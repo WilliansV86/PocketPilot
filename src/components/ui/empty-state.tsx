@@ -26,11 +26,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={PATTERNS.EMPTY_STATE}>
-      {icon ? (
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          {icon}
-        </div>
-      ) : null}
+      {icon ? <div className="mx-auto mb-3">{icon}</div> : null}
       
       <h3 className={PATTERNS.EMPTY_STATE_TITLE}>{title}</h3>
       <p className={PATTERNS.EMPTY_STATE_DESCRIPTION}>{description}</p>
