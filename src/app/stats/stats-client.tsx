@@ -135,7 +135,7 @@ export function StatsClient() {
         </div>
       ) : !hasData ? (
         <EmptyState
-          icon={BarChart3}
+          icon={<BarChart3 className="h-8 w-8 text-muted-foreground" />}
           title="No Data Available"
           description="Add transactions to see insights and statistics about your financial performance"
           action={{
