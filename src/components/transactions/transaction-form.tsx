@@ -33,7 +33,7 @@ import { toast } from "sonner";
 // Define the form validation schema
 const formSchema = z.object({
   description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().refine(val => val > 0, "Amount must be positive"),
+  amount: z.string().min(1, "Amount is required").refine(val => !isNaN(Number(val)) && Number(val) > 0, "Amount must be a positive number"),
   date: z.string().min(1, "Date is required"),
   type: z.nativeEnum(TransactionType),
   accountId: z.string().min(1, "From account is required"),
@@ -103,7 +103,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
   const defaultValues: FormValues = transaction
     ? {
         description: transaction.description,
-        amount: transaction.amount,
+        amount: transaction.amount.toString(),
         date: format(new Date(transaction.date), "yyyy-MM-dd"),
         type: transaction.type,
         accountId: transaction.accountId,
@@ -113,7 +113,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
       }
     : {
         description: "",
-        amount: 0,
+        amount: "",
         date: format(new Date(), "yyyy-MM-dd"),
         type: TransactionType.EXPENSE,
         accountId: accounts.length > 0 ? accounts[0].id : "",
@@ -143,7 +143,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
       try {
         const formData = new FormData();
         formData.append("description", values.description);
-        formData.append("amount", values.amount.toString());
+        formData.append("amount", Number(values.amount).toString());
         formData.append("date", values.date);
         formData.append("type", values.type);
         formData.append("accountId", values.accountId);

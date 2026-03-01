@@ -51,7 +51,7 @@ export async function getDashboardData() {
       }),
       
       // Monthly financial data
-      getMonthlyFinancialData(userId),
+      getMonthlyFinancialData(new Date().getMonth() + 1, new Date().getFullYear()),
       
       // Expense by category (raw query)
       prisma.$queryRaw`
