@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts     FinancialAccount[]
+  transactions Transaction[]
+  categories   Category[]
+  budgets      Budget[]
+  budgetMoves  BudgetMove[]
+  debts        Debt[]
+  moneyOwed    MoneyOwed[]
+  moneyOwedPayments MoneyOwedPayment[]
+  goals        Goal[]
+  goalContributions GoalContribution[]
+}
+
+model FinancialAccount {
+  id        String   @id @default(cuid())
+  name      String
+  type      AccountType
+  balance   Decimal  @default(0) @db.Decimal(12,2)
+  currency  String   @default("USD")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations for transactions
+  transactions         Transaction[]            // Outgoing transactions (from this account)
+  transferToTransactions Transaction[] @relation("TransferToAccount") // Incoming transfers (to this account)
+  moneyOwedPayments    MoneyOwedPayment[]       // Payments received into this account
+  linkedGoals          Goal[]                   @relation("GoalAccount")           // Goals linked to this account
+  goalContributions    GoalContribution[]       @relation("GoalContributionAccount") // Contributions from this account
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT
+  CASH
+  INVESTMENT
+  LOAN
+  OTHER
+}
+
+model Category {
+  id         String        @id @default(cuid())
+  name       String
+  group      CategoryGroup
+  color      String        @default("#6366F1")
+  icon       String        @default("tag")
+  isArchived Boolean       @default(false)
+  order      Int           @default(0)
+
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+  budgetMovesFrom BudgetMove[] @relation("BudgetMovesFrom")
+  budgetMovesTo   BudgetMove[] @relation("BudgetMovesTo")
+
+  @@unique([userId, name])
+  @@index([userId, group, order])
+}
+
+enum CategoryGroup {
+  INCOME
+  NEEDS
+  WANTS
+  SAVINGS
+  DEBT
+  OTHER
+}
+
+model Transaction {
+  id          String           @id @default(cuid())
+  date        DateTime
+  amount      Decimal          @db.Decimal(12,2)
+  description String
+  type        TransactionType
+  notes       String?          // Optional notes field
+
+  accountId   String           // From account for all types
+  account     FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  // For transfers only - the destination account
+  toAccountId String?          
+  toAccount   FinancialAccount? @relation("TransferToAccount", fields: [toAccountId], references: [id], onDelete: SetNull)
+
+  categoryId  String?
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  amount     Decimal  @db.Decimal(12,2)
+  month      String   // Format: "YYYY-MM" for easy querying
+  year       Int      // Year for additional indexing
+  
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, categoryId, month])
+  @@index([userId, month])
+  @@index([categoryId])
+}
+
+model BudgetMove {
+  id          String   @id @default(cuid())
+  amount      Decimal  @db.Decimal(12,2)
+  month       String   // Format: "YYYY-MM" for easy querying
+  year        Int      // Year for additional indexing
+  
+  fromCategoryId String
+  fromCategory   Category @relation("BudgetMovesFrom", fields: [fromCategoryId], references: [id], onDelete: Cascade)
+  
+  toCategoryId   String
+  toCategory     Category @relation("BudgetMovesTo", fields: [toCategoryId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId, month])
+  @@index([fromCategoryId])
+  @@index([toCategoryId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum DebtType {
+  CREDIT_CARD
+  PERSONAL_LOAN
+  AUTO_LOAN
+  MORTGAGE
+  STUDENT_LOAN
+  MEDICAL
+  OTHER
+}
+
+enum MoneyOwedStatus {
+  OPEN
+  PARTIAL
+  PAID
+}
+
+enum GoalType {
+  SAVINGS
+  DEBT_PAYOFF
+  PURCHASE
+  EMERGENCY_FUND
+  INVESTMENT
+  OTHER
+}
+
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Debt {
+  id               String     @id @default(cuid())
+  name             String
+  type             DebtType
+  lender           String?
+  originalAmount   Decimal?   @db.Decimal(12,2)
+  currentBalance   Decimal    @db.Decimal(12,2)
+  interestRateAPR  Decimal?   @db.Decimal(5,2) // APR as percentage (e.g., 15.99)
+  minimumPayment   Decimal?   @db.Decimal(12,2)
+  dueDayOfMonth    Int?        // 1-31
+  notes            String?
+  isClosed         Boolean    @default(false)
+  
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  linkedGoals      Goal[]     @relation("GoalDebt")  // Goals linked to this debt
+  
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  
+  @@index([userId, isClosed])
+}
+
+model MoneyOwed {
+  id                String           @id @default(cuid())
+  personName        String
+  description       String?
+  amountOriginal    Decimal          @db.Decimal(12,2)
+  amountOutstanding Decimal          @db.Decimal(12,2)
+  dueDate           DateTime?
+  status            MoneyOwedStatus  @default(OPEN)
+  isArchived        Boolean          @default(false)
+  
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  payments          MoneyOwedPayment[]
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  @@index([userId, status, isArchived])
+  @@index([dueDate])
+}
+
+model MoneyOwedPayment {
+  id          String   @id @default(cuid())
+  amount      Decimal  @db.Decimal(12,2)
+  date        DateTime
+  note        String?
+  
+  moneyOwedId  String
+  moneyOwed    MoneyOwed @relation(fields: [moneyOwedId], references: [id], onDelete: Cascade)
+  
+  accountId   String
+  account     FinancialAccount @relation(fields: [accountId], references: [id])
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([moneyOwedId])
+  @@index([userId])
+  @@index([accountId])
+}
+
+model Goal {
+  id               String       @id @default(cuid())
+  name             String
+  type             GoalType
+  targetAmount     Decimal      @db.Decimal(12,2)
+  currentAmount    Decimal      @db.Decimal(12,2) @default(0)
+  startDate        DateTime
+  targetDate       DateTime?
+  linkedAccountId  String?
+  linkedDebtId     String?
+  autoTrack        Boolean      @default(true)
+  priority         GoalPriority @default(MEDIUM)
+  notes            String?
+  isCompleted      Boolean      @default(false)
+  
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  linkedAccount    FinancialAccount? @relation("GoalAccount", fields: [linkedAccountId], references: [id])
+  linkedDebt       Debt?            @relation("GoalDebt", fields: [linkedDebtId], references: [id])
+  contributions    GoalContribution[]
+  
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  
+  @@index([userId, isCompleted])
+  @@index([userId, priority])
+  @@index([targetDate])
+}
+
+model GoalContribution {
+  id        String   @id @default(cuid())
+  amount    Decimal  @db.Decimal(12,2)
+  date      DateTime
+  note      String?
+  accountId String?
+  
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  account   FinancialAccount? @relation("GoalContributionAccount", fields: [accountId], references: [id])
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([goalId])
+  @@index([userId])
+  @@index([date])
+}
