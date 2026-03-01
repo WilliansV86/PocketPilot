@@ -143,7 +143,7 @@ export function generateCategoryDropdownOptions(categories: any[], includeArchiv
   
   return Object.entries(grouped).map(([group, cats]) => ({
     label: getGroupInfo(group as CategoryGroup).name,
-    options: cats.map(cat => ({
+    options: (cats as typeof sortedCategories).map(cat => ({
       value: cat.id,
       label: cat.name,
       group: cat.group,

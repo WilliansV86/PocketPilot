@@ -112,6 +112,13 @@ export async function getNetWorthSummary() {
 
     const { data } = result;
     
+    if (!data) {
+      return {
+        success: false,
+        error: "No net worth data available",
+      };
+    }
+
     return {
       success: true,
       data: {

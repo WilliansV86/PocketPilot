@@ -54,7 +54,12 @@ export async function getDashboardData() {
       getMonthlyFinancialData(new Date().getMonth() + 1, new Date().getFullYear()),
       
       // Expense by category (raw query)
-      prisma.$queryRaw`
+      prisma.$queryRaw<Array<{
+        categoryId: string;
+        categoryName: string;
+        categoryGroup: string;
+        amount: bigint;
+      }>>`
         SELECT 
           t."categoryId",
           c.name as "categoryName",
@@ -69,12 +74,7 @@ export async function getDashboardData() {
           AND t."categoryId" IS NOT NULL
         GROUP BY t."categoryId", c.name, c.group
         ORDER BY amount DESC
-      ` as Array<{
-        categoryId: string;
-        categoryName: string;
-        categoryGroup: string;
-        amount: bigint;
-      }>,
+      `,
       
       // Recent transactions
       prisma.transaction.findMany({
@@ -159,7 +159,11 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
       dailySpend
     ] = await Promise.all([
       // Monthly cashflow for the last 12 months
-      prisma.$queryRaw`
+      prisma.$queryRaw<Array<{
+        month: Date;
+        income: bigint;
+        expenses: bigint;
+      }>>`
         SELECT 
           DATE_TRUNC('month', date) as month,
           SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END) as income,
@@ -170,11 +174,7 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
           AND date <= ${dateRange.to}
         GROUP BY DATE_TRUNC('month', date)
         ORDER BY month ASC
-      ` as Array<{
-        month: Date;
-        income: bigint;
-        expenses: bigint;
-      }>,
+      `,
       
       // Category spending
       prisma.transaction.groupBy({
@@ -202,7 +202,10 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
       }),
       
       // Daily spending
-      prisma.$queryRaw`
+      prisma.$queryRaw<Array<{
+        date: Date;
+        amount: bigint;
+      }>>`
         SELECT 
           DATE(date) as date,
           SUM(amount) as amount
@@ -213,10 +216,7 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
           AND date <= ${dateRange.to}
         GROUP BY DATE(date)
         ORDER BY date ASC
-      ` as Array<{
-        date: Date;
-        amount: bigint;
-      }>,
+      `,
     ]);
 
     return {
