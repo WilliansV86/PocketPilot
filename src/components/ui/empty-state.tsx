@@ -1,3 +1,4 @@
+// EmptyState component - fixed for Vercel TypeScript compatibility
 import React from "react";
 import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
