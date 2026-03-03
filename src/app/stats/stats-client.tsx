@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStateV2 } from "@/components/ui/empty-state-v2";
 import { PATTERNS, TYPOGRAPHY, BUTTON, SPACING, LAYOUT } from "@/lib/ui-constants";
 import { StatsTable } from "@/components/stats/stats-table";
 import { getDateRangePreset, type DateRange } from "@/lib/actions/stats";
@@ -134,7 +134,7 @@ export function StatsClient() {
           </div>
         </div>
       ) : !hasData ? (
-        <EmptyState
+        <EmptyStateV2
           icon={<BarChart3 className="h-8 w-8 text-muted-foreground" />}
           title="No Data Available"
           description="Add transactions to see insights and statistics about your financial performance"

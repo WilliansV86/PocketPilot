@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStateV2 } from "@/components/ui/empty-state-v2";
 import { AnimatedBalance } from "@/components/ui/animated-balance";
 import { AccountTypeBadge } from "@/components/accounts/account-type-badge";
 import { getAccounts, deleteAccount } from "@/lib/actions/account-actions";
@@ -175,7 +175,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
 
   if ((accountsList || []).length === 0) {
     return (
-      <EmptyState
+      <EmptyStateV2
         icon={<Wallet className="h-8 w-8 text-muted-foreground" />}
         title="No accounts yet"
         description="Create your first account to start tracking your finances"
