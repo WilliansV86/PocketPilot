@@ -1,9 +1,8 @@
-// EmptyState component - fixed for Vercel TypeScript compatibility
 import React from "react";
 import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   icon?: React.ReactNode;
   title: string;
   description: string;
@@ -27,7 +26,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={PATTERNS.EMPTY_STATE}>
-      {icon ? <div className="mx-auto mb-3">{icon}</div> : null}
+      {icon && <div className="mx-auto mb-3">{icon}</div>}
       
       <h3 className={PATTERNS.EMPTY_STATE_TITLE}>{title}</h3>
       <p className={PATTERNS.EMPTY_STATE_DESCRIPTION}>{description}</p>
