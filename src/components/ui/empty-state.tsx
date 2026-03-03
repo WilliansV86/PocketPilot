@@ -3,7 +3,7 @@ import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
 
 export interface EmptyStateProps {
-  icon?: React.ReactNode | React.ComponentType<any> | React.ReactElement;
+  icon?: any;
   title: string;
   description: string;
   action?: {
