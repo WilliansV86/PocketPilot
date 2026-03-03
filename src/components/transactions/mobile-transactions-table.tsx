@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStateV2 } from "@/components/ui/empty-state-v2";
 import { TransactionAmount } from "@/components/transactions/transaction-amount";
 import { deleteTransactionOptimized } from "@/lib/actions/transaction-actions-optimized";
 import { formatCurrency, getAmountColorClass, getTransactionIcon } from "@/lib/format";
@@ -172,7 +172,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
 
   if (transactionsList.length === 0) {
     return (
-      <EmptyState
+      <EmptyStateV2
         icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
         title="No transactions found"
         description="No transactions yet"
