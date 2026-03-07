@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getDefaultUser } from "@/lib/get-default-user";
 
 // Define account types as constants for the updated schema
 const ACCOUNT_TYPES = [
@@ -24,12 +25,9 @@ const accountSchema = z.object({
   currency: z.string().default("USD"),
 });
 
-// Default user email for single-user mode
-const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
-
 export async function getAccounts() {
   try {
-    // Get the default user
+    // Get the default user with production-safe fallback
     const user = await getDefaultUser();
     
     const accounts = await prisma.financialAccount.findMany({
@@ -211,23 +209,4 @@ export async function deleteAccount(id: string) {
     console.error(`Failed to delete account ${id}:`, error);
     return { success: false, error: "Failed to delete account" };
   }
-}
-
-// Helper function to get the default user
-async function getDefaultUser() {
-  // Try the hardcoded email first
-  let user = await prisma.user.findUnique({
-    where: { email: DEFAULT_USER_EMAIL },
-  });
-
-  // If not found, get the first available user
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
-
-  if (!user) {
-    throw new Error("No users found in database");
-  }
-
-  return user;
 }
