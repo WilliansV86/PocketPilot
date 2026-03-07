@@ -176,6 +176,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
   if ((accountsList || []).length === 0) {
     return (
       <EmptyState
+        icon="🏦"
         title="No accounts yet"
         description="Create your first account to start tracking your finances"
         action={{

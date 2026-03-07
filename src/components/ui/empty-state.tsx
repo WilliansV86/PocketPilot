@@ -3,6 +3,7 @@ import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
 
 export interface EmptyStateProps {
+  icon?: string; // Using emoji or text icons instead of React components
   title: string;
   description: string;
   action?: {
@@ -17,6 +18,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
+  icon,
   title,
   description,
   action,
@@ -24,6 +26,12 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={PATTERNS.EMPTY_STATE}>
+      {icon && (
+        <div className="mx-auto mb-4 text-6xl text-center">
+          {icon}
+        </div>
+      )}
+      
       <h3 className={PATTERNS.EMPTY_STATE_TITLE}>{title}</h3>
       <p className={PATTERNS.EMPTY_STATE_DESCRIPTION}>{description}</p>
       

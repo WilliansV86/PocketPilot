@@ -173,6 +173,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
   if (transactionsList.length === 0) {
     return (
       <EmptyState
+        icon="🧾"
         title="No transactions found"
         description="No transactions yet"
       />
