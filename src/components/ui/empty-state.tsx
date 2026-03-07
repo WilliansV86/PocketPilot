@@ -3,7 +3,6 @@ import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
 
 export interface EmptyStateProps {
-  icon?: any;
   title: string;
   description: string;
   action?: {
@@ -18,34 +17,13 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon,
   title,
   description,
   action,
   secondaryAction,
 }: EmptyStateProps) {
-  const renderIcon = () => {
-    if (!icon) return null;
-    
-    // If it's a React element, render it directly
-    if (React.isValidElement(icon)) {
-      return icon;
-    }
-    
-    // If it's a component (like Lucide icons), render it with default props
-    if (typeof icon === 'function') {
-      const IconComponent = icon;
-      return <IconComponent className="h-8 w-8 text-muted-foreground" />;
-    }
-    
-    // Otherwise, render as is
-    return icon;
-  };
-
   return (
     <div className={PATTERNS.EMPTY_STATE}>
-      {icon && <div className="mx-auto mb-3">{renderIcon()}</div>}
-      
       <h3 className={PATTERNS.EMPTY_STATE_TITLE}>{title}</h3>
       <p className={PATTERNS.EMPTY_STATE_DESCRIPTION}>{description}</p>
       

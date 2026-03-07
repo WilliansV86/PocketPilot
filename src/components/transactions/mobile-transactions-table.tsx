@@ -173,7 +173,6 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
   if (transactionsList.length === 0) {
     return (
       <EmptyState
-        icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
         title="No transactions found"
         description="No transactions yet"
       />
