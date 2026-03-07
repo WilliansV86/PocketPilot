@@ -31,7 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyStateV2 } from "@/components/ui/empty-state-v2";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TransactionAmount } from "@/components/transactions/transaction-amount";
 import { deleteTransaction } from "@/lib/actions/transaction-actions";
 import { deleteTransactionOptimized } from "@/lib/actions/transaction-actions-optimized";

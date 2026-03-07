@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "./button";
 import { PATTERNS, TYPOGRAPHY } from "@/lib/ui-constants";
 
-export interface EmptyStateV2Props {
+export interface EmptyStateProps {
   icon?: any;
   title: string;
   description: string;
@@ -17,13 +17,13 @@ export interface EmptyStateV2Props {
   };
 }
 
-export function EmptyStateV2({
+export function EmptyState({
   icon,
   title,
   description,
   action,
   secondaryAction,
-}: EmptyStateV2Props) {
+}: EmptyStateProps) {
   const renderIcon = () => {
     if (!icon) return null;
     
