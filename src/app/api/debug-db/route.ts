@@ -32,9 +32,9 @@ export async function GET() {
     });
     
     // Test a sample query using the default user
-    let sampleAccounts = [];
-    let sampleTransactions = [];
-    let sampleCategories = [];
+    let sampleAccounts: any[] = [];
+    let sampleTransactions: any[] = [];
+    let sampleCategories: any[] = [];
     
     if (defaultUser) {
       sampleAccounts = await prisma.financialAccount.findMany({
