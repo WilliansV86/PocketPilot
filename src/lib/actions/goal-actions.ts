@@ -4,28 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getDefaultUser } from "@/lib/get-default-user";
 import { calculateGoalProgress, validateGoalData } from "@/lib/finance/goals";
-
-// Default user email for single-user mode
-const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
-
-// Helper function to get the default user
-async function getDefaultUser() {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email: DEFAULT_USER_EMAIL },
-    });
-
-    if (!user) {
-      throw new Error("Default user not found");
-    }
-
-    return user;
-  } catch (error) {
-    console.error("Error getting default user:", error);
-    throw new Error("Failed to get default user");
-  }
-}
 
 // Define the validation schema for goal creation
 const goalSchema = z.object({

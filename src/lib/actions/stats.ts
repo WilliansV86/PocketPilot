@@ -1,21 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
 import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
-
-// Default user email for single-user mode
-const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
-
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: { email: DEFAULT_USER_EMAIL },
-  });
-
-  if (!user) {
-    throw new Error("Default user not found");
-  }
-
-  return user;
-}
+import { getDefaultUser } from "@/lib/get-default-user";
 
 export type DateRange = {
   start: Date;
