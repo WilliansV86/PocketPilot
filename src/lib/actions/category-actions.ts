@@ -6,6 +6,7 @@ import { z } from "zod";
 import { CategoryGroup } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { getDefaultUser } from "@/lib/get-default-user";
 
 // Define the validation schema for category creation/update
 const categorySchema = z.object({
@@ -17,25 +18,6 @@ const categorySchema = z.object({
 });
 
 export type CategoryFormValues = z.infer<typeof categorySchema>;
-
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  // Try the hardcoded email first
-  let user = await prisma.user.findUnique({
-    where: { email: "dev@pocketpilot.local" },
-  });
-
-  // If not found, get the first available user
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
-
-  if (!user) {
-    throw new Error("No users found in database");
-  }
-
-  return user;
-}
 
 // Category actions
 export async function getCategories(includeArchived: boolean = false) {

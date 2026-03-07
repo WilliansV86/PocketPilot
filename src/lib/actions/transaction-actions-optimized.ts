@@ -1,34 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { TransactionType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { getDefaultUser } from "@/lib/get-default-user";
 import { smartRevalidate } from "@/lib/actions/performance-actions";
 
 // Type for Prisma transaction client
 type PrismaTransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
-
-// Default user email for single-user mode
-const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
-
-// Helper function to get the default user
-async function getDefaultUser() {
-  // Try the hardcoded email first
-  let user = await prisma.user.findUnique({
-    where: { email: DEFAULT_USER_EMAIL },
-  });
-
-  // If not found, get the first available user
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
-
-  if (!user) {
-    throw new Error("No users found in database");
-  }
-
-  return user;
-}
 
 // Helper function to update account balance
 async function updateAccountBalance(
