@@ -7,13 +7,13 @@ export async function POST() {
     const { execSync } = require('child_process');
     
     try {
-      // Run Prisma migrations
-      console.log('Executing prisma migrate deploy...');
-      const migrateOutput = execSync('npx prisma migrate deploy', { 
+      // Use Prisma push for serverless environments
+      console.log('Executing prisma db push...');
+      const pushOutput = execSync('npx prisma db push --force-reset', { 
         encoding: 'utf8',
         stdio: 'pipe'
       });
-      console.log('Migration output:', migrateOutput);
+      console.log('Push output:', pushOutput);
       
       // Generate Prisma Client
       console.log('Generating Prisma Client...');
@@ -27,8 +27,8 @@ export async function POST() {
       
       return NextResponse.json({
         success: true,
-        message: 'Database migrations completed successfully',
-        migrationOutput: migrateOutput,
+        message: 'Database schema created successfully using prisma db push',
+        pushOutput: pushOutput,
         generateOutput: generateOutput,
         timestamp: new Date().toISOString(),
       });
