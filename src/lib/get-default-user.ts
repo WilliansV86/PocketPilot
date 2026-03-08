@@ -3,22 +3,15 @@ import { prisma } from "@/lib/db";
 const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
 
 export async function getDefaultUser() {
-  // Try the hardcoded email first
-  let user = await prisma.user.findUnique({
-    where: { email: DEFAULT_USER_EMAIL },
-  });
+  // Try to find any user first
+  let user = await prisma.user.findFirst();
 
-  // If not found, get the first available user
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
-
-  // PRODUCTION SAFE FALLBACK: Create default user if no users exist
+  // If no users exist, create the default user
   if (!user) {
     console.log("No users found, creating default user for production...");
     user = await prisma.user.create({
       data: {
-        name: "Dev User",
+        name: "PocketPilot User",
         email: DEFAULT_USER_EMAIL,
       },
     });
