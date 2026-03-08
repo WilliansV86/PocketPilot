@@ -44,12 +44,11 @@ export async function POST() {
         // Try to create the User table manually using raw SQL
         await client.$executeRaw`
           CREATE TABLE IF NOT EXISTS "User" (
-            "id" TEXT NOT NULL,
+            "id" TEXT PRIMARY KEY,
             "name" TEXT NOT NULL,
             "email" TEXT NOT NULL,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY ("id")
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
           );
         `;
         console.log('✅ User table created');
@@ -57,23 +56,21 @@ export async function POST() {
         // Create other essential tables
         await client.$executeRaw`
           CREATE TABLE IF NOT EXISTS "FinancialAccount" (
-            "id" TEXT NOT NULL,
+            "id" TEXT PRIMARY KEY,
             "name" TEXT NOT NULL,
             "type" TEXT NOT NULL,
             "balance" REAL NOT NULL,
             "currency" TEXT NOT NULL DEFAULT 'USD',
             "userId" TEXT NOT NULL,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY ("id"),
-            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE ON CASCADE
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
           );
         `;
         console.log('✅ FinancialAccount table created');
         
         await client.$executeRaw`
           CREATE TABLE IF NOT EXISTS "Category" (
-            "id" TEXT NOT NULL,
+            "id" TEXT PRIMARY KEY,
             "name" TEXT NOT NULL,
             "group" TEXT NOT NULL,
             "color" TEXT NOT NULL,
@@ -81,16 +78,14 @@ export async function POST() {
             "isArchived" BOOLEAN NOT NULL DEFAULT false,
             "icon" TEXT NOT NULL DEFAULT 'tag',
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY ("id"),
-            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE ON CASCADE
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
           );
         `;
         console.log('✅ Category table created');
         
         await client.$executeRaw`
           CREATE TABLE IF NOT EXISTS "Transaction" (
-            "id" TEXT NOT NULL,
+            "id" TEXT PRIMARY KEY,
             "description" TEXT NOT NULL,
             "amount" REAL NOT NULL,
             "date" DATETIME NOT NULL,
@@ -99,11 +94,7 @@ export async function POST() {
             "categoryId" TEXT NOT NULL,
             "userId" TEXT NOT NULL,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY ("id"),
-            FOREIGN KEY ("accountId") REFERENCES "FinancialAccount"("id") ON DELETE ON CASCADE,
-            FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE ON CASCADE,
-            FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE ON CASCADE
+            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
           );
         `;
         console.log('✅ Transaction table created');
