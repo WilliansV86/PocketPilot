@@ -31,7 +31,7 @@ export async function GET() {
       `);
       
       console.log('Tables found:', tablesResult.rows.length);
-      tablesResult.rows.forEach(row => {
+      tablesResult.rows.forEach((row: any) => {
         console.log('- ' + row.table_name);
       });
       

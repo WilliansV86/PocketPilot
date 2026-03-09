@@ -65,7 +65,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
         const result = await getAccounts();
         
         if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch accounts');
+          throw new Error('Failed to fetch accounts');
         }
         
         setAccountsList(result.data || []);

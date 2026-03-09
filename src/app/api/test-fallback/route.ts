@@ -22,7 +22,7 @@ export async function GET() {
     
     // Test transactions
     const transactionsResult = await getTransactions();
-    console.log('Transactions:', transactionsResult.success ? transactionsResult.data.length : 'Failed');
+    console.log('Transactions:', transactionsResult.success ? transactionsResult.data?.length || 0 : 'Failed');
     
     const testData = {
       success: true,
@@ -36,15 +36,15 @@ export async function GET() {
         accounts: accountsResult.success ? {
           count: accountsResult.data.length,
           sample: accountsResult.data.slice(0, 2)
-        } : { error: accountsResult.error },
+        } : { error: 'Failed to load accounts' },
         categories: categoriesResult.success ? {
           count: categoriesResult.data.length,
           sample: categoriesResult.data.slice(0, 2)
-        } : { error: categoriesResult.error },
+        } : { error: 'Failed to load categories' },
         transactions: transactionsResult.success ? {
-          count: transactionsResult.data.length,
-          sample: transactionsResult.data.slice(0, 2)
-        } : { error: transactionsResult.error }
+          count: transactionsResult.data?.length || 0,
+          sample: transactionsResult.data?.slice(0, 2) || []
+        } : { error: 'Failed to load transactions' }
       },
       timestamp: new Date().toISOString()
     };
