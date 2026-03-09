@@ -56,7 +56,10 @@ export async function getAccounts() {
       { id: "acc-3", name: "Savings", type: "SAVINGS", balance: 10000, currency: "USD", userId: "user-1" },
       { id: "acc-4", name: "Chase Credit Card", type: "CREDIT", balance: 0, currency: "USD", userId: "user-1" },
       { id: "acc-5", name: "Wells Fargo", type: "CHECKING", balance: 0, currency: "USD", userId: "user-1" },
-      { id: "acc-6", name: "Wells Fargo Credit Card", type: "CREDIT", balance: 0, currency: "USD", userId: "user-1" }
+      { id: "acc-6", name: "Wells Fargo Credit Card", type: "CREDIT", balance: 0, currency: "USD", userId: "user-1" },
+      { id: "acc-7", name: "Investment", type: "INVESTMENT", balance: 5000, currency: "USD", userId: "user-1" },
+      { id: "acc-8", name: "Business", type: "CHECKING", balance: 12000, currency: "USD", userId: "user-1" },
+      { id: "acc-9", name: "Emergency", type: "SAVINGS", balance: 3000, currency: "USD", userId: "user-1" }
     ];
     
     console.log("Using fallback account data");

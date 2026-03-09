@@ -47,7 +47,20 @@ export async function getCategories(includeArchived: boolean = false) {
       { id: "cat-4", name: "Dining Out", group: "WANTS", color: "#FF9800", userId: "user-1", isArchived: false, icon: "utensils" },
       { id: "cat-5", name: "Entertainment", group: "WANTS", color: "#FFC107", userId: "user-1", isArchived: false, icon: "film" },
       { id: "cat-6", name: "Emergency Fund", group: "SAVINGS", color: "#2196F3", userId: "user-1", isArchived: false, icon: "shield" },
-      { id: "cat-7", name: "Credit Card Payment", group: "DEBT", color: "#795548", userId: "user-1", isArchived: false, icon: "credit-card" }
+      { id: "cat-7", name: "Credit Card Payment", group: "DEBT", color: "#795548", userId: "user-1", isArchived: false, icon: "credit-card" },
+      { id: "cat-8", name: "Utilities", group: "NEEDS", color: "#9C27B0", userId: "user-1", isArchived: false, icon: "zap" },
+      { id: "cat-9", name: "Gas", group: "NEEDS", color: "#FF5722", userId: "user-1", isArchived: false, icon: "car" },
+      { id: "cat-10", name: "Insurance", group: "NEEDS", color: "#607D8B", userId: "user-1", isArchived: false, icon: "shield-check" },
+      { id: "cat-11", name: "Shopping", group: "WANTS", color: "#E91E63", userId: "user-1", isArchived: false, icon: "shopping-bag" },
+      { id: "cat-12", name: "Subscriptions", group: "WANTS", color: "#FF9800", userId: "user-1", isArchived: false, icon: "repeat" },
+      { id: "cat-13", name: "Healthcare", group: "NEEDS", color: "#4CAF50", userId: "user-1", isArchived: false, icon: "heart" },
+      { id: "cat-14", name: "Fitness", group: "WANTS", color: "#00BCD4", userId: "user-1", isArchived: false, icon: "dumbbell" },
+      { id: "cat-15", name: "Travel", group: "WANTS", color: "#3F51B5", userId: "user-1", isArchived: false, icon: "plane" },
+      { id: "cat-16", name: "Education", group: "SAVINGS", color: "#009688", userId: "user-1", isArchived: false, icon: "book" },
+      { id: "cat-17", name: "Investment", group: "SAVINGS", color: "#FFC107", userId: "user-1", isArchived: false, icon: "trending-up" },
+      { id: "cat-18", name: "Freelance", group: "INCOME", color: "#8BC34A", userId: "user-1", isArchived: false, icon: "laptop" },
+      { id: "cat-19", name: "Bonus", group: "INCOME", color: "#CDDC39", userId: "user-1", isArchived: false, icon: "gift" },
+      { id: "cat-20", name: "Other Income", group: "INCOME", color: "#FFEB3B", userId: "user-1", isArchived: false, icon: "plus-circle" }
     ];
     
     console.log("Using fallback category data");

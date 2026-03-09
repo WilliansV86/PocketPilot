@@ -147,6 +147,45 @@ export async function getTransactions(month?: string) {
         account: { id: "acc-3", name: "Savings", type: "SAVINGS", balance: 10000, currency: "USD", userId: "user-1" },
         category: { id: "cat-1", name: "Salary", group: "INCOME", color: "#4CAF50", userId: "user-1", isArchived: false, icon: "briefcase" },
         toAccount: null
+      },
+      { 
+        id: "tx-4", 
+        description: "Grocery Store", 
+        amount: 150.75, 
+        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 
+        type: "EXPENSE", 
+        accountId: "acc-2", 
+        categoryId: "cat-3", 
+        userId: "user-1",
+        account: { id: "acc-2", name: "Chase", type: "CHECKING", balance: 2547.26, currency: "USD", userId: "user-1" },
+        category: { id: "cat-3", name: "Groceries", group: "NEEDS", color: "#E91E63", userId: "user-1", isArchived: false, icon: "shopping-cart" },
+        toAccount: null
+      },
+      { 
+        id: "tx-5", 
+        description: "Restaurant", 
+        amount: 85.50, 
+        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 
+        type: "EXPENSE", 
+        accountId: "acc-2", 
+        categoryId: "cat-4", 
+        userId: "user-1",
+        account: { id: "acc-2", name: "Chase", type: "CHECKING", balance: 2547.26, currency: "USD", userId: "user-1" },
+        category: { id: "cat-4", name: "Dining Out", group: "WANTS", color: "#FF9800", userId: "user-1", isArchived: false, icon: "utensils" },
+        toAccount: null
+      },
+      { 
+        id: "tx-6", 
+        description: "Gas Station", 
+        amount: 65.00, 
+        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), 
+        type: "EXPENSE", 
+        accountId: "acc-2", 
+        categoryId: "cat-9", 
+        userId: "user-1",
+        account: { id: "acc-2", name: "Chase", type: "CHECKING", balance: 2547.26, currency: "USD", userId: "user-1" },
+        category: { id: "cat-9", name: "Gas", group: "NEEDS", color: "#FF5722", userId: "user-1", isArchived: false, icon: "car" },
+        toAccount: null
       }
     ];
     
