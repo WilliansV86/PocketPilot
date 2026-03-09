@@ -100,7 +100,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
       if (accountsResult.success) {
         setAccounts(accountsResult.data || []);
       } else {
-        console.error("Failed to load accounts:", accountsResult.error);
+        console.error("Failed to load accounts");
         toast.error("Failed to load accounts");
       }
 
@@ -111,7 +111,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
         ) || [];
         setCategories(debtCategories);
       } else {
-        console.error("Failed to load categories:", categoriesResult.error);
+        console.error("Failed to load categories");
         // Don't show error for categories as they're optional
       }
     } catch (error) {

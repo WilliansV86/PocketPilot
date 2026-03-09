@@ -34,7 +34,12 @@ export function CategoriesClient({ searchParams }: CategoriesClientProps) {
         setLoading(true);
         const response = await getCategories(showArchived);
         if (response.success && response.data) {
-          setCategories(response.data);
+          // Convert group field to proper CategoryGroup type
+          const typedCategories = response.data.map(cat => ({
+            ...cat,
+            group: cat.group as CategoryGroup
+          }));
+          setCategories(typedCategories);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);

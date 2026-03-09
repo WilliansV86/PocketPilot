@@ -92,7 +92,7 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
       if (accountsResult.success) {
         setAccounts(accountsResult.data || []);
       } else {
-        console.error("Failed to load accounts:", accountsResult.error);
+        console.error("Failed to load accounts");
         toast.error("Failed to load accounts");
       }
     } catch (error) {

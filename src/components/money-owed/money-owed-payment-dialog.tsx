@@ -94,7 +94,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
       if (accountsResult.success) {
         setAccounts(accountsResult.data || []);
       } else {
-        console.error("Failed to load accounts:", accountsResult.error);
+        console.error("Failed to load accounts");
         toast.error("Failed to load accounts");
       }
     } catch (error) {
