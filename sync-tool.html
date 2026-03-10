@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketPilot - Sync Local to Production</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 PocketPilot - Sync Local to Production</h1>
+        
+        <div class="step">
+            <h3>Step 1: Start Local Server</h3>
+            <p>Make sure your local PocketPilot app is running on <code>http://localhost:3000</code></p>
+            <p>Run: <code>npm run dev</code> in your project folder</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Enter Production URL</h3>
+            <input type="text" id="productionUrl" class="url-input" placeholder="https://your-app-url.vercel.app" value="https://your-app-url.vercel.app">
+            <p><small>Replace with your actual Vercel deployment URL</small></p>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Export Local Data</h3>
+            <button onclick="exportLocalData()">📤 Export Local Data</button>
+            <div id="exportResult" class="result info" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Import to Production</h3>
+            <button onclick="importToProduction()" id="importBtn" disabled>📥 Import to Production</button>
+            <div id="importResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Manual Alternative</h3>
+            <p>If the automatic import doesn't work:</p>
+            <ol>
+                <li>Copy the exported data from the box below</li>
+                <li>Use curl or Postman to POST to: <code id="manualUrl">https://your-app-url.vercel.app/api/import-local-data</code></li>
+                <li>Set Content-Type to <code>application/json</code></li>
+            </ol>
+            <textarea id="manualData" placeholder="Exported data will appear here..." readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        let exportedData = null;
+
+        async function exportLocalData() {
+            const exportResult = document.getElementById('exportResult');
+            const importBtn = document.getElementById('importBtn');
+            const manualData = document.getElementById('manualData');
+            
+            try {
+                exportResult.style.display = 'block';
+                exportResult.className = 'result info';
+                exportResult.textContent = 'Exporting local data...';
+                
+                const response = await fetch('http://localhost:3000/api/export-local-data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                exportedData = await response.json();
+                
+                exportResult.className = 'result success';
+                exportResult.textContent = `✅ Export successful!\n\nData summary:\n${JSON.stringify(exportedData.counts, null, 2)}\n\nReady for import to production.`;
+                
+                manualData.value = JSON.stringify(exportedData, null, 2);
+                importBtn.disabled = false;
+                
+            } catch (error) {
+                exportResult.className = 'result error';
+                exportResult.textContent = `❌ Export failed: ${error.message}\n\nMake sure:\n1. Local server is running on http://localhost:3000\n2. Your local database has data\n3. The export endpoint is available`;
+            }
+        }
+
+        async function importToProduction() {
+            if (!exportedData) {
+                alert('Please export local data first');
+                return;
+            }
+
+            const importResult = document.getElementById('importResult');
+            const productionUrl = document.getElementById('productionUrl').value.trim();
+            const manualUrl = document.getElementById('manualUrl');
+            
+            if (!productionUrl || productionUrl === 'https://your-app-url.vercel.app') {
+                alert('Please enter your actual Vercel URL');
+                return;
+            }
+
+            const importUrl = `${productionUrl}/api/import-local-data`;
+            manualUrl.textContent = importUrl;
+            
+            try {
+                importResult.style.display = 'block';
+                importResult.className = 'result info';
+                importResult.textContent = 'Importing to production...';
+                
+                const response = await fetch(importUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(exportedData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                importResult.className = 'result success';
+                importResult.textContent = `✅ Import successful!\n\nResult:\n${JSON.stringify(result, null, 2)}\n\nYour production app now has your local data!`;
+                
+            } catch (error) {
+                importResult.className = 'result error';
+                importResult.textContent = `❌ Import failed: ${error.message}\n\nTroubleshooting:\n1. Check if the production URL is correct\n2. Make sure the latest deployment is complete\n3. Try the manual method below\n4. Check Vercel logs for errors`;
+            }
+        }
+
+        // Update manual URL when production URL changes
+        document.getElementById('productionUrl').addEventListener('input', function(e) {
+            const manualUrl = document.getElementById('manualUrl');
+            if (e.target.value && e.target.value !== 'https://your-app-url.vercel.app') {
+                manualUrl.textContent = `${e.target.value}/api/import-local-data`;
+            }
+        });
+    </script>
+</body>
+</html>
