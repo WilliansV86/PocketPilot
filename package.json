@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
-    "import:data": "tsx scripts/importFallbackData.ts"
+    "import:data": "tsx scripts/importFallbackData.ts",
+    "data:export": "tsx scripts/exportFallbackData.ts",
+    "data:import": "tsx scripts/importDataToDatabase.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
