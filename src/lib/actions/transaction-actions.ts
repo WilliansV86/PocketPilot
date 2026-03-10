@@ -106,52 +106,7 @@ export async function getTransactions(month?: string) {
     return { success: true, data: formattedTransactions };
   } catch (error) {
     console.error("Failed to fetch transactions:", error);
-    
-    // Return fallback data when database doesn't work
-    const fallbackTransactions = [
-      { 
-        id: "tx-1", 
-        description: "Initial Deposit", 
-        amount: 700, 
-        date: new Date(), 
-        type: "INCOME", 
-        accountId: "acc-1", 
-        categoryId: "cat-1", 
-        userId: "user-1",
-        account: { id: "acc-1", name: "Cash", type: "CASH", balance: 700, currency: "USD", userId: "user-1" },
-        category: { id: "cat-1", name: "Salary", group: "INCOME", color: "#4CAF50", userId: "user-1", isArchived: false, icon: "briefcase" },
-        toAccount: null
-      },
-      { 
-        id: "tx-2", 
-        description: "Initial Deposit", 
-        amount: 2547.26, 
-        date: new Date(), 
-        type: "INCOME", 
-        accountId: "acc-2", 
-        categoryId: "cat-1", 
-        userId: "user-1",
-        account: { id: "acc-2", name: "Chase", type: "CHECKING", balance: 2547.26, currency: "USD", userId: "user-1" },
-        category: { id: "cat-1", name: "Salary", group: "INCOME", color: "#4CAF50", userId: "user-1", isArchived: false, icon: "briefcase" },
-        toAccount: null
-      },
-      { 
-        id: "tx-3", 
-        description: "Initial Deposit", 
-        amount: 10000, 
-        date: new Date(), 
-        type: "INCOME", 
-        accountId: "acc-3", 
-        categoryId: "cat-1", 
-        userId: "user-1",
-        account: { id: "acc-3", name: "Savings", type: "SAVINGS", balance: 10000, currency: "USD", userId: "user-1" },
-        category: { id: "cat-1", name: "Salary", group: "INCOME", color: "#4CAF50", userId: "user-1", isArchived: false, icon: "briefcase" },
-        toAccount: null
-      }
-    ];
-    
-    console.log("Using fallback transaction data");
-    return { success: true, data: fallbackTransactions };
+    return { success: false, error: "Failed to fetch transactions" };
   }
 }
 
