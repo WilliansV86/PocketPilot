@@ -184,13 +184,13 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {transactionsList.map((transaction) => (
-        <Card key={transaction.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="space-y-3">
+        <Card key={transaction.id} className="pp-mobile-transaction min-w-0 gap-0 py-0 hover:shadow-md transition-shadow">
+          <CardContent className="p-3">
+            <div className="space-y-2">
               {/* Header Row - Date, Amount, Actions */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   {(() => {
@@ -222,7 +222,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-11 w-11 p-0"
                         disabled={isDeleting === transaction.id}
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -263,7 +263,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
               </div>
 
               {/* Meta Information Row */}
-              <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 {/* Type Badge */}
                 <div className="flex items-center gap-1">
                   <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${getTransactionColorClass(transaction.type)}`}>

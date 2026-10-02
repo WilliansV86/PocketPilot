@@ -49,12 +49,12 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
       <PerformanceMonitor />
       {/* Top Bar */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center px-4 md:px-6">
+        <div className="flex h-12 md:h-16 items-center px-3 md:px-6">
           {/* Logo and Title */}
           <div className="flex items-center gap-4 flex-1">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-xl font-bold hidden md:block">PocketPilot</span>
-              <span className="text-xl font-bold md:hidden">PP</span>
+              <span className="text-base font-bold md:hidden">PP</span>
             </Link>
             
             {/* Page Title */}
@@ -115,13 +115,13 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto pb-16 md:pb-0">
+        <main className="pp-main min-w-0 flex-1 overflow-auto pb-24 md:pb-0">
           {/* Mobile Page Title */}
-          <div className="md:hidden border-b bg-muted/30 px-4 py-3">
+          <div className="pp-mobile-page-title md:hidden border-b bg-muted/30 px-3 py-2">
             <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
           </div>
           
-          <div className="p-4 md:p-6">
+          <div className="p-3 md:p-6">
             <NavigationOptimizer>
               {children}
             </NavigationOptimizer>
