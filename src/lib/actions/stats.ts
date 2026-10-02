@@ -53,13 +53,14 @@ export function getDateRangePreset(preset: string): DateRange {
   }
 }
 
-export async function getMonthlyCashflow(range: DateRange) {
+export async function getMonthlyCashflow(range: DateRange, currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
         date: {
           gte: range.start,
           lte: range.end,
@@ -108,13 +109,14 @@ export async function getMonthlyCashflow(range: DateRange) {
   }
 }
 
-export async function getCategorySpending(range: DateRange) {
+export async function getCategorySpending(range: DateRange, currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
         type: "EXPENSE",
         date: {
           gte: range.start,
@@ -169,13 +171,14 @@ export async function getCategorySpending(range: DateRange) {
   }
 }
 
-export async function getAccountBreakdown() {
+export async function getAccountBreakdown(currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     const accounts = await prisma.financialAccount.findMany({
       where: {
         userId: user.id,
+        currency,
       },
       select: {
         id: true,
@@ -200,13 +203,14 @@ export async function getAccountBreakdown() {
   }
 }
 
-export async function getDailySpend(month: DateRange) {
+export async function getDailySpend(month: DateRange, currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
         type: "EXPENSE",
         date: {
           gte: month.start,
@@ -242,13 +246,14 @@ export async function getDailySpend(month: DateRange) {
   }
 }
 
-export async function getTopSpending(range: DateRange) {
+export async function getTopSpending(range: DateRange, currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
         type: "EXPENSE",
         date: {
           gte: range.start,

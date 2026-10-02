@@ -21,6 +21,7 @@ type MonthlyData = {
 
 interface MonthlyChartProps {
   data: MonthlyData[];
+  currency?: string;
 }
 
 export function MonthlyChartDynamic(props: MonthlyChartProps) {

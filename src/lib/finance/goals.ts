@@ -5,7 +5,7 @@
  * and automatic tracking based on financial data.
  */
 
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 
 export interface GoalProgress {
   goal: any;
@@ -168,9 +168,9 @@ export function formatGoalProgress(progress: GoalProgress): {
   statusColor: string;
 } {
   return {
-    currentAmount: formatCurrency(progress.currentAmount),
-    targetAmount: formatCurrency(progress.targetAmount),
-    remainingAmount: formatCurrency(progress.remainingAmount),
+    currentAmount: formatCurrency(progress.currentAmount, progress.goal.currency),
+    targetAmount: formatCurrency(progress.targetAmount, progress.goal.currency),
+    remainingAmount: formatCurrency(progress.remainingAmount, progress.goal.currency),
     percentage: `${progress.percentage.toFixed(1)}%`,
     status: progress.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
     statusColor: getStatusColor(progress.status),

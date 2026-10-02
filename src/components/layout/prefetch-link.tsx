@@ -10,6 +10,8 @@ interface PrefetchLinkProps {
   className?: string;
   prefetch?: boolean;
   scroll?: boolean;
+  "aria-current"?: "page";
+  onClick?: () => void;
 }
 
 export function PrefetchLink({ 
@@ -17,7 +19,9 @@ export function PrefetchLink({
   children, 
   className, 
   prefetch = true, 
-  scroll = false 
+  scroll = false,
+  "aria-current": ariaCurrent,
+  onClick
 }: PrefetchLinkProps) {
   const router = useRouter();
   const [isPrefetched, setIsPrefetched] = useState(false);
@@ -49,6 +53,8 @@ export function PrefetchLink({
       prefetch={false} // Disable automatic prefetching, we handle it manually
       scroll={scroll}
       className={className}
+      aria-current={ariaCurrent}
+      onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
       onFocus={handleFocus}

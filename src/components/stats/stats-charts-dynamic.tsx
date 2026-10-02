@@ -21,6 +21,7 @@ const StatsChartsComponent = dynamic(
 );
 
 interface StatsChartsProps {
+  currency?: string;
   type: "monthly-cashflow" | "category-spending" | "account-breakdown" | "daily-spend";
   data: any[];
   dateRange: any;

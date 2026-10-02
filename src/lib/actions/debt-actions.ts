@@ -1,27 +1,71 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { DebtType } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getDefaultUser } from "@/lib/get-default-user";
+import { formatMoney } from "@/lib/currency";
+import {
+  buildDebtReminders,
+  nextMonthlyOccurrence,
+  paymentCycleKey,
+  toLocalDateKey,
+} from "@/lib/debt-reminders";
+
+const optionalNumber = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    value => value === "" || value === null || value === undefined ? undefined : value,
+    schema.optional(),
+  );
 
 // Define the validation schema for debt creation/update
 const debtSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   name: z.string().min(1, "Name is required"),
   type: z.nativeEnum(DebtType),
   lender: z.string().optional(),
-  originalAmount: z.coerce.number().optional(),
+  originalAmount: optionalNumber(z.coerce.number().positive()),
   currentBalance: z.coerce.number().min(0, "Current balance must be non-negative"),
-  interestRateAPR: z.coerce.number().min(0).max(100).optional(),
-  minimumPayment: z.coerce.number().min(0).optional(),
-  dueDayOfMonth: z.coerce.number().min(1).max(31).optional(),
+  interestRateAPR: optionalNumber(z.coerce.number().min(0).max(100)),
+  minimumPayment: optionalNumber(z.coerce.number().min(0)),
+  dueDayOfMonth: optionalNumber(z.coerce.number().int().min(1).max(31)),
+  creditLimit: optionalNumber(z.coerce.number().positive()),
+  statementClosingDay: optionalNumber(z.coerce.number().int().min(1).max(31)),
   notes: z.string().optional(),
   isClosed: z.boolean().default(false),
 });
 
 export type DebtFormValues = z.infer<typeof debtSchema>;
+
+function formatDebt(debt: any, today = new Date()) {
+  const currentCycle = debt.dueDayOfMonth
+    ? paymentCycleKey(debt.dueDayOfMonth, today)
+    : null;
+  const amountPaid = currentCycle && debt.minimumPaymentCycle === currentCycle
+    ? Number(debt.minimumPaymentPaid)
+    : 0;
+  const minimumPayment = debt.minimumPayment ? Number(debt.minimumPayment) : null;
+
+  return {
+    ...debt,
+    originalAmount: debt.originalAmount ? Number(debt.originalAmount) : null,
+    currentBalance: Number(debt.currentBalance),
+    interestRateAPR: debt.interestRateAPR ? Number(debt.interestRateAPR) : null,
+    minimumPayment,
+    creditLimit: debt.creditLimit ? Number(debt.creditLimit) : null,
+    minimumPaymentPaid: amountPaid,
+    minimumPaymentRemaining: minimumPayment === null
+      ? null
+      : Math.max(minimumPayment - amountPaid, 0),
+    nextDueDate: debt.dueDayOfMonth
+      ? toLocalDateKey(nextMonthlyOccurrence(debt.dueDayOfMonth, today))
+      : null,
+    nextStatementClosingDate: debt.statementClosingDay
+      ? toLocalDateKey(nextMonthlyOccurrence(debt.statementClosingDay, today))
+      : null,
+  };
+}
 
 // Get all debts for the user
 export async function getDebts() {
@@ -39,13 +83,7 @@ export async function getDebts() {
     });
     
     // Convert Decimal amounts to numbers for frontend compatibility
-    const formattedDebts = debts.map(debt => ({
-      ...debt,
-      originalAmount: debt.originalAmount ? Number(debt.originalAmount) : null,
-      currentBalance: Number(debt.currentBalance),
-      interestRateAPR: debt.interestRateAPR ? Number(debt.interestRateAPR) : null,
-      minimumPayment: debt.minimumPayment ? Number(debt.minimumPayment) : null,
-    }));
+    const formattedDebts = debts.map(debt => formatDebt(debt));
     
     return { success: true, data: formattedDebts };
   } catch (error) {
@@ -71,13 +109,7 @@ export async function getDebtById(id: string) {
     }
     
     // Convert Decimal amounts to numbers for frontend compatibility
-    const formattedDebt = {
-      ...debt,
-      originalAmount: debt.originalAmount ? Number(debt.originalAmount) : null,
-      currentBalance: Number(debt.currentBalance),
-      interestRateAPR: debt.interestRateAPR ? Number(debt.interestRateAPR) : null,
-      minimumPayment: debt.minimumPayment ? Number(debt.minimumPayment) : null,
-    };
+    const formattedDebt = formatDebt(debt);
     
     return { success: true, data: formattedDebt };
   } catch (error) {
@@ -93,11 +125,14 @@ export async function createDebt(formData: FormData) {
       name: formData.get("name"),
       type: formData.get("type"),
       lender: formData.get("lender"),
+      currency: formData.get("currency") || "USD",
       originalAmount: formData.get("originalAmount"),
       currentBalance: formData.get("currentBalance"),
       interestRateAPR: formData.get("interestRateAPR"),
       minimumPayment: formData.get("minimumPayment"),
       dueDayOfMonth: formData.get("dueDayOfMonth"),
+      creditLimit: formData.get("creditLimit"),
+      statementClosingDay: formData.get("statementClosingDay"),
       notes: formData.get("notes"),
       isClosed: formData.get("isClosed") === "true",
     });
@@ -114,13 +149,7 @@ export async function createDebt(formData: FormData) {
     revalidatePath("/debts");
     return { 
       success: true, 
-      data: {
-        ...debt,
-        originalAmount: debt.originalAmount ? Number(debt.originalAmount) : null,
-        currentBalance: Number(debt.currentBalance),
-        interestRateAPR: debt.interestRateAPR ? Number(debt.interestRateAPR) : null,
-        minimumPayment: debt.minimumPayment ? Number(debt.minimumPayment) : null,
-      }, 
+      data: formatDebt(debt),
       message: "Debt created successfully" 
     };
   } catch (error) {
@@ -141,11 +170,14 @@ export async function updateDebt(id: string, formData: FormData) {
       name: formData.get("name"),
       type: formData.get("type"),
       lender: formData.get("lender"),
+      currency: formData.get("currency") || "USD",
       originalAmount: formData.get("originalAmount"),
       currentBalance: formData.get("currentBalance"),
       interestRateAPR: formData.get("interestRateAPR"),
       minimumPayment: formData.get("minimumPayment"),
       dueDayOfMonth: formData.get("dueDayOfMonth"),
+      creditLimit: formData.get("creditLimit"),
+      statementClosingDay: formData.get("statementClosingDay"),
       notes: formData.get("notes"),
       isClosed: formData.get("isClosed") === "true",
     });
@@ -169,13 +201,7 @@ export async function updateDebt(id: string, formData: FormData) {
     revalidatePath("/debts");
     return { 
       success: true, 
-      data: {
-        ...updatedDebt,
-        originalAmount: updatedDebt.originalAmount ? Number(updatedDebt.originalAmount) : null,
-        currentBalance: Number(updatedDebt.currentBalance),
-        interestRateAPR: updatedDebt.interestRateAPR ? Number(updatedDebt.interestRateAPR) : null,
-        minimumPayment: updatedDebt.minimumPayment ? Number(updatedDebt.minimumPayment) : null,
-      }, 
+      data: formatDebt(updatedDebt),
       message: "Debt updated successfully" 
     };
   } catch (error) {
@@ -231,6 +257,15 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
     if (!debt) {
       return { success: false, error: "Debt not found" };
     }
+    const paymentAccount = await prisma.financialAccount.findFirst({
+      where: { id: accountId, userId: user.id },
+    });
+    if (!paymentAccount) {
+      return { success: false, error: "Payment account not found" };
+    }
+    if (paymentAccount.currency !== debt.currency) {
+      return { success: false, error: "Choose an account with the same currency as this debt. Cross-currency payments are not supported yet." };
+    }
     
     if (paymentAmount <= 0) {
       return { success: false, error: "Payment amount must be positive" };
@@ -266,40 +301,36 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
       debtPaymentCategoryId = debtPaymentCategory.id;
     }
     
-    // Update debt balance
+    const [year, month, day] = paymentDate.split('-').map(Number);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+      return { success: false, error: "Invalid payment date" };
+    }
+    const parsedPaymentDate = new Date(Date.UTC(year, month - 1, day, 12));
+
+    // Update debt balance and this cycle's minimum-payment progress.
     const newBalance = Number(debt.currentBalance) - paymentAmount;
-    const isClosed = newBalance <= 0;
+    const isClosed = debt.type === "CREDIT_CARD" ? debt.isClosed : newBalance <= 0;
+    const cycleKey = debt.dueDayOfMonth
+      ? paymentCycleKey(debt.dueDayOfMonth, parsedPaymentDate)
+      : null;
+    const previousCycleAmount = cycleKey && debt.minimumPaymentCycle === cycleKey
+      ? Number(debt.minimumPaymentPaid)
+      : 0;
     
     await prisma.debt.update({
       where: { id: debtId },
       data: {
         currentBalance: newBalance,
         isClosed,
+        minimumPaymentCycle: cycleKey,
+        minimumPaymentPaid: previousCycleAmount + paymentAmount,
       },
     });
     
     // Create corresponding transaction
     await prisma.transaction.create({
       data: {
-        date: (() => {
-          // Parse the date string and create a consistent UTC date
-          const [year, month, day] = paymentDate.split('-').map(Number);
-          
-          // Validate the parsed components
-          if (isNaN(year) || isNaN(month) || isNaN(day)) {
-            throw new Error(`Invalid date format: ${paymentDate}`);
-          }
-          
-          const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-          console.log(`Debt payment date parsed: ${paymentDate} -> ${utcDate.toISOString()}`);
-          
-          // Validate the created date
-          if (isNaN(utcDate.getTime())) {
-            throw new Error(`Invalid date created from: ${paymentDate}`);
-          }
-          
-          return utcDate;
-        })(),
+        date: parsedPaymentDate,
         amount: paymentAmount,
         description: `Payment to ${debt.name}`,
         type: "EXPENSE",
@@ -330,7 +361,7 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
     
     return { 
       success: true, 
-      message: `Payment of $${paymentAmount.toFixed(2)} made to ${debt.name}` 
+      message: `Payment of ${formatMoney(paymentAmount, debt.currency)} made to ${debt.name}`
     };
   } catch (error) {
     console.error("Failed to make debt payment:", error);
@@ -357,42 +388,44 @@ export async function getDebtSummary() {
     const totalBalance = debts.reduce((sum, debt) => sum + Number(debt.currentBalance), 0);
     const totalMinimumPayments = debts.reduce((sum, debt) => sum + (Number(debt.minimumPayment) || 0), 0);
     
-    // Calculate next due payments
     const today = new Date();
-    const currentDay = today.getDate();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    
-    const nextDuePayments = debts
-      .filter(debt => debt.dueDayOfMonth && debt.minimumPayment && Number(debt.minimumPayment) > 0)
-      .map(debt => {
-        let dueDate = new Date(currentYear, currentMonth, debt.dueDayOfMonth!);
-        
-        // If due date has passed this month, move to next month
-        if (dueDate < today) {
-          dueDate = new Date(currentYear, currentMonth + 1, debt.dueDayOfMonth!);
-        }
-        
+    const formattedDebts = debts.map(debt => formatDebt(debt, today));
+    const totalsByCurrency = ["USD", "CAD"].map(currency => {
+      const matching = debts.filter(debt => debt.currency === currency);
+      return {
+        currency,
+        totalBalance: matching.reduce((sum, debt) => sum + Number(debt.currentBalance), 0),
+        totalMinimumPayments: matching.reduce((sum, debt) => sum + Number(debt.minimumPayment || 0), 0),
+      };
+    });
+    const upcomingReminders = buildDebtReminders(formattedDebts, today, 31);
+    const nextDuePayments = upcomingReminders
+      .filter(reminder => reminder.kind === "PAYMENT_DUE")
+      .slice(0, 5)
+      .map(reminder => {
+        const debt = formattedDebts.find(item => item.id === reminder.debtId)!;
         return {
-          id: debt.id,
-          name: debt.name,
-          dueDate: dueDate.toISOString().split('T')[0],
+          id: reminder.debtId,
+          name: reminder.name,
+          dueDate: reminder.date,
           dueDayOfMonth: debt.dueDayOfMonth,
-          minimumPayment: Number(debt.minimumPayment),
-          currentBalance: Number(debt.currentBalance),
+          minimumPayment: reminder.amount || 0,
+          currentBalance: debt.currentBalance,
           type: debt.type,
-          lender: debt.lender,
+          lender: reminder.lender,
+          daysUntil: reminder.daysUntil,
         };
-      })
-      .slice(0, 5); // Show next 5 due payments
+      });
     
     return {
       success: true,
       data: {
         totalBalance,
         totalMinimumPayments,
+        totalsByCurrency,
         openDebtCount: debts.length,
         nextDuePayments,
+        upcomingReminders: upcomingReminders.slice(0, 8),
       },
     };
   } catch (error) {

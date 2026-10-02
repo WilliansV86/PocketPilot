@@ -23,9 +23,7 @@ export default async function AccountsPage() {
           </div>
           
           <div className={LAYOUT.SPACING.SECTION}>
-            <div className={COMPONENTS.CARD.CONTAINER}>
-              <AccountsTable />
-            </div>
+            <AccountsTable />
           </div>
         </div>
       </AccountsPageClient>

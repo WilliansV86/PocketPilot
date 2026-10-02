@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
+
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getBudgetProgressColor, getGoalProgressColor, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/currency";
 import { PATTERNS, TYPOGRAPHY, BUTTON, SPACING, LAYOUT } from "@/lib/ui-constants";
 import { 
   ArrowDownUp, 
@@ -30,7 +32,7 @@ import {
   AlertCircle,
   Filter
 } from "lucide-react";
-import { getBudgetsForMonth, updateBudget, moveBudgetMoney, deleteBudget } from "@/lib/actions/budget-actions";
+import { getBudgetsForMonth, updateBudget, moveBudgetMoney, deleteBudget, copyMonthlyBudget } from "@/lib/actions/budget-actions";
 import { toast } from "sonner";
 import { MobileBudgets } from "./mobile-budgets";
 
@@ -70,6 +72,8 @@ interface BudgetsClientProps {
 }
 
 export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }: BudgetsClientProps) {
+  const [currency, setCurrency] = usePreferredCurrency("budgets");
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [data, setData] = useState<BudgetData>(initialData || {
@@ -88,6 +92,34 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   const [moveAmount, setMoveAmount] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyTarget, setCopyTarget] = useState("");
+  const [replaceExisting, setReplaceExisting] = useState(false);
+  const [copying, setCopying] = useState(false);
+
+  function openCopy() {
+    const next = new Date(year, Number(month), 1);
+    setCopyTarget(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+    setReplaceExisting(false);
+    setCopyOpen(true);
+  }
+
+  async function handleCopy() {
+    setCopying(true);
+    try {
+      const result = await copyMonthlyBudget(`${year}-${month.padStart(2, "0")}`, copyTarget, currency, replaceExisting);
+      if (!result.success) { toast.error(result.error || "Could not copy budget"); return; }
+      toast.success(`Copied ${result.count} category budgets to ${copyTarget} (${currency})`);
+      setCopyOpen(false);
+      setMonth(String(Number(copyTarget.slice(5))));
+      setYear(Number(copyTarget.slice(0, 4)));
+    } catch {
+      toast.error("Could not copy budget. Please try again.");
+    } finally {
+      setCopying(false);
+    }
+  }
+
   // Generate month options
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -103,30 +135,36 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
 
   // Fetch data when month/year changes or on initial mount
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
       setLoading(true);
       try {
-        const result = await getBudgetsForMonth(month, year);
-        if (result.success && result.data) {
+        const result = await getBudgetsForMonth(month, year, currency);
+        if (active && result.success && result.data) {
           setData(result.data);
-          // Update URL if different from initial
-          if (month !== initialMonth || year !== initialYear) {
-            const params = new URLSearchParams(searchParams);
-            params.set('month', month);
-            params.set('year', year.toString());
-            router.push(`/budgets?${params.toString()}`);
-          }
+
         }
       } catch (error) {
         console.error("Failed to fetch budget data:", error);
         toast.error("Failed to load budget data");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchData();
-  }, [month, year, initialMonth, initialYear, searchParams, router]);
+    return () => { active = false; };
+  }, [currency, month, year]);
+
+  // Changing the selected month updates its URL without moving the page.
+  // Saving an amount does not trigger navigation or replace the category list.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("month") === month && url.searchParams.get("year") === String(year)) return;
+    url.searchParams.set("month", month);
+    url.searchParams.set("year", String(year));
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [month, year]);
 
   // Auto-save on blur
   const handleBlur = (categoryId: string) => {
@@ -138,6 +176,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   // Save on Enter key
   const handleKeyDown = (e: React.KeyboardEvent, categoryId: string) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       saveEdit(categoryId);
     } else if (e.key === 'Escape') {
       cancelEdit();
@@ -146,10 +185,10 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
 
   const handleBudgetUpdate = async (categoryId: string, newAmount: number) => {
     try {
-      const result = await updateBudget(categoryId, month, year, newAmount);
+      const result = await updateBudget(categoryId, month, year, newAmount, currency);
       if (result.success) {
         // Refresh data
-        const refreshed = await getBudgetsForMonth(month, year);
+        const refreshed = await getBudgetsForMonth(month, year, currency);
         if (refreshed.success && refreshed.data) {
           setData(refreshed.data);
         }
@@ -177,10 +216,10 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
     }
 
     try {
-      const result = await moveBudgetMoney(moveFromCategory, moveToCategory, month, year, amount);
+      const result = await moveBudgetMoney(moveFromCategory, moveToCategory, month, year, amount, currency);
       if (result.success) {
         // Refresh data
-        const refreshed = await getBudgetsForMonth(month, year);
+        const refreshed = await getBudgetsForMonth(month, year, currency);
         if (refreshed.success && refreshed.data) {
           setData(refreshed.data);
         }
@@ -200,10 +239,10 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
 
   const handleDeleteBudget = async (categoryId: string) => {
     try {
-      const result = await deleteBudget(categoryId, month, year);
+      const result = await deleteBudget(categoryId, month, year, currency);
       if (result.success) {
         // Refresh data
-        const refreshed = await getBudgetsForMonth(month, year);
+        const refreshed = await getBudgetsForMonth(month, year, currency);
         if (refreshed.success && refreshed.data) {
           setData(refreshed.data);
         }
@@ -313,10 +352,29 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   };
 
   return (
-    <div className={PATTERNS.PAGE_CONTENT}>
+    <div className="w-full space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+      <CurrencyPicker remember preferenceKey="budgets" value={currency} disabled={loading || editingCategory !== null} onChange={value => { setLoading(true); setCurrency(value); }} />
+      <Button variant="outline" onClick={openCopy} disabled={loading || editingCategory !== null}>Copy budget to another month</Button>
+      </div>
+      <Dialog open={copyOpen} onOpenChange={open => { if (!copying) setCopyOpen(open); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy monthly budget</DialogTitle>
+            <DialogDescription>Copy {year}-{month.padStart(2, "0")} planned amounts in {currency} to another month. You can edit the copied amounts afterward. Spending and money moves stay in their original month.</DialogDescription>
+          </DialogHeader>
+          <Label htmlFor="copy-budget-month">Destination month</Label>
+          <Input id="copy-budget-month" type="month" value={copyTarget} onChange={event => setCopyTarget(event.target.value)} disabled={copying} />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={replaceExisting} onChange={event => setReplaceExisting(event.target.checked)} disabled={copying} />
+            Replace existing amounts for matching categories
+          </label>
+          <Button onClick={handleCopy} disabled={copying || !copyTarget}>{copying ? "Copying..." : "Copy budget"}</Button>
+        </DialogContent>
+      </Dialog>
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <MobileBudgets 
+        <MobileBudgets currency={currency}
           data={data}
           month={month}
           year={year}
@@ -377,54 +435,54 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       <div className={SPACING.MARGIN.SECTION}>
       <div className={LAYOUT.GRID.SUMMARY}>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Income</CardTitle>
             <ArrowDownUp className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.totals.income)}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{formatCurrency(data.totals.income)}</div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Expenses</CardTitle>
             <ReceiptText className="h-4 w-4 text-red-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.totals.expenses)}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{formatCurrency(data.totals.expenses)}</div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Total Budgeted</CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.totals.budgeted)}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{formatCurrency(data.totals.budgeted)}</div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Available</CardTitle>
             <Wallet className="h-4 w-4 text-purple-500" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getAvailableColor(data.totals.available)}`}>
+          <CardContent className="p-3 pt-0">
+            <div className={`text-xl font-bold ${getAvailableColor(data.totals.available)}`}>
               {formatCurrency(data.totals.available)}
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Left to Budget</CardTitle>
             <ArrowRightLeft className="h-4 w-4 text-orange-500" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${data.totals.leftToBudget < 0 ? "text-red-600" : "text-green-600"}`}>
+          <CardContent className="p-3 pt-0">
+            <div className={`text-xl font-bold ${data.totals.leftToBudget < 0 ? "text-red-600" : "text-green-600"}`}>
               {formatCurrency(data.totals.leftToBudget)}
             </div>
           </CardContent>
@@ -444,7 +502,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
               You have {data.uncategorized.count} uncategorized transactions totaling {formatCurrency(data.uncategorized.total)}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0">
             <Button onClick={handleFixUncategorized} className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
               Fix Now
@@ -454,10 +512,10 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       )}
 
       {/* Action Buttons */}
-      <div className="mt-6 flex justify-between">
+      <div className="flex flex-wrap justify-between gap-2">
         <div className="flex items-center space-x-2">
           <Button asChild variant="outline">
-            <a href="/categories/new" className="flex items-center gap-2">
+            <a href={`/categories/new?returnTo=${encodeURIComponent(`/budgets?month=${month}&year=${year}`)}`} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add Category
             </a>
@@ -553,7 +611,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
               Set and track your monthly budget by category (excluding income categories)
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0">
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : data.categories.length === 0 ? (
@@ -562,7 +620,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                 <h3 className="text-lg font-semibold mb-2">No Categories Found</h3>
                 <p className="text-muted-foreground mb-4">Create categories first to start budgeting.</p>
                 <Button asChild>
-                  <a href="/categories/new" className="flex items-center gap-2">
+                  <a href={`/categories/new?returnTo=${encodeURIComponent(`/budgets?month=${month}&year=${year}`)}`} className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
                     Create Categories
                   </a>
@@ -614,7 +672,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                       <CollapsibleContent>
                         <div className="ml-4 space-y-2">
                           {categories.map((category) => (
-                            <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                            <div key={category.id} className="flex items-center justify-between gap-3 p-2.5 border rounded-lg bg-background">
                               <div className="flex items-center space-x-4">
                                 <div
                                   className="w-4 h-4 rounded-full"

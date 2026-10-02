@@ -21,7 +21,7 @@ async function getDefaultUser() {
 }
 
 // Function to get account balances
-export async function getAccountBalances() {
+export async function getAccountBalances(currency = "USD") {
   try {
     // Get the default user
     const user = await getDefaultUser();
@@ -29,6 +29,7 @@ export async function getAccountBalances() {
     const accounts = await prisma.financialAccount.findMany({
       where: {
         userId: user.id,
+        currency,
       },
       select: {
         id: true,
@@ -65,7 +66,7 @@ export async function getAccountBalances() {
 }
 
 // Function to get monthly income vs expenses using shared calculation logic
-export async function getMonthlyFinancials() {
+export async function getMonthlyFinancials(currency = "USD") {
   try {
     const now = new Date();
     const months = 6; // Get data for the last 6 months
@@ -80,7 +81,7 @@ export async function getMonthlyFinancials() {
       const monthName = date.toLocaleString('default', { month: 'short' });
       
       // Use shared calculation logic
-      const financialData = await getMonthlyFinancialData(month, year);
+      const financialData = await getMonthlyFinancialData(month, year, currency);
       
       monthlyData.unshift({
         month: monthName,
@@ -95,11 +96,11 @@ export async function getMonthlyFinancials() {
     const previousMonthData = monthlyData[monthlyData.length - 2];
     
     // Calculate percentage changes
-    const incomeChange = previousMonthData ? 
-      ((currentMonthData.income - previousMonthData.income) / previousMonthData.income) * 100 : 0;
+    const incomeChange = previousMonthData?.income > 0 ?
+      ((currentMonthData.income - previousMonthData.income) / previousMonthData.income) * 100 : null;
     
-    const expensesChange = previousMonthData ? 
-      ((currentMonthData.expenses - previousMonthData.expenses) / previousMonthData.expenses) * 100 : 0;
+    const expensesChange = previousMonthData?.expenses > 0 ?
+      ((currentMonthData.expenses - previousMonthData.expenses) / previousMonthData.expenses) * 100 : null;
     
     const savingsRate = currentMonthData.income > 0 ? 
       (currentMonthData.savings / currentMonthData.income) * 100 : 0;
@@ -110,7 +111,7 @@ export async function getMonthlyFinancials() {
     // Get uncategorized transactions count for current month
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
-    const uncategorizedCount = await getUncategorizedCount(currentMonth, currentYear);
+    const uncategorizedCount = await getUncategorizedCount(currentMonth, currentYear, currency);
     
     return { 
       success: true, 
@@ -137,7 +138,7 @@ export async function getMonthlyFinancials() {
 }
 
 // Function to get expense breakdown by category
-export async function getExpensesByCategory() {
+export async function getExpensesByCategory(currency = "USD") {
   try {
     const user = await getDefaultUser();
     const now = new Date();
@@ -148,12 +149,10 @@ export async function getExpensesByCategory() {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
         date: {
           gte: monthStart,
           lte: monthEnd,
-        },
-        amount: {
-          lt: 0,
         },
         type: "EXPENSE",
         categoryId: {
@@ -216,13 +215,14 @@ export async function getExpensesByCategory() {
 }
 
 // Function to get recent transactions
-export async function getRecentTransactions() {
+export async function getRecentTransactions(currency = "USD") {
   try {
     const user = await getDefaultUser();
     
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
+        account: { currency },
       },
       take: 5,
       orderBy: {

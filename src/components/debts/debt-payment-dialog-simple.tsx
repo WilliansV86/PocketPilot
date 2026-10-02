@@ -32,7 +32,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,7 @@ interface Debt {
   name: string;
   type: string;
   lender?: string;
+  currency?: string;
   currentBalance: number;
   minimumPayment?: number;
   dueDayOfMonth?: number;
@@ -155,11 +156,11 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {formatCurrency(debt.currentBalance)}
+                {formatCurrency(debt.currentBalance, debt.currency)}
               </div>
               {debt.minimumPayment && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Minimum payment: {formatCurrency(debt.minimumPayment)}
+                  Minimum payment: {formatCurrency(debt.minimumPayment, debt.currency)}
                 </p>
               )}
             </CardContent>
@@ -215,9 +216,9 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {accounts.map((account) => (
+                        {accounts.filter(account => account.currency === (debt.currency || "USD")).map((account) => (
                           <SelectItem key={account.id} value={account.id}>
-                            {account.name} ({formatCurrency(account.balance)})
+                            {account.name} ({formatCurrency(account.balance, account.currency)})
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -1,10 +1,11 @@
 import * as React from "react";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { getAmountColorClass, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
 import { cn } from "@/lib/utils";
 
 interface AnimatedBalanceProps extends React.HTMLAttributes<HTMLSpanElement> {
   amount: number;
+  currency?: string;
   previousAmount?: number;
   showSign?: boolean;
   animated?: boolean;
@@ -12,7 +13,7 @@ interface AnimatedBalanceProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const AnimatedBalance = React.forwardRef<HTMLSpanElement, AnimatedBalanceProps>(
-  ({ className, amount, previousAmount, showSign = false, animated = true, size = 'md', ...props }, ref) => {
+  ({ className, amount, currency = "USD", previousAmount, showSign = false, animated = true, size = 'md', ...props }, ref) => {
   const [displayAmount, setDisplayAmount] = React.useState(amount);
   const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -59,7 +60,7 @@ const AnimatedBalance = React.forwardRef<HTMLSpanElement, AnimatedBalanceProps>(
 
   const colorClass = getAmountColorClass(displayAmount);
   const sign = showSign && amount > 0 ? '+' : '';
-  const formattedAmount = formatCurrency(Math.abs(displayAmount));
+  const formattedAmount = formatCurrency(Math.abs(displayAmount), currency);
 
   return (
     <span

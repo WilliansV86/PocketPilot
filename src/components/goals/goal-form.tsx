@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker } from "@/components/ui/currency-picker";
+
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -20,6 +22,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Separator } from "@/components/ui/separator";
 
 const goalFormSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   name: z.string().min(1, "Goal name is required"),
   type: z.enum(["SAVINGS", "DEBT_PAYOFF", "PURCHASE", "EMERGENCY_FUND", "INVESTMENT", "OTHER"]),
   targetAmount: z.coerce.number().positive("Target amount must be positive"),
@@ -79,7 +82,8 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
 
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalFormSchema) as any,
-    defaultValues: goal || {
+    defaultValues: goal ? { ...goal, currency: goal.currency || "USD" } : {
+      currency: "USD",
       name: "",
       type: "SAVINGS",
       targetAmount: 0,
@@ -124,6 +128,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
   const onSubmit = async (values: GoalFormValues) => {
     try {
       const formData = new FormData();
+      formData.append("currency", values.currency);
       formData.append("name", values.name);
       formData.append("type", values.type);
       formData.append("targetAmount", values.targetAmount.toString());
@@ -180,6 +185,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <CurrencyPicker value={form.watch("currency")} onChange={value => { form.setValue("currency", value as "USD" | "CAD"); form.setValue("linkedAccountId", ""); form.setValue("linkedDebtId", ""); }} />
             {/* Basic Information */}
             <div className="space-y-4">
               <FormField
@@ -376,6 +382,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                             <SelectContent>
                               {accounts
                                 .filter(account => ["CHECKING", "SAVINGS", "INVESTMENT"].includes(account.type))
+                                .filter(account => account.currency === form.watch("currency"))
                                 .map((account) => (
                                   <SelectItem key={account.id} value={account.id}>
                                     {account.name} ({account.type})
@@ -403,7 +410,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {debts.map((debt) => (
+                              {debts.filter(d => d.currency === form.watch("currency")).map((debt) => (
                                 <SelectItem key={debt.id} value={debt.id}>
                                   {debt.name} - {debt.type}
                                 </SelectItem>

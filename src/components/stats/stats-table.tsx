@@ -1,14 +1,16 @@
 "use client";
 
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 interface StatsTableProps {
+  currency?: string;
   data: any[];
 }
 
-export function StatsTable({ data }: StatsTableProps) {
+export function StatsTable({ currency = "USD", data }: StatsTableProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   if (data.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">

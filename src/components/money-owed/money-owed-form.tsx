@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker } from "@/components/ui/currency-picker";
+
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -25,6 +27,7 @@ import { toast } from "sonner";
 
 // Define the form validation schema
 const formSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   personName: z.string().min(1, "Person name is required"),
   description: z.string().optional(),
   amountOriginal: z.coerce.number().positive("Original amount must be positive"),
@@ -37,16 +40,18 @@ interface MoneyOwedFormProps {
   mode: "create" | "edit";
   moneyOwed?: any; // Money owed data for edit mode
   onCancel?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (currency?: string) => void;
+  defaultCurrency?: string;
 }
 
-export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess }: MoneyOwedFormProps) {
+export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCurrency = "USD" }: MoneyOwedFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
+      currency: moneyOwed?.currency || defaultCurrency,
       personName: moneyOwed?.personName || "",
       description: moneyOwed?.description || "",
       amountOriginal: moneyOwed?.amountOriginal?.toString() || "",
@@ -58,6 +63,7 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess }: MoneyOwe
     startTransition(async () => {
       try {
         const formData = new FormData();
+        formData.append("currency", values.currency);
         formData.append("personName", values.personName);
         formData.append("description", values.description || "");
         formData.append("amountOriginal", values.amountOriginal.toString());
@@ -67,7 +73,7 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess }: MoneyOwe
           const result = await createMoneyOwed(formData);
           if (result.success) {
             toast.success(result.message || "Money owed record created successfully");
-            onSuccess?.();
+            onSuccess?.(values.currency);
           } else {
             toast.error(result.error || "Failed to create money owed record");
           }
@@ -75,7 +81,7 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess }: MoneyOwe
           const result = await updateMoneyOwed(moneyOwed.id, formData);
           if (result.success) {
             toast.success(result.message || "Money owed record updated successfully");
-            onSuccess?.();
+            onSuccess?.(values.currency);
           } else {
             toast.error(result.error || "Failed to update money owed record");
           }
@@ -106,6 +112,8 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess }: MoneyOwe
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <CurrencyPicker value={form.watch("currency")} onChange={value => form.setValue("currency", value as "USD" | "CAD")} />
+              <p className="text-sm text-muted-foreground">All amounts use this currency. Changing currency does not convert amounts.</p>
               <FormField
                 control={form.control}
                 name="personName"

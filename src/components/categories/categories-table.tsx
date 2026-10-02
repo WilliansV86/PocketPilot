@@ -155,7 +155,7 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                 {/* Categories in this group */}
                 {groupedCategories[group]?.filter(cat => showArchived || !cat.isArchived).map((category) => (
                   <TableRow key={category.id} className={category.isArchived ? "opacity-50" : ""}>
-                    <TableCell className="font-medium">
+                    <TableCell className="py-2 font-medium">
                       <div className="flex items-center">
                         <div 
                           className="w-3 h-3 rounded-full mr-2"
@@ -164,11 +164,10 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                         {category.name}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Tag className="h-4 w-4 mr-2" />
-                      {category.icon}
+                    <TableCell className="py-2">
+                      <Badge variant="outline" className={getCategoryGroupColor(category.group)}>{category.group.charAt(0) + category.group.slice(1).toLowerCase()}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       {category.isArchived ? (
                         <Badge variant="outline" className="bg-amber-100 text-amber-800">
                           Archived
@@ -179,7 +178,7 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className={BUTTON.ICON_ONLY}>

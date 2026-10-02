@@ -20,7 +20,7 @@ async function getDefaultUser() {
  * Get total income for a specific month and year
  * Only includes transactions with type INCOME
  */
-export async function getTotalIncome(month: number, year: number): Promise<number> {
+export async function getTotalIncome(month: number, year: number, currency = "USD"): Promise<number> {
   try {
     const user = await getDefaultUser();
     const monthStart = startOfMonth(new Date(year, month - 1));
@@ -29,6 +29,7 @@ export async function getTotalIncome(month: number, year: number): Promise<numbe
     const result = await prisma.transaction.aggregate({
       where: {
         userId: user.id,
+        account: { currency },
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -51,7 +52,7 @@ export async function getTotalIncome(month: number, year: number): Promise<numbe
  * Get total expenses for a specific month and year
  * Only includes transactions with type EXPENSE and categoryId IS NOT NULL
  */
-export async function getTotalExpenses(month: number, year: number): Promise<number> {
+export async function getTotalExpenses(month: number, year: number, currency = "USD"): Promise<number> {
   try {
     const user = await getDefaultUser();
     const monthStart = startOfMonth(new Date(year, month - 1));
@@ -60,6 +61,7 @@ export async function getTotalExpenses(month: number, year: number): Promise<num
     const result = await prisma.transaction.aggregate({
       where: {
         userId: user.id,
+        account: { currency },
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -84,9 +86,9 @@ export async function getTotalExpenses(month: number, year: number): Promise<num
 /**
  * Get cash flow (income - expenses) for a specific month and year
  */
-export async function getCashFlow(month: number, year: number): Promise<number> {
-  const income = await getTotalIncome(month, year);
-  const expenses = await getTotalExpenses(month, year);
+export async function getCashFlow(month: number, year: number, currency = "USD"): Promise<number> {
+  const income = await getTotalIncome(month, year, currency);
+  const expenses = await getTotalExpenses(month, year, currency);
   return income - expenses;
 }
 
@@ -94,7 +96,7 @@ export async function getCashFlow(month: number, year: number): Promise<number> 
  * Get count of uncategorized transactions for a specific month and year
  * Uncategorized = transactions with categoryId IS NULL
  */
-export async function getUncategorizedCount(month: number, year: number): Promise<number> {
+export async function getUncategorizedCount(month: number, year: number, currency = "USD"): Promise<number> {
   try {
     const user = await getDefaultUser();
     const monthStart = startOfMonth(new Date(year, month - 1));
@@ -103,6 +105,7 @@ export async function getUncategorizedCount(month: number, year: number): Promis
     const count = await prisma.transaction.count({
       where: {
         userId: user.id,
+        account: { currency },
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -121,12 +124,12 @@ export async function getUncategorizedCount(month: number, year: number): Promis
 /**
  * Get detailed financial data for a month (income, expenses, cash flow, uncategorized)
  */
-export async function getMonthlyFinancialData(month: number, year: number) {
+export async function getMonthlyFinancialData(month: number, year: number, currency = "USD") {
   const [income, expenses, cashFlow, uncategorizedCount] = await Promise.all([
-    getTotalIncome(month, year),
-    getTotalExpenses(month, year),
-    getCashFlow(month, year),
-    getUncategorizedCount(month, year),
+    getTotalIncome(month, year, currency),
+    getTotalExpenses(month, year, currency),
+    getCashFlow(month, year, currency),
+    getUncategorizedCount(month, year, currency),
   ]);
 
   return {

@@ -1,6 +1,8 @@
 "use client";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { BarChart3, PieChart, TrendingUp, DollarSign, Calendar } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -29,6 +31,8 @@ const StatsCharts = dynamic(() => import("@/components/stats/stats-charts-dynami
 });
 
 export function StatsClient() {
+  const requestIdRef = useRef(0);
+  const [currency, setCurrency] = usePreferredCurrency("stats");
   const [selectedRange, setSelectedRange] = useState("this_month");
   const [dateRange, setDateRange] = useState<DateRange>(getDateRangePreset("this_month"));
   const [data, setData] = useState<any>({
@@ -42,9 +46,10 @@ export function StatsClient() {
 
   useEffect(() => {
     loadData();
-  }, [selectedRange]);
+  }, [selectedRange, currency]);
 
   const loadData = async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setLoading(true);
       const range = getDateRangePreset(selectedRange);
@@ -60,26 +65,27 @@ export function StatsClient() {
         fetch("/api/stats/monthly-cashflow", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preset: selectedRange }),
+          body: JSON.stringify({ currency, preset: selectedRange }),
         }).then(res => res.json()),
         fetch("/api/stats/category-spending", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preset: selectedRange }),
+          body: JSON.stringify({ currency, preset: selectedRange }),
         }).then(res => res.json()),
-        fetch("/api/stats/account-breakdown").then(res => res.json()),
+        fetch(`/api/stats/account-breakdown?currency=${currency}`).then(res => res.json()),
         fetch("/api/stats/daily-spend", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preset: "this_month" }),
+          body: JSON.stringify({ currency, preset: "this_month" }),
         }).then(res => res.json()),
         fetch("/api/stats/top-spending", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ preset: selectedRange }),
+          body: JSON.stringify({ currency, preset: selectedRange }),
         }).then(res => res.json()),
       ]);
 
+      if (requestId !== requestIdRef.current) return;
       setData({
         monthlyCashflow: monthlyCashflowRes.success ? monthlyCashflowRes.data : [],
         categorySpending: categorySpendingRes.success ? categorySpendingRes.data : [],
@@ -90,7 +96,7 @@ export function StatsClient() {
     } catch (error) {
       console.error("Error loading stats data:", error);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   };
 
@@ -99,7 +105,7 @@ export function StatsClient() {
                  data.accountBreakdown.length > 0;
 
   return (
-    <div className={PATTERNS.PAGE_CONTENT}>
+    <div className="w-full space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -108,7 +114,8 @@ export function StatsClient() {
             Insights and analytics about your financial performance
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <CurrencyPicker remember preferenceKey="stats" value={currency} disabled={loading} onChange={value => { setLoading(true); setCurrency(value); }} />
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <Select value={selectedRange} onValueChange={setSelectedRange}>
             <SelectTrigger className="w-[180px]">
@@ -147,7 +154,7 @@ export function StatsClient() {
         <div className={SPACING.SPACE_Y.LARGE}>
           {/* Mobile Layout */}
           <div className="md:hidden">
-            <MobileStatsCharts 
+            <MobileStatsCharts currency={currency}
               data={{
                 monthlyCashflow: data.monthlyCashflow,
                 categorySpending: data.categorySpending,
@@ -162,7 +169,7 @@ export function StatsClient() {
           <div className={LAYOUT.GRID.CHARTS}>
             {/* Monthly Cashflow */}
             <Card className="lg:col-span-2">
-              <CardHeader>
+              <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
                   Monthly Cashflow
@@ -171,8 +178,8 @@ export function StatsClient() {
                   Income vs expenses over the last 6 months
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <StatsCharts
+              <CardContent className="p-4 pt-0">
+                <StatsCharts currency={currency}
                   type="monthly-cashflow"
                   data={data.monthlyCashflow}
                   dateRange={dateRange}
@@ -182,7 +189,7 @@ export function StatsClient() {
 
             {/* Category Spending */}
             <Card>
-              <CardHeader>
+              <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
                   Spending by Category
@@ -191,8 +198,8 @@ export function StatsClient() {
                   Expense breakdown for {dateRange.label}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <StatsCharts
+              <CardContent className="p-4 pt-0">
+                <StatsCharts currency={currency}
                   type="category-spending"
                   data={data.categorySpending}
                   dateRange={dateRange}
@@ -202,7 +209,7 @@ export function StatsClient() {
 
             {/* Account Breakdown */}
             <Card>
-              <CardHeader>
+              <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
                   Account Breakdown
@@ -211,8 +218,8 @@ export function StatsClient() {
                   Current balances across all accounts
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <StatsCharts
+              <CardContent className="p-4 pt-0">
+                <StatsCharts currency={currency}
                   type="account-breakdown"
                   data={data.accountBreakdown}
                   dateRange={dateRange}
@@ -223,7 +230,7 @@ export function StatsClient() {
 
           {/* Daily Spend Trend */}
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 Daily Spending Trend
@@ -232,8 +239,8 @@ export function StatsClient() {
                 Daily expense totals for the current month
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <StatsCharts
+            <CardContent className="p-4 pt-0">
+              <StatsCharts currency={currency}
                 type="daily-spend"
                 data={data.dailySpend}
                 dateRange={getDateRangePreset("this_month")}
@@ -243,7 +250,7 @@ export function StatsClient() {
 
           {/* Top Spending Table */}
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
                 Top Spending
@@ -252,8 +259,8 @@ export function StatsClient() {
                 Highest expenses for {dateRange.label}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <StatsTable data={data.topSpending} />
+            <CardContent className="p-4 pt-0">
+              <StatsTable currency={currency} data={data.topSpending} />
             </CardContent>
           </Card>
           </div>

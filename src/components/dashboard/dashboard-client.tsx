@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LayoutDashboard, Wallet, ReceiptText, ArrowDownUp, PiggyBank, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
+import { formatMoney } from "@/lib/currency";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getNetWorthStatus } from "@/lib/finance/net-worth";
 import { SkeletonChart, SkeletonPieChart } from "@/components/charts/skeleton-chart";
@@ -44,8 +46,8 @@ type DashboardData = {
       savingsRate: number;
     };
     changes: {
-      incomeChange: number;
-      expensesChange: number;
+      incomeChange: number | null;
+      expensesChange: number | null;
       savingsRateChange: number;
     };
     uncategorizedCount: number;
@@ -69,9 +71,18 @@ type DashboardData = {
 
 interface DashboardClientProps {
   data: DashboardData;
+  currency?: string;
 }
 
-export function DashboardClient({ data }: DashboardClientProps) {
+export function DashboardClient({ data, currency = "USD" }: DashboardClientProps) {
+  const [preferredCurrency] = usePreferredCurrency("dashboard");
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("currency") && preferredCurrency !== currency) {
+      router.replace(`/?currency=${preferredCurrency}`);
+    }
+  }, [preferredCurrency, currency]);
+  const router = useRouter();
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
@@ -99,7 +110,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
       // Add new accounts
       const allAccounts = [...finalAccounts, ...newAccounts];
       
-      setMergedAccounts(allAccounts);
+      setMergedAccounts(allAccounts.filter((account: any) => (account.currency || "USD") === currency));
     };
     
     mergeAccountData();
@@ -111,7 +122,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
     
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [data.balanceData.accounts]);
+  }, [data.balanceData.accounts, currency]);
   
   // Calculate total balance with merged accounts
   const totalBalance = mergedAccounts.reduce((sum: number, account: any) => sum + account.balance, 0);
@@ -135,8 +146,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard — {currency}</h1>
         <div className="flex items-center space-x-2">
+          <CurrencyPicker remember preferenceKey="dashboard" value={currency} onChange={value => router.push(`/?currency=${value}`)} />
           <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Month" />
@@ -218,7 +230,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(data.financialsData.current.income)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatPercentChange(data.financialsData.changes.incomeChange)} from last month
+              {data.financialsData.changes.incomeChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.incomeChange)} from last month`}
             </p>
           </CardContent>
         </Card>
@@ -232,7 +244,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(data.financialsData.current.expenses)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatPercentChange(data.financialsData.changes.expensesChange)} from last month
+              {data.financialsData.changes.expensesChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.expensesChange)} from last month`}
             </p>
           </CardContent>
         </Card>
@@ -334,11 +346,11 @@ export function DashboardClient({ data }: DashboardClientProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <MonthlyChart data={data.financialsData.monthlyData} />
+            <MonthlyChart currency={currency} data={data.financialsData.monthlyData} />
           </CardContent>
         </Card>
         
-        <GoalsWidget goals={data.goalsData} />
+        <GoalsWidget currency={currency} goals={data.goalsData} />
         
         <Card>
           <CardHeader>
@@ -349,7 +361,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
           </CardHeader>
           <CardContent>
             {data.expenseData.categories.length > 0 ? (
-              <ExpenseBreakdown categories={data.expenseData.categories} />
+              <ExpenseBreakdown currency={currency} categories={data.expenseData.categories} />
             ) : (
               <div className="flex h-[350px] items-center justify-center">
                 <p className="text-muted-foreground">No expense data available</p>

@@ -8,13 +8,13 @@ import { getDefaultUser } from "@/lib/get-default-user";
  * Fetches all data needed for net worth calculation for a user
  * Returns complete net worth breakdown using the shared calculation engine
  */
-export async function getNetWorth() {
+export async function getNetWorth(currency = "USD") {
   try {
     const user = await getDefaultUser();
 
     // Fetch accounts with only needed fields
     const accounts = await prisma.financialAccount.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, currency },
       select: {
         id: true,
         name: true,
@@ -25,7 +25,7 @@ export async function getNetWorth() {
 
     // Fetch debts with only needed fields
     const debts = await prisma.debt?.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, currency },
       select: {
         id: true,
         name: true,
@@ -38,7 +38,7 @@ export async function getNetWorth() {
     let moneyOwed: any[] = [];
     if (prisma.moneyOwed) {
       moneyOwed = await prisma.moneyOwed.findMany({
-        where: { userId: user.id },
+        where: { userId: user.id, currency },
         select: {
           id: true,
           personName: true,
@@ -82,9 +82,9 @@ export async function getNetWorth() {
  * Fetches simplified net worth data for dashboard cards
  * Returns only the essential values needed for display
  */
-export async function getNetWorthSummary() {
+export async function getNetWorthSummary(currency = "USD") {
   try {
-    const result = await getNetWorth();
+    const result = await getNetWorth(currency);
     
     if (!result.success) {
       return result;

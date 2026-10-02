@@ -158,7 +158,7 @@ export function GoalsClient() {
 
   if (loading) {
     return (
-      <div className={PATTERNS.PAGE_CONTENT}>
+      <div className="w-full space-y-4">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
@@ -171,7 +171,7 @@ export function GoalsClient() {
   }
 
   return (
-    <div className={PATTERNS.PAGE_CONTENT}>
+    <div className="w-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -34,7 +34,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { getCategories } from "@/lib/actions/category-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +54,7 @@ interface Debt {
   name: string;
   type: string;
   lender?: string;
+  currency?: string;
   currentBalance: number;
   minimumPayment?: number;
   dueDayOfMonth?: number;
@@ -175,12 +176,12 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Current Balance:</span>
-                <span className="font-medium">{formatCurrency(debt.currentBalance)}</span>
+                <span className="font-medium">{formatCurrency(debt.currentBalance, debt.currency)}</span>
               </div>
               {debt.minimumPayment && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Minimum Payment:</span>
-                  <span className="font-medium">{formatCurrency(debt.minimumPayment)}</span>
+                  <span className="font-medium">{formatCurrency(debt.minimumPayment, debt.currency)}</span>
                 </div>
               )}
               {debt.dueDayOfMonth && (
@@ -210,7 +211,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                       />
                     </FormControl>
                     <FormDescription>
-                      Maximum: {formatCurrency(debt.currentBalance)}
+                      Maximum: {formatCurrency(debt.currentBalance, debt.currency)}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -234,7 +235,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                           </span>
                         ) : (
                           <span className="text-blue-700">
-                            Remaining balance after payment: {formatCurrency(remainingBalance)}
+                            Remaining balance after payment: {formatCurrency(remainingBalance, debt.currency)}
                           </span>
                         )}
                       </div>
@@ -272,12 +273,12 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {accounts.map((account) => (
+                        {accounts.filter(account => account.currency === (debt.currency || "USD")).map((account) => (
                           <SelectItem key={account.id} value={account.id}>
                             <div className="flex items-center justify-between w-full">
                               <span>{account.name}</span>
                               <span className="text-muted-foreground ml-2">
-                                {formatCurrency(account.balance)}
+                                {formatCurrency(account.balance, account.currency)}
                               </span>
                             </div>
                           </SelectItem>
@@ -331,7 +332,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isPending || loading}>
-                  {isPending ? "Processing..." : `Pay ${formatCurrency(paymentAmount || 0)}`}
+                  {isPending ? "Processing..." : `Pay ${formatCurrency(paymentAmount || 0, debt.currency)}`}
                 </Button>
               </DialogFooter>
             </form>

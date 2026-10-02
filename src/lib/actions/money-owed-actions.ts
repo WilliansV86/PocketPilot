@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 
 // Define the validation schema for money owed creation
 const moneyOwedSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   personName: z.string().min(1, "Person name is required"),
   description: z.string().optional(),
   amountOriginal: z.coerce.number().positive("Original amount must be positive"),
@@ -172,6 +173,7 @@ export async function createMoneyOwed(formData: FormData) {
     // Validate form data
     const validatedFields = moneyOwedSchema.safeParse({
       personName: formData.get("personName"),
+      currency: formData.get("currency") || "USD",
       description: formData.get("description"),
       amountOriginal: formData.get("amountOriginal"),
       dueDate: formData.get("dueDate"),
@@ -185,7 +187,7 @@ export async function createMoneyOwed(formData: FormData) {
       };
     }
 
-    const { personName, description, amountOriginal, dueDate } = validatedFields.data;
+    const { personName, description, amountOriginal, dueDate, currency } = validatedFields.data;
 
     // Create money owed record
     const moneyOwed = await prisma.moneyOwed.create({
@@ -194,6 +196,7 @@ export async function createMoneyOwed(formData: FormData) {
         description,
         amountOriginal,
         amountOutstanding: amountOriginal,
+        currency,
         dueDate: dueDate ? new Date(dueDate) : null,
         status: "OPEN",
         userId: user.id,
@@ -251,6 +254,7 @@ export async function updateMoneyOwed(id: string, formData: FormData) {
     // Validate form data
     const validatedFields = moneyOwedSchema.safeParse({
       personName: formData.get("personName"),
+      currency: formData.get("currency") || "USD",
       description: formData.get("description"),
       amountOriginal: formData.get("amountOriginal"),
       dueDate: formData.get("dueDate"),
@@ -264,12 +268,14 @@ export async function updateMoneyOwed(id: string, formData: FormData) {
       };
     }
 
-    const { personName, description, amountOriginal, dueDate } = validatedFields.data;
+    const { personName, description, amountOriginal, dueDate, currency } = validatedFields.data;
 
     // Check if there are payments - if so, don't allow changing amountOriginal
     const hasPayments = existing.payments.length > 0;
     
+    if (hasPayments && currency !== existing.currency) return { success: false, error: "Currency cannot change after payments have been recorded." };
     const updateData: any = {
+      currency,
       personName,
       description,
       dueDate: dueDate ? new Date(dueDate) : null,
@@ -484,6 +490,9 @@ export async function recordMoneyOwedPayment(moneyOwedId: string, formData: Form
     }
 
     // Create payment record
+    if (account.currency !== moneyOwed.currency) {
+      return { success: false, error: "Choose an account with the same currency as this receivable." };
+    }
     const payment = await prisma.moneyOwedPayment.create({
       data: {
         amount,
@@ -577,7 +586,7 @@ export async function recordMoneyOwedPayment(moneyOwedId: string, formData: Form
 
     return {
       success: true,
-      message: `Payment of ${formatCurrency(amount)} recorded successfully`,
+      message: `Payment of ${formatCurrency(amount, moneyOwed.currency)} recorded successfully`,
       data: {
         payment,
         updatedMoneyOwed: moneyOwed,
@@ -647,7 +656,7 @@ export async function markMoneyOwedAsPaid(id: string) {
 }
 
 // Get money owed summary statistics
-export async function getMoneyOwedSummary() {
+export async function getMoneyOwedSummary(currency = "USD") {
   try {
     const user = await getDefaultUser();
 
@@ -658,6 +667,7 @@ export async function getMoneyOwedSummary() {
       by: ["status"],
       where: {
         userId: user.id,
+        currency,
         isArchived: false,
         status: {
           not: "PAID",
@@ -675,6 +685,7 @@ export async function getMoneyOwedSummary() {
     const overdueCount = await prisma.moneyOwed.count({
       where: {
         userId: user.id,
+        currency,
         isArchived: false,
         status: {
           not: "PAID",

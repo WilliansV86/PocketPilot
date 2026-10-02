@@ -1,11 +1,13 @@
 import React from "react";
+import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
 // Recharts-compatible tooltip wrapper for better mobile experience
 export function ChartTooltip({ 
   active, 
   payload, 
-  label 
+  label,
+  currency = "USD"
 }: any) {
   if (active && payload && payload.length) {
     return (
@@ -25,7 +27,7 @@ export function ChartTooltip({
               </span>
             </div>
             <span className="font-medium text-gray-900 dark:text-gray-100">
-              ${entry.value?.toFixed(2) || '0.00'}
+              {formatMoney(Number(entry.value || 0), currency)}
             </span>
           </div>
         ))}
@@ -36,7 +38,7 @@ export function ChartTooltip({
 }
 
 // Pie chart specific tooltip
-export function PieChartTooltip({ active, payload }: any) {
+export function PieChartTooltip({ active, payload, currency = "USD" }: any) {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -55,7 +57,7 @@ export function PieChartTooltip({ active, payload }: any) {
             </span>
           </div>
           <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
-            ${data.value?.toFixed(2) || '0.00'}
+            {formatMoney(Number(data.value || 0), currency)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-1">

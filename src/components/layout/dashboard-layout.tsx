@@ -108,8 +108,8 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="w-64 border-r bg-background hidden md:block">
-          <div className="flex h-full flex-col gap-2 p-4">
+        <aside className="sticky top-[65px] hidden h-[calc(100dvh-65px)] w-64 shrink-0 self-start overflow-y-auto overscroll-contain border-r bg-background md:block lg:w-72">
+          <div className="flex min-h-full flex-col gap-2 p-3 lg:p-4">
             <MainNav />
           </div>
         </aside>
