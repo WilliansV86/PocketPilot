@@ -193,7 +193,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
   };
 
   return (
-    <div className="space-y-4 max-w-full overflow-x-hidden">
+    <div className="pp-mobile-budgets space-y-3 min-w-0 max-w-full">
       {/* Mobile Header */}
       <div className="space-y-4">
         {/* Month Selector */}
@@ -225,8 +225,8 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
         </div>
 
         {/* Summary Chips - Horizontal Scroll */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex-shrink-0 bg-green-50 border border-green-200 rounded-lg p-3 min-w-[140px]">
+        <div className="pp-budget-summary grid grid-cols-2 gap-2">
+          <div className="min-w-0 bg-green-50 border border-green-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-green-800">
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-medium">Income</span>
@@ -236,7 +236,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             </div>
           </div>
 
-          <div className="flex-shrink-0 bg-blue-50 border border-blue-200 rounded-lg p-3 min-w-[140px]">
+          <div className="min-w-0 bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-blue-800">
               <ReceiptText className="h-4 w-4" />
               <span className="text-xs font-medium">Expenses</span>
@@ -246,7 +246,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             </div>
           </div>
 
-          <div className="flex-shrink-0 bg-purple-50 border border-purple-200 rounded-lg p-3 min-w-[140px]">
+          <div className="min-w-0 bg-purple-50 border border-purple-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-purple-800">
               <Target className="h-4 w-4" />
               <span className="text-xs font-medium">Budgeted</span>
@@ -256,7 +256,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             </div>
           </div>
 
-          <div className="flex-shrink-0 bg-orange-50 border border-orange-200 rounded-lg p-3 min-w-[140px]">
+          <div className="min-w-0 bg-orange-50 border border-orange-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-orange-800">
               <Wallet className="h-4 w-4" />
               <span className="text-xs font-medium">Left to Budget</span>
@@ -271,7 +271,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
       {/* Uncategorized Expenses Card */}
       {data.uncategorized.count > 0 && (
         <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
@@ -306,10 +306,10 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             onOpenChange={() => toggleGroup(group)}
           >
             <CollapsibleTrigger asChild>
-              <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+              <Card className="gap-0 py-0 cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardContent className="p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <Badge variant="outline" className={getGroupColor(group)}>
                         {group}
                       </Badge>
@@ -334,19 +334,19 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
               </Card>
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="space-y-3">
+            <CollapsibleContent className="space-y-2">
               {categories.map((category) => (
-                <Card key={category.id} className="border-l-4" style={{ borderLeftColor: category.color }}>
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
+                <Card key={category.id} className="min-w-0 gap-0 py-0 border-l-4" style={{ borderLeftColor: category.color }}>
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
                       {/* Category Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: category.color }}
                           />
-                          <span className="font-medium">{category.name}</span>
+                          <span className="min-w-0 break-words font-medium">{category.name}</span>
                         </div>
                         
                         <div className={`text-lg font-bold ${getAvailableColor(category.available)}`}>
@@ -368,12 +368,12 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                               onChange={(e) => setEditValue(e.target.value)}
                               onBlur={() => handleBlur(category.id)}
                               onKeyDown={(e) => handleKeyDown(e, category.id)}
-                              className="w-24 h-8"
+                              className="w-24 h-11"
                             />
                           ) : (
                             <button
                               onClick={() => startEditing(category.id, category.budgeted)}
-                              className="flex items-center gap-1 hover:text-foreground transition-colors"
+                              className="flex min-h-11 items-center gap-1 hover:text-foreground transition-colors"
                             >
                               <span>{formatCurrency(category.budgeted)}</span>
                               <Edit className="h-3 w-3 opacity-60" />

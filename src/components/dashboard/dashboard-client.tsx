@@ -145,9 +145,9 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard — {currency}</h1>
-        <div className="flex items-center space-x-2">
+      <div className="pp-dashboard-toolbar flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">Dashboard — {currency}</h1>
+        <div className="flex flex-wrap items-center gap-2">
           <CurrencyPicker remember preferenceKey="dashboard" value={currency} onChange={value => router.push(`/?currency=${value}`)} />
           <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
             <SelectTrigger className="w-[120px]">
@@ -176,9 +176,9 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
         </div>
       </div>
       
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="pp-dashboard-summary mt-4 md:mt-6 grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-2 lg:grid-cols-5">
         {/* Net Worth Card - Spans 2 columns */}
-        <Card className="md:col-span-2 lg:col-span-2">
+        <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
             {data.netWorthData && (
@@ -252,7 +252,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
 
       {/* Second row for additional details */}
       {data.netWorthData && (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="pp-dashboard-totals grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-3 lg:grid-cols-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-medium">Account Assets</CardTitle>
@@ -338,7 +338,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
       )}
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="col-span-2">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Income vs Expenses</CardTitle>
             <CardDescription>
@@ -363,7 +363,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
             {data.expenseData.categories.length > 0 ? (
               <ExpenseBreakdown currency={currency} categories={data.expenseData.categories} />
             ) : (
-              <div className="flex h-[350px] items-center justify-center">
+              <div className="flex h-[180px] md:h-[350px] items-center justify-center">
                 <p className="text-muted-foreground">No expense data available</p>
               </div>
             )}

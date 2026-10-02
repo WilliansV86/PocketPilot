@@ -152,3 +152,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Compact phone layouts. Desktop spacing remains controlled by existing classes. */
+@media (max-width: 767px) {
+  .pp-main [data-slot="card"] { padding-block: 12px; gap: 8px; min-width: 0; }
+  .pp-main [data-slot="card-header"],
+  .pp-main [data-slot="card-content"],
+  .pp-main [data-slot="card-footer"] { padding-inline: 12px; }
+  .pp-main .pp-mobile-transaction,
+  .pp-main .pp-mobile-budgets [data-slot="card"] { padding-block: 0; }
+  .pp-dashboard-toolbar + .pp-dashboard-summary { margin-top: 16px; }
+  .pp-dashboard-summary .text-2xl { font-size: 1.125rem; line-height: 1.5rem; overflow-wrap: anywhere; }
+  .pp-dashboard-totals .text-lg { font-size: 1rem; line-height: 1.5rem; overflow-wrap: anywhere; }
+  .pp-dashboard-totals [data-slot="card-header"] { gap: 4px; }
+  .pp-budget-summary .text-lg { overflow-wrap: anywhere; }
+  .pp-currency-picker { width: 100%; }
+  .pp-currency-picker label { flex: 1 1 180px; }
+  .pp-currency-picker select { width: 100%; min-height: 44px; font-size: 16px; }
+  .pp-currency-picker button { min-height: 44px; }
+  .pp-dashboard-toolbar + .pp-dashboard-summary [data-slot="card-content"] { padding-top: 0; }
+  /* Keep one page title: sections with their own heading do not need the extra bar. */
+  .pp-main:has(.pp-dashboard-toolbar) .pp-mobile-page-title,
+  .pp-main:has(.pp-transactions-page) .pp-mobile-page-title { display: none; }
+}

@@ -355,7 +355,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
     <div className="w-full space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
       <CurrencyPicker remember preferenceKey="budgets" value={currency} disabled={loading || editingCategory !== null} onChange={value => { setLoading(true); setCurrency(value); }} />
-      <Button variant="outline" onClick={openCopy} disabled={loading || editingCategory !== null}>Copy budget to another month</Button>
+      <Button className="w-full md:w-auto" variant="outline" onClick={openCopy} disabled={loading || editingCategory !== null}>Copy budget to another month</Button>
       </div>
       <Dialog open={copyOpen} onOpenChange={open => { if (!copying) setCopyOpen(open); }}>
         <DialogContent>

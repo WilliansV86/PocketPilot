@@ -54,9 +54,9 @@ export default function TransactionsPageWithFilter() {
   const currentMonthFilter = format(new Date(), "yyyy-MM");
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Transactions</h1>
+    <div className="pp-transactions-page space-y-4 md:space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-xl md:text-2xl font-semibold">Transactions</h1>
         <Button asChild>
           <Link href="/transactions/new">
             <PlusCircle className="mr-2 h-4 w-4" />
