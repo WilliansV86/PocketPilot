@@ -33,7 +33,7 @@ import { toast } from "sonner";
 // Define the form validation schema
 const formSchema = z.object({
   description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().refine(val => val > 0, "Amount must be positive"),
+  amount: z.string().min(1, "Amount is required").refine(val => Number.isFinite(Number(val)) && Number(val) > 0, "Amount must be positive"),
   date: z.string().min(1, "Date is required"),
   type: z.nativeEnum(TransactionType),
   accountId: z.string().min(1, "From account is required"),
@@ -161,7 +161,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
   const defaultValues: FormValues = transaction
     ? {
         description: transaction.description,
-        amount: transaction.amount,
+        amount: transaction.amount.toString(),
         date: format(new Date(transaction.date), "yyyy-MM-dd"),
         type: transaction.type,
         accountId: transaction.accountId,
@@ -171,7 +171,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
       }
     : {
         description: "",
-        amount: 0,
+        amount: "",
         date: format(new Date(), "yyyy-MM-dd"),
         type: TransactionType.EXPENSE,
         accountId: mergedAccounts && mergedAccounts.length > 0 ? mergedAccounts[0].id : "",
@@ -298,8 +298,8 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
                     type="number" 
                     step="0.01" 
                     placeholder="0.00" 
-                    value={typeof field.value === 'number' ? field.value : 0}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
