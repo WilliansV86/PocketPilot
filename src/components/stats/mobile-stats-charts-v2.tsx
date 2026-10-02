@@ -4,7 +4,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Toolti
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltip, PieChartTooltip } from "@/components/charts/mobile-tooltip";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/currency";
 import { TrendingUp, TrendingDown, DollarSign, PieChart as PieChartIcon } from "lucide-react";
 import { MobileStatsSummary } from "./mobile-stats-summary";
 
@@ -28,10 +28,12 @@ type StatsData = {
 };
 
 interface MobileStatsChartsProps {
+  currency?: string;
   data: StatsData;
 }
 
-export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
+export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const renderMonthlyCashflow = () => {
     if (data.monthlyCashflow.length === 0) {
       return (
@@ -77,14 +79,14 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
               />
               <YAxis 
                 tickFormatter={(value) => {
-                  if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-                  return `$${value}`;
+                  if (value >= 1000) return `${currency} ${(value / 1000).toFixed(1)}k`;
+                  return `${currency} ${value}`;
                 }}
                 fontSize={11}
                 width={55}
                 tick={{ fill: '#666' }}
               />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={<ChartTooltip currency={currency} />} />
               <Bar dataKey="income" fill="#10b981" name="Income" radius={[2, 2, 0, 0]} />
               <Bar dataKey="expenses" fill="#ef4444" name="Expenses" radius={[2, 2, 0, 0]} />
             </BarChart>
@@ -172,7 +174,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip content={<PieChartTooltip />} />
+              <Tooltip content={<PieChartTooltip currency={currency} />} />
             </PieChart>
           </ResponsiveContainer>
           
@@ -258,7 +260,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip content={<PieChartTooltip />} />
+              <Tooltip content={<PieChartTooltip currency={currency} />} />
             </PieChart>
           </ResponsiveContainer>
           
@@ -297,7 +299,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
   return (
     <div className="space-y-4">
       {/* Quick Summary Cards */}
-      <MobileStatsSummary 
+      <MobileStatsSummary currency={currency}
         monthlyCashflow={data.monthlyCashflow}
         categorySpending={data.categorySpending}
         accountBalances={data.accountBalances}

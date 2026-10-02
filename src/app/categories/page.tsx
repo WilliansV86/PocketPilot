@@ -14,7 +14,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
   // Move data fetching to client side for faster navigation
   return (
     <DashboardLayout>
-      <div className={PATTERNS.PAGE_CONTENT}>
+      <div className="w-full space-y-4">
         <div className="flex items-center justify-between">
           <h1 className={TYPOGRAPHY.PAGE_TITLE}>Categories</h1>
           <Button asChild className={BUTTON.PRIMARY_ACTION}>
@@ -25,7 +25,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
           </Button>
         </div>
         
-        <div className={SPACING.MARGIN.SECTION}>
+        <div className="mt-3">
           <CategoriesClient searchParams={searchParams} />
         </div>
       </div>

@@ -155,6 +155,14 @@ export async function updateAccount(id: string, formData: FormData) {
     if (!existingAccount || existingAccount.userId !== user.id) {
       return { success: false, error: "Account not found" };
     }
+    if (parsed.currency !== existingAccount.currency) {
+      const linkedTransactions = await prisma.transaction.count({
+        where: { OR: [{ accountId: id }, { toAccountId: id }] },
+      });
+      if (linkedTransactions > 0) {
+        return { success: false, error: "This account has transaction history. Create a separate account for a different currency instead of changing the currency of past transactions." };
+      }
+    }
     
     // Update the account
     const updatedAccount = await prisma.financialAccount.update({

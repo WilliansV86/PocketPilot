@@ -62,6 +62,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 </div>
                 <TransactionAmount 
                   amount={transaction.amount}
+                  currency={transaction.account?.currency || "USD"}
                   type={transaction.type}
                   size="sm"
                   animated={false}

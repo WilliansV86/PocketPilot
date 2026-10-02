@@ -2,7 +2,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoryForm } from "@/components/categories/category-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function NewCategoryPage() {
+export default async function NewCategoryPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
+  const params = await searchParams;
+  const returnTo = params.returnTo && /^\/budgets(?:\?[^#]*)?$/.test(params.returnTo) ? params.returnTo : "/categories";
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
@@ -16,7 +18,8 @@ export default async function NewCategoryPage() {
           </CardHeader>
           <CardContent>
             <CategoryForm 
-              mode="create" 
+              mode="create"
+              returnTo={returnTo} 
             />
           </CardContent>
         </Card>

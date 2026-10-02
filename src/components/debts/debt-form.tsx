@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +26,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createDebt, updateDebt, DebtFormValues } from "@/lib/actions/debt-actions";
+import { createDebt, updateDebt } from "@/lib/actions/debt-actions";
 import { toast } from "sonner";
+import { formatMoney } from "@/lib/currency";
 
 // Define the form validation schema
 const formSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   name: z.string().min(1, "Name is required"),
   type: z.enum(["CREDIT_CARD", "PERSONAL_LOAN", "AUTO_LOAN", "MORTGAGE", "STUDENT_LOAN", "MEDICAL", "OTHER"]),
   lender: z.string().optional(),
@@ -41,6 +41,8 @@ const formSchema = z.object({
   interestRateAPR: z.coerce.number().min(0).max(100).optional().or(z.literal("")),
   minimumPayment: z.coerce.number().min(0).optional().or(z.literal("")),
   dueDayOfMonth: z.coerce.number().min(1).max(31).optional().or(z.literal("")),
+  creditLimit: z.coerce.number().positive("Credit limit must be positive").optional().or(z.literal("")),
+  statementClosingDay: z.coerce.number().min(1).max(31).optional().or(z.literal("")),
   notes: z.string().optional(),
   isClosed: z.boolean().default(false),
 });
@@ -65,12 +67,12 @@ const debtTypeOptions = [
 ];
 
 export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
+      currency: debt?.currency || "USD",
       name: debt?.name || "",
       type: debt?.type || "CREDIT_CARD",
       lender: debt?.lender || "",
@@ -79,6 +81,8 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
       interestRateAPR: debt?.interestRateAPR?.toString() || "",
       minimumPayment: debt?.minimumPayment?.toString() || "",
       dueDayOfMonth: debt?.dueDayOfMonth?.toString() || "",
+      creditLimit: debt?.creditLimit?.toString() || "",
+      statementClosingDay: debt?.statementClosingDay?.toString() || "",
       notes: debt?.notes || "",
       isClosed: debt?.isClosed || false,
     },
@@ -88,6 +92,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
     startTransition(async () => {
       try {
         const formData = new FormData();
+        formData.append("currency", values.currency);
         formData.append("name", values.name);
         formData.append("type", values.type);
         formData.append("lender", values.lender || "");
@@ -96,6 +101,8 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
         formData.append("interestRateAPR", (values.interestRateAPR || "").toString());
         formData.append("minimumPayment", (values.minimumPayment || "").toString());
         formData.append("dueDayOfMonth", (values.dueDayOfMonth || "").toString());
+        formData.append("creditLimit", (values.creditLimit || "").toString());
+        formData.append("statementClosingDay", (values.statementClosingDay || "").toString());
         formData.append("notes", values.notes || "");
         formData.append("isClosed", values.isClosed.toString());
 
@@ -124,6 +131,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
 
   const currentBalance = parseFloat(String(form.watch("currentBalance") || "0"));
   const originalAmount = parseFloat(String(form.watch("originalAmount") || "0"));
+  const debtType = form.watch("type");
   const progressPercentage = originalAmount > 0 ? ((originalAmount - currentBalance) / originalAmount) * 100 : 0;
 
   return (
@@ -141,6 +149,24 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="USD">USD — US Dollar</SelectItem>
+                        <SelectItem value="CAD">CAD — Canadian Dollar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>All amounts on this form use this currency. Changing currency does not convert amounts.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="name"
@@ -295,6 +321,56 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                   </FormItem>
                 )}
               />
+
+              {debtType === "CREDIT_CARD" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="creditLimit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Credit Limit</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Used to calculate your credit utilization
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="statementClosingDay"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Statement Closing Day</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="31"
+                            placeholder="25"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Day your statement normally closes (1-31)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
 
             {/* Progress indicator */}
@@ -311,7 +387,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                   />
                 </div>
                 <div className="text-xs text-gray-500">
-                  ${currentBalance.toFixed(2)} remaining of ${originalAmount.toFixed(2)}
+                  {formatMoney(currentBalance, form.watch("currency"))} remaining of {formatMoney(originalAmount, form.watch("currency"))}
                 </div>
               </div>
             )}

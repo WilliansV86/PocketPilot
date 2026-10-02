@@ -6,7 +6,7 @@ import {
   Edit, 
   MoreHorizontal, 
   Trash,
-  Wallet
+  Wallet, CreditCard, PiggyBank, TrendingUp, Banknote, ArrowLeftRight, Home
 } from "lucide-react";
 
 import {
@@ -30,7 +30,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AnimatedBalance } from "@/components/ui/animated-balance";
 import { AccountTypeBadge } from "@/components/accounts/account-type-badge";
 import { getAccounts, deleteAccount } from "@/lib/actions/account-actions";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/currency";
 import { getAmountColorClass, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
 import { safeServerAction } from "@/lib/client-actions";
 import { PATTERNS, TYPOGRAPHY, BUTTON } from "@/lib/ui-constants";
@@ -187,40 +187,63 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
     );
   }
 
+  const preferredOrder = ["CHECKING", "SAVINGS", "INVESTMENT", "CASH", "CREDIT", "LOAN", "OTHER"];
+  const groups = Array.from(new Set(accountsList.map(account => account.type))).sort((a, b) => {
+    const rank = (type: string) => preferredOrder.includes(type) ? preferredOrder.indexOf(type) : preferredOrder.length;
+    return rank(a) - rank(b) || a.localeCompare(b);
+  });
+  const labels: Record<string, string> = { CHECKING: "Checking accounts", SAVINGS: "Savings accounts", INVESTMENT: "Investments", CASH: "Cash", CREDIT: "Credit accounts", LOAN: "Loan accounts", OTHER: "Other accounts" };
+
+  const styles: Record<string, { icon: typeof Wallet; color: string; tint: string; border: string }> = {
+    CHECKING: { icon: CreditCard, color: "text-blue-700 dark:text-blue-400", tint: "bg-blue-500/10", border: "border-t-blue-500" },
+    SAVINGS: { icon: PiggyBank, color: "text-emerald-700 dark:text-emerald-400", tint: "bg-emerald-500/10", border: "border-t-emerald-500" },
+    INVESTMENT: { icon: TrendingUp, color: "text-indigo-700 dark:text-indigo-400", tint: "bg-indigo-500/10", border: "border-t-indigo-500" },
+    CASH: { icon: Banknote, color: "text-orange-700 dark:text-orange-400", tint: "bg-orange-500/10", border: "border-t-orange-500" },
+    CREDIT: { icon: CreditCard, color: "text-violet-700 dark:text-violet-400", tint: "bg-violet-500/10", border: "border-t-violet-500" },
+    CREDIT_CARD: { icon: CreditCard, color: "text-violet-700 dark:text-violet-400", tint: "bg-violet-500/10", border: "border-t-violet-500" },
+    LOAN: { icon: ArrowLeftRight, color: "text-rose-700 dark:text-rose-400", tint: "bg-rose-500/10", border: "border-t-rose-500" },
+    MORTGAGE: { icon: Home, color: "text-amber-700 dark:text-amber-400", tint: "bg-amber-500/10", border: "border-t-amber-500" }
+  };
   return (
-    <div className={PATTERNS.TABLE_SCROLL_CONTAINER}>
-      <Table>
-        <TableHeader className={PATTERNS.TABLE_HEADER}>
-          <TableRow>
-            <TableHead className={TYPOGRAPHY.LABEL}>Name</TableHead>
-            <TableHead className={TYPOGRAPHY.LABEL}>Type</TableHead>
-            <TableHead className={`text-right ${TYPOGRAPHY.LABEL}`}>Balance</TableHead>
-            <TableHead className="w-[80px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(accountsList || []).map((account) => (
+    <div className="grid items-start gap-6 xl:grid-cols-2">
+      {groups.map(type => {
+        const groupAccounts = accountsList.filter(account => account.type === type);
+        const currencies = Array.from(new Set(groupAccounts.map(account => account.currency || "USD"))).sort();
+        const style = styles[type] || { icon: Wallet, color: "text-muted-foreground", tint: "bg-muted", border: "border-t-muted-foreground" };
+        const Icon = style.icon;
+        return (
+          <section key={type} className={`min-w-0 overflow-hidden rounded-xl border border-t-2 bg-card shadow-sm ${style.border}`} aria-label={labels[type] || formatAccountType(type)}>
+            <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 ${style.tint}`}>
+              <div className="flex items-center gap-3">
+                <span className={`flex size-9 items-center justify-center rounded-xl ${style.tint} ${style.color}`}><Icon className="size-5" /></span>
+                <div><h2 className="text-xl font-semibold tracking-tight">{labels[type] || formatAccountType(type)}</h2>
+                <div className="text-xs text-muted-foreground">{groupAccounts.length} {groupAccounts.length === 1 ? "account" : "accounts"}</div></div>
+              </div>
+              <div className="space-y-0.5 text-right">
+                <div className="text-xs font-normal text-muted-foreground">Total balance</div>
+                <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">{currencies.map(currency => <div key={currency} className="text-base font-semibold">{formatMoney(groupAccounts.filter(account => (account.currency || "USD") === currency).reduce((sum, account) => sum + Number(account.balance), 0), currency)}</div>)}</div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Account</TableHead><TableHead className="text-right">Balance</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {groupAccounts.map(account => (
             <TableRow key={account.id} className={`${PATTERNS.TABLE_ROW} ${FINANCIAL_ANIMATIONS.CARD_ELEVATION}`}>
-              <TableCell className={TYPOGRAPHY.BODY_LARGE}>{account.name}</TableCell>
-              <TableCell className={TYPOGRAPHY.BODY}>
-                <AccountTypeBadge 
-                  type={account.type} 
-                  size="sm" 
-                  variant="default"
-                />
-              </TableCell>
-              <TableCell className={`text-right ${TYPOGRAPHY.AMOUNT_MEDIUM}`}>
+              <TableCell className="px-4 py-3"><div className="text-base font-medium">{account.name}</div><div className="mt-1"><AccountTypeBadge type={account.type} size="sm" /></div></TableCell>
+              <TableCell className="px-4 py-3 text-right whitespace-nowrap">
                 <AnimatedBalance 
                   amount={account.balance}
+                  currency={account.currency}
                   size="md"
                   animated={true}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="w-10 py-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={BUTTON.ICON_ONLY}>
-                      <span className="sr-only">Open menu</span>
+                    <Button variant="ghost" className="size-8 p-0">
+                      <span className="sr-only">Actions for {account.name}</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -245,9 +268,13 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

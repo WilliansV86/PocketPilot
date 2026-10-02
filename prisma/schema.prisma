@@ -115,6 +115,7 @@ model Transaction {
 }
 
 model Budget {
+  currency   String   @default("USD")
   id         String   @id @default(cuid())
   amount     Decimal  @db.Decimal(12,2)
   month      String   // Format: "YYYY-MM" for easy querying
@@ -129,12 +130,13 @@ model Budget {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([userId, categoryId, month])
+  @@unique([userId, categoryId, month, currency])
   @@index([userId, month])
   @@index([categoryId])
 }
 
 model BudgetMove {
+  currency    String   @default("USD")
   id          String   @id @default(cuid())
   amount      Decimal  @db.Decimal(12,2)
   month       String   // Format: "YYYY-MM" for easy querying
@@ -194,6 +196,7 @@ enum GoalPriority {
 }
 
 model Debt {
+  currency         String     @default("USD")
   id               String     @id @default(cuid())
   name             String
   type             DebtType
@@ -203,6 +206,10 @@ model Debt {
   interestRateAPR  Decimal?   @db.Decimal(5,2) // APR as percentage (e.g., 15.99)
   minimumPayment   Decimal?   @db.Decimal(12,2)
   dueDayOfMonth    Int?        // 1-31
+  creditLimit      Decimal?   @db.Decimal(12,2) // Credit cards only
+  statementClosingDay Int?    // Credit cards only, 1-31
+  minimumPaymentCycle String? // Upcoming due date key (YYYY-MM-DD)
+  minimumPaymentPaid Decimal  @default(0) @db.Decimal(12,2)
   notes            String?
   isClosed         Boolean    @default(false)
   
@@ -218,6 +225,7 @@ model Debt {
 }
 
 model MoneyOwed {
+  currency          String           @default("USD")
   id                String           @id @default(cuid())
   personName        String
   description       String?
@@ -262,6 +270,7 @@ model MoneyOwedPayment {
 }
 
 model Goal {
+  currency         String       @default("USD")
   id               String       @id @default(cuid())
   name             String
   type             GoalType

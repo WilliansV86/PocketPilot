@@ -32,7 +32,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { recordMoneyOwedPayment } from "@/lib/actions/money-owed-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,7 @@ interface MoneyOwed {
   id: string;
   personName: string;
   description?: string;
+  currency?: string;
   amountOriginal: number;
   amountOutstanding: number;
   dueDate?: string;
@@ -153,10 +154,10 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {formatCurrency(moneyOwed.amountOutstanding)}
+                {formatCurrency(moneyOwed.amountOutstanding, moneyOwed.currency)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Original: {formatCurrency(moneyOwed.amountOriginal)}
+                Original: {formatCurrency(moneyOwed.amountOriginal, moneyOwed.currency)}
               </p>
               {moneyOwed.dueDate && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -216,9 +217,9 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {accounts.map((account) => (
+                        {accounts.filter(account => account.currency === (moneyOwed.currency || "USD")).map((account) => (
                           <SelectItem key={account.id} value={account.id}>
-                            {account.name} ({formatCurrency(account.balance)})
+                            {account.name} ({formatCurrency(account.balance, account.currency)})
                           </SelectItem>
                         ))}
                       </SelectContent>

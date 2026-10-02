@@ -21,9 +21,10 @@ type MonthlyData = {
 
 interface MonthlyChartProps {
   data: MonthlyData[];
+  currency?: string;
 }
 
-export function MonthlyChart({ data }: MonthlyChartProps) {
+export function MonthlyChart({ data, currency = "USD" }: MonthlyChartProps) {
   return (
     <ResponsiveContainer width="100%" height={280} className="md:h-[350px]">
       <BarChart
@@ -40,13 +41,13 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
         />
         <YAxis 
           tickFormatter={(value) => {
-            if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-            return `$${value}`;
+            if (value >= 1000) return `${currency} ${(value / 1000).toFixed(1)}k`;
+            return `${currency} ${value}`;
           }}
           fontSize={12}
           width={60}
         />
-        <Tooltip content={<ChartTooltip />} />
+        <Tooltip content={<ChartTooltip currency={currency} />} />
         <Legend />
         <Bar dataKey="income" name="Income" fill="#4CAF50" />
         <Bar dataKey="expenses" name="Expenses" fill="#F44336" />

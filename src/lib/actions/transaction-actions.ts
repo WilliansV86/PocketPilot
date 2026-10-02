@@ -166,6 +166,14 @@ export async function createTransaction(formData: FormData) {
       notes: formData.get("notes") || null,
     });
     
+    const fromAccount = await prisma.financialAccount.findFirst({ where: { id: parsed.accountId, userId: user.id } });
+    if (!fromAccount) return { success: false, error: "Account not found" };
+    if (parsed.type === TransactionType.TRANSFER && parsed.toAccountId) {
+      const toAccount = await prisma.financialAccount.findFirst({ where: { id: parsed.toAccountId, userId: user.id } });
+      if (!toAccount) return { success: false, error: "Destination account not found" };
+      if (fromAccount.currency !== toAccount.currency) return { success: false, error: "Cross-currency transfers need separate source and destination amounts and are not supported yet." };
+    }
+
     // Validate transfer specific requirements
     if (parsed.type === TransactionType.TRANSFER && !parsed.toAccountId) {
       return { success: false, error: "To Account is required for transfers" };
@@ -264,6 +272,14 @@ export async function updateTransaction(id: string, formData: FormData) {
       notes: formData.get("notes") || null,
     });
     
+    const fromAccount = await prisma.financialAccount.findFirst({ where: { id: parsed.accountId, userId: user.id } });
+    if (!fromAccount) return { success: false, error: "Account not found" };
+    if (parsed.type === TransactionType.TRANSFER && parsed.toAccountId) {
+      const toAccount = await prisma.financialAccount.findFirst({ where: { id: parsed.toAccountId, userId: user.id } });
+      if (!toAccount) return { success: false, error: "Destination account not found" };
+      if (fromAccount.currency !== toAccount.currency) return { success: false, error: "Cross-currency transfers need separate source and destination amounts and are not supported yet." };
+    }
+
     // Validate transfer specific requirements
     if (parsed.type === TransactionType.TRANSFER && !parsed.toAccountId) {
       return { success: false, error: "To Account is required for transfers" };

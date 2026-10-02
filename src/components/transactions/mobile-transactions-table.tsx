@@ -44,15 +44,18 @@ type Transaction = {
   type: string; // INCOME, EXPENSE, TRANSFER
   category?: {
     id: string;
+    currency?: string;
     name: string;
     color: string;
   } | null;
   account?: {
     id: string;
+    currency?: string;
     name: string;
   } | null;
   toAccount?: {
     id: string;
+    currency?: string;
     name: string;
   } | null;
   notes?: string | null;
@@ -208,6 +211,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
                   <div className="text-lg font-bold">
                     <TransactionAmount 
                       amount={transaction.amount}
+                  currency={transaction.account?.currency || "USD"}
                       type={transaction.type}
                       size="lg"
                     />

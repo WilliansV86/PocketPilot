@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/currency";
 import { toast } from "sonner";
 import { 
   ChevronDown, 
@@ -59,6 +59,7 @@ type BudgetData = {
 };
 
 interface MobileBudgetsProps {
+  currency?: string;
   data: BudgetData;
   month: string;
   year: number;
@@ -66,7 +67,8 @@ interface MobileBudgetsProps {
   onDataUpdate?: (newData: BudgetData) => void;
 }
 
-export function MobileBudgets({ data, month, year, onMonthChange, onDataUpdate }: MobileBudgetsProps) {
+export function MobileBudgets({ currency = "USD", data, month, year, onMonthChange, onDataUpdate }: MobileBudgetsProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -162,7 +164,7 @@ export function MobileBudgets({ data, month, year, onMonthChange, onDataUpdate }
         return;
       }
 
-      await updateBudget(categoryId, month, year, newValue);
+      await updateBudget(categoryId, month, year, newValue, currency);
       
       // Update local state immediately for better UX
       if (onDataUpdate) {

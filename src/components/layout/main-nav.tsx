@@ -32,21 +32,25 @@ const navSections = [
     items: [
       {
         name: "Dashboard",
+        iconColor: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
         href: "/",
         icon: LayoutDashboard,
       },
       {
         name: "Accounts",
+        iconColor: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
         href: "/accounts",
         icon: Wallet,
       },
       {
         name: "Transactions",
+        iconColor: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
         href: "/transactions",
         icon: ReceiptText,
       },
       {
         name: "Categories",
+        iconColor: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
         href: "/categories",
         icon: PieChart,
       },
@@ -57,21 +61,25 @@ const navSections = [
     items: [
       {
         name: "Budgets",
+        iconColor: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
         href: "/budgets",
         icon: Target,
       },
       {
         name: "Goals",
+        iconColor: "bg-teal-500/10 text-teal-700 dark:text-teal-400",
         href: "/goals",
         icon: Flag,
       },
       {
         name: "Debts",
+        iconColor: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
         href: "/debts",
         icon: TrendingDown,
       },
       {
         name: "Money Owed",
+        iconColor: "bg-lime-500/10 text-lime-700 dark:text-lime-400",
         href: "/money-owed",
         icon: TrendingUp,
       },
@@ -82,6 +90,7 @@ const navSections = [
     items: [
       {
         name: "Stats",
+        iconColor: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
         href: "/stats",
         icon: BarChart3,
       },
@@ -115,10 +124,10 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
   };
 
   const NavContent = () => (
-    <nav className="flex flex-col gap-1">
+    <nav aria-label="Main navigation" className="flex flex-col gap-4">
       {navSections.map((section) => {
         const isCollapsed = collapsedSections.has(section.title);
-        const hasActiveItem = section.items.some(item => pathname === item.href);
+        const hasActiveItem = section.items.some(item => pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")));
 
         return (
           <Collapsible
@@ -130,7 +139,7 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-between px-3 py-2 h-auto font-medium text-sm",
+                  "w-full justify-between rounded-lg px-3 py-2 h-auto text-xs font-semibold uppercase tracking-wider",
                   COLORS.SIDEBAR.GROUP_TITLE,
                   hasActiveItem && !isCollapsed && "bg-accent/50",
                   "hover:bg-accent/50",
@@ -152,15 +161,16 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
                 />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1">
+            <CollapsibleContent className="mt-2 space-y-1.5">
               {section.items.map((item) => (
                 <Button
                   key={item.href}
                   variant="ghost"
                   className={cn(
-                    pathname === item.href 
-                      ? COMPONENTS.NAV.ITEM_ACTIVE 
-                      : COMPONENTS.NAV.ITEM,
+                    "w-full h-12 justify-start gap-3 rounded-xl border px-3 text-[15px] font-medium",
+                    pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"))
+                      ? "border-blue-500/30 bg-blue-500/15 text-blue-700 shadow-sm hover:bg-blue-500/20 dark:text-blue-300"
+                      : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
                     ANIMATIONS.TRANSITION.COLOR
                   )}
                   asChild
@@ -169,9 +179,10 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
                   <PrefetchLink 
                     href={item.href}
                     scroll={false}
+                    aria-current={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")) ? "page" : undefined}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {item.name}
+                    <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", item.iconColor)}><item.icon className="size-5" /></span>
+                    <span>{item.name}</span>
                   </PrefetchLink>
                 </Button>
               ))}

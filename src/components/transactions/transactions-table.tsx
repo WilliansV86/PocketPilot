@@ -248,6 +248,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
               <td className="px-4 py-3 text-sm text-right font-semibold">
                 <TransactionAmount 
                   amount={transaction.amount}
+                  currency={transaction.account?.currency || "USD"}
                   type={transaction.type}
                   size="sm"
                 />

@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker } from "@/components/ui/currency-picker";
+
 
 import { useState, useEffect } from "react";
 import { Target, Plus, Edit, Trash2 } from "lucide-react";
@@ -35,6 +37,7 @@ const priorities = [
 export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimpleProps) {
   const [formData, setFormData] = useState({
     name: goal?.name || "",
+    currency: goal?.currency || "USD",
     type: goal?.type || "SAVINGS",
     targetAmount: goal?.targetAmount || "",
     startDate: goal?.startDate ? new Date(goal.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -82,6 +85,7 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
 
     try {
       const submitData = new FormData();
+      submitData.append("currency", formData.currency);
       submitData.append("name", formData.name);
       submitData.append("type", formData.type);
       submitData.append("targetAmount", formData.targetAmount);
@@ -136,6 +140,8 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          <CurrencyPicker value={formData.currency} onChange={value => setFormData(prev => ({ ...prev, currency: value, linkedAccountId: "", linkedDebtId: "" }))} />
+          <p className="text-sm text-muted-foreground">Amounts use this currency; changing it does not convert amounts.</p>
           {/* Basic Information */}
           <div className="space-y-4">
             <div>

@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/currency";
 
 type StatsSummaryProps = {
+  currency?: string;
   monthlyCashflow: Array<{
     month: string;
     income: number;
@@ -23,7 +24,8 @@ type StatsSummaryProps = {
   }>;
 };
 
-export function MobileStatsSummary({ monthlyCashflow, categorySpending, accountBalances }: StatsSummaryProps) {
+export function MobileStatsSummary({ currency = "USD", monthlyCashflow, categorySpending, accountBalances }: StatsSummaryProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   // Calculate key metrics
   const latestMonth = monthlyCashflow[monthlyCashflow.length - 1];
   const previousMonth = monthlyCashflow[monthlyCashflow.length - 2];

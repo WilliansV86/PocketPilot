@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency";
 import { getGoalTypeInfo, getProgressColor } from "@/lib/finance/goals";
 
 interface GoalProgress {
@@ -23,10 +23,12 @@ interface GoalProgress {
 }
 
 interface GoalsWidgetProps {
+  currency?: string;
   goals?: GoalProgress[];
 }
 
-export function GoalsWidget({ goals = [] }: GoalsWidgetProps) {
+export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const [loading, setLoading] = useState(true);
   const [goalsData, setGoalsData] = useState<GoalProgress[]>(goals);
 
@@ -44,7 +46,7 @@ export function GoalsWidget({ goals = [] }: GoalsWidgetProps) {
         const result = await response.json();
         
         if (result.success) {
-          setGoalsData(result.data || []);
+          setGoalsData((result.data || []).filter((item: any) => (item.goal.currency || "USD") === currency));
         }
       } catch (error) {
         console.error("Failed to fetch goals:", error);
@@ -54,7 +56,7 @@ export function GoalsWidget({ goals = [] }: GoalsWidgetProps) {
     };
 
     fetchGoals();
-  }, [goals]);
+  }, [goals, currency]);
 
   if (loading) {
     return (

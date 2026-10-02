@@ -1,4 +1,5 @@
 "use client";
+import { formatMoney } from "@/lib/currency";
 
 import { 
   PieChart, 
@@ -19,9 +20,10 @@ type ExpenseCategory = {
 
 interface ExpenseBreakdownProps {
   categories: ExpenseCategory[];
+  currency?: string;
 }
 
-export function ExpenseBreakdown({ categories }: ExpenseBreakdownProps) {
+export function ExpenseBreakdown({ categories, currency = "USD" }: ExpenseBreakdownProps) {
   // Ensure categories array is not empty to avoid errors in Recharts
   if (!categories || categories.length === 0) {
     return (
@@ -38,7 +40,7 @@ export function ExpenseBreakdown({ categories }: ExpenseBreakdownProps) {
       return (
         <div className="bg-background p-3 shadow-md rounded-md border">
           <p className="font-medium">{data.name}</p>
-          <p>Amount: ${data.amount.toFixed(2)}</p>
+          <p>Amount: {formatMoney(data.amount, currency)}</p>
           <p>Percentage: {data.percentage.toFixed(1)}%</p>
         </div>
       );

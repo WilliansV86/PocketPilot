@@ -9,6 +9,7 @@ import { calculateGoalProgress, validateGoalData } from "@/lib/finance/goals";
 
 // Define the validation schema for goal creation
 const goalSchema = z.object({
+  currency: z.enum(["USD", "CAD"]).default("USD"),
   name: z.string().min(1, "Goal name is required"),
   type: z.enum(["SAVINGS", "DEBT_PAYOFF", "PURCHASE", "EMERGENCY_FUND", "INVESTMENT", "OTHER"]),
   targetAmount: z.coerce.number().positive("Target amount must be positive"),
@@ -159,6 +160,7 @@ export async function createGoal(formData: FormData) {
     // Parse and validate the form data
     const parsed = goalSchema.parse({
       name: formData.get("name"),
+      currency: formData.get("currency") || "USD",
       type: formData.get("type"),
       targetAmount: formData.get("targetAmount"),
       startDate: formData.get("startDate"),
@@ -186,6 +188,12 @@ export async function createGoal(formData: FormData) {
 
     if (!prisma.goal) {
       return { success: false, error: "Goals module not available" };
+    }
+
+    for (const [model, linkedId] of [[prisma.financialAccount, parsed.linkedAccountId], [prisma.debt, parsed.linkedDebtId]] as const) {
+      if (!linkedId) continue;
+      const linked = await (model as any).findFirst({ where: { id: linkedId, userId: user.id } });
+      if (!linked || linked.currency !== parsed.currency) return { success: false, error: "Link an account or debt with the same currency as this goal." };
     }
 
     // Create the goal
@@ -233,6 +241,7 @@ export async function updateGoal(id: string, formData: FormData) {
     // Parse and validate the form data
     const parsed = goalSchema.parse({
       name: formData.get("name"),
+      currency: formData.get("currency") || "USD",
       type: formData.get("type"),
       targetAmount: formData.get("targetAmount"),
       startDate: formData.get("startDate"),
@@ -268,6 +277,17 @@ export async function updateGoal(id: string, formData: FormData) {
 
     if (!existingGoal) {
       return { success: false, error: "Goal not found" };
+    }
+
+    if (existingGoal.currency !== parsed.currency) {
+      const contributions = await prisma.goalContribution.count({ where: { goalId: id } });
+      if (contributions > 0) return { success: false, error: "Currency cannot change after contributions have been recorded." };
+    }
+
+    for (const [model, linkedId] of [[prisma.financialAccount, parsed.linkedAccountId], [prisma.debt, parsed.linkedDebtId]] as const) {
+      if (!linkedId) continue;
+      const linked = await (model as any).findFirst({ where: { id: linkedId, userId: user.id } });
+      if (!linked || linked.currency !== parsed.currency) return { success: false, error: "Link an account or debt with the same currency as this goal." };
     }
 
     // Update the goal
@@ -407,6 +427,10 @@ export async function addGoalContribution(goalId: string, formData: FormData) {
       return { success: false, error: "Goal not found" };
     }
 
+    if (parsed.accountId) {
+      const account = await prisma.financialAccount.findFirst({ where: { id: parsed.accountId, userId: user.id } });
+      if (!account || account.currency !== existingGoal.currency) return { success: false, error: "Choose an account with the same currency as the goal." };
+    }
     // Create the contribution
     const contribution = await prisma.goalContribution.create({
       data: {
@@ -488,7 +512,7 @@ export async function getGoalContributions(goalId: string) {
 /**
  * Get goal summary for dashboard
  */
-export async function getGoalSummary() {
+export async function getGoalSummary(currency = "USD") {
   try {
     const result = await getGoals();
     
@@ -497,7 +521,7 @@ export async function getGoalSummary() {
     }
 
     const { calculateGoalSummary } = await import("@/lib/finance/goals");
-    const summary = calculateGoalSummary([], result.data || []);
+    const summary = calculateGoalSummary([], (result.data || []).filter(item => item.goal.currency === currency));
 
     return { success: true, data: summary };
   } catch (error) {

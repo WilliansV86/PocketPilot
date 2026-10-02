@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
+
 
 import { useState } from "react";
 import { format } from "date-fns";
@@ -26,7 +28,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency";
 import { 
   getGoalTypeInfo, 
   getPriorityColor, 
@@ -38,6 +40,7 @@ interface Goal {
   id: string;
   name: string;
   type: string;
+  currency?: string;
   targetAmount: number;
   currentAmount: number;
   startDate: string;
@@ -82,9 +85,12 @@ export function GoalList({
   onComplete, 
   onAddContribution 
 }: GoalListProps) {
+  const [currency, setCurrency] = usePreferredCurrency("goals");
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   const filteredGoals = goals.filter(goal => {
+    if ((goal.goal.currency || "USD") !== currency) return false;
     if (filter === 'active') return !goal.isCompleted;
     if (filter === 'completed') return goal.isCompleted;
     return true;
@@ -97,16 +103,17 @@ export function GoalList({
   const totalTarget = activeGoals.reduce((sum, g) => sum + g.targetAmount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <CurrencyPicker remember preferenceKey="goals" value={currency} onChange={setCurrency} />
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Total Goals</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{filteredGoals.length}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{filteredGoals.length}</div>
             <p className="text-xs text-muted-foreground">
               {activeGoals.length} active, {completedGoals.length} completed
             </p>
@@ -114,12 +121,12 @@ export function GoalList({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Total Saved</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalSaved)}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{formatCurrency(totalSaved)}</div>
             <p className="text-xs text-muted-foreground">
               Across {activeGoals.length} active goals
             </p>
@@ -127,12 +134,12 @@ export function GoalList({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Total Target</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalTarget)}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">{formatCurrency(totalTarget)}</div>
             <p className="text-xs text-muted-foreground">
               Combined goal targets
             </p>
@@ -140,12 +147,12 @@ export function GoalList({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
             <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 pt-0">
+            <div className="text-xl font-bold">
               {filteredGoals.length > 0 
                 ? `${Math.round((completedGoals.length / filteredGoals.length) * 100)}%`
                 : '0%'
@@ -187,8 +194,8 @@ export function GoalList({
       <div className="space-y-4">
         {filteredGoals.length === 0 ? (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Target className="h-12 w-12 text-muted-foreground mb-4" />
+            <CardContent className="flex flex-col items-center justify-center py-6">
+              <Target className="h-8 w-8 text-muted-foreground mb-2" />
               <h3 className="text-lg font-semibold mb-2">No goals found</h3>
               <p className="text-muted-foreground text-center mb-4">
                 {filter === 'completed' 

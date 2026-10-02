@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createCategoryEnhanced, updateCategoryEnhanced, updateCategoryEnhancedSimple, testServerAction } from "@/lib/actions/category-actions-enhanced";
+import { createCategoryEnhanced, updateCategoryEnhanced } from "@/lib/actions/category-actions-enhanced";
 import { toast } from "sonner";
 
 // Define the form validation schema
@@ -54,6 +54,7 @@ type CategoryFormProps = {
   mode: "create" | "edit";
   onSuccess?: () => void;
   onCancel?: () => void;
+  returnTo?: string;
 };
 
 // Category group options for the dropdown
@@ -115,7 +116,7 @@ const predefinedColors = [
   "#9e9e9e", // Grey
 ];
 
-export function CategoryForm({ category, mode, onSuccess, onCancel }: CategoryFormProps) {
+export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "/categories" }: CategoryFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedIcon, setSelectedIcon] = useState<string>("tag");
@@ -153,81 +154,22 @@ export function CategoryForm({ category, mode, onSuccess, onCancel }: CategoryFo
   }, [form.watch]);
 
   const onSubmit = (values: FormValues) => {
-    console.log('=== CLIENT SIDE FORM SUBMISSION ===');
-    console.log('Mode:', mode);
-    console.log('Values:', values);
-    
     startTransition(async () => {
       try {
-        if (mode === "create") {
-          console.log('Creating new category...');
-          const formData = new FormData();
-          formData.append("name", values.name);
-          formData.append("group", values.group);
-          formData.append("color", values.color);
-          formData.append("icon", values.icon);
-          formData.append("isArchived", "false"); // New categories are never archived
-
-          const result = await createCategoryEnhanced(formData);
-          console.log('Create result:', result);
-          
-          if (result.success) {
-            toast.success("Category created successfully");
-            onSuccess?.();
-            return;
-          } else {
-            toast.error(result.error || "Failed to create category");
-            return;
-          }
-        } else if (mode === "edit" && category) {
-          console.log('Updating existing category...');
-          console.log('Category ID:', category.id);
-          
-          // Test server action first
-          console.log('Testing server action...');
-          const testResult = await testServerAction();
-          console.log('Test result:', testResult);
-          
-          const formData = new FormData();
-          formData.append("name", values.name);
-          formData.append("group", values.group);
-          formData.append("color", values.color);
-          formData.append("icon", values.icon);
-          formData.append("isArchived", values.isArchived.toString());
-
-          console.log('About to call updateCategoryEnhancedSimple...');
-          const result = await updateCategoryEnhancedSimple(category.id, formData);
-          console.log('Simple update result:', result);
-          
-          // Also try the original function
-          console.log('About to call original updateCategoryEnhanced...');
-          try {
-            const originalResult = await updateCategoryEnhanced(category.id, formData);
-            console.log('Original update result:', originalResult);
-            
-            // If we get here, it means the function returned instead of redirecting
-            if (originalResult.success) {
-              toast.success("Category updated successfully");
-              onSuccess?.();
-              return;
-            } else {
-              console.log('Update failed:', originalResult.error);
-              toast.error(originalResult.error || "Failed to update category");
-              return;
-            }
-          } catch (redirectError) {
-            // Server action redirected - this is expected behavior
-            console.log('Server action redirected successfully');
-            toast.success("Category updated successfully");
-            onSuccess?.();
-            return;
-          }
-        }
-        
-        // Call success callback if provided
-        onSuccess?.();
+        const formData = new FormData();
+        formData.append("name", values.name);
+        formData.append("group", values.group);
+        formData.append("color", values.color);
+        formData.append("icon", values.icon);
+        formData.append("isArchived", (mode === "create" ? false : values.isArchived).toString());
+        const result = mode === "create"
+          ? await createCategoryEnhanced(formData)
+          : category ? await updateCategoryEnhanced(category.id, formData) : { success: false, error: "Category not found" };
+        if (!result.success) { toast.error(result.error || "Failed to save category"); return; }
+        toast.success(mode === "create" ? "Category created successfully" : "Category updated successfully");
+        if (onSuccess) onSuccess();
+        else { router.push(returnTo); router.refresh(); }
       } catch (error) {
-        console.error('=== CLIENT SIDE ERROR ===');
         console.error("Failed to save category:", error);
         toast.error("Failed to save category");
       }
@@ -367,7 +309,7 @@ export function CategoryForm({ category, mode, onSuccess, onCancel }: CategoryFo
           <Button
             type="button"
             variant="outline"
-            onClick={onCancel || (() => router.push("/categories"))}
+            onClick={onCancel || (() => router.push(returnTo))}
           >
             Cancel
           </Button>

@@ -1,4 +1,6 @@
 "use client";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
+
 
 import { useState } from "react";
 import { format } from "date-fns";
@@ -34,13 +36,14 @@ import {
 import { MoneyOwedPaymentDialog } from "./money-owed-payment-dialog";
 import { MoneyOwedForm } from "./money-owed-form";
 import { archiveMoneyOwed, deleteMoneyOwed, markMoneyOwedAsPaid } from "@/lib/actions/money-owed-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency";
 import { toast } from "sonner";
 
 interface MoneyOwed {
   id: string;
   personName: string;
   description?: string;
+  currency?: string;
   amountOriginal: number;
   amountOutstanding: number;
   dueDate?: string;
@@ -71,14 +74,16 @@ const statusIcons = {
 };
 
 export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOwedListProps) {
+  const [currency, setCurrency] = usePreferredCurrency("money-owed");
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const [selectedMoneyOwed, setSelectedMoneyOwed] = useState<MoneyOwed | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingMoneyOwed, setEditingMoneyOwed] = useState<MoneyOwed | null>(null);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
 
-  const openMoneyOwed = moneyOwed.filter(item => !item.isArchived && item.status !== "PAID");
-  const paidMoneyOwed = moneyOwed.filter(item => !item.isArchived && item.status === "PAID");
+  const openMoneyOwed = moneyOwed.filter(item => (item.currency || "USD") === currency && !item.isArchived && item.status !== "PAID");
+  const paidMoneyOwed = moneyOwed.filter(item => (item.currency || "USD") === currency && !item.isArchived && item.status === "PAID");
 
   const totalOutstanding = openMoneyOwed.reduce((sum, item) => sum + item.amountOutstanding, 0);
   const openCount = openMoneyOwed.filter(item => item.status === "OPEN").length;
@@ -170,7 +175,8 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
     setEditingMoneyOwed(null);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (savedCurrency?: string) => {
+    if (savedCurrency === "USD" || savedCurrency === "CAD") setCurrency(savedCurrency);
     setShowCreateForm(false);
     setEditingMoneyOwed(null);
     onUpdate?.();
@@ -184,6 +190,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
   if (showCreateForm || editingMoneyOwed) {
     return (
       <div className="space-y-6">
+      <CurrencyPicker remember preferenceKey="money-owed" value={currency} onChange={setCurrency} />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleCancel}>
@@ -199,6 +206,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
           mode={editingMoneyOwed ? "edit" : "create"}
           moneyOwed={editingMoneyOwed}
           onCancel={handleCancel}
+          defaultCurrency={currency}
           onSuccess={handleUpdate}
         />
       </div>
@@ -219,6 +227,8 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
           Add Money Owed
         </Button>
       </div>
+
+      <CurrencyPicker remember preferenceKey="money-owed" value={currency} onChange={setCurrency} />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -306,10 +316,10 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        {formatCurrency(item.amountOriginal)}
+                        {formatMoney(item.amountOriginal, item.currency)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        {formatCurrency(item.amountOutstanding)}
+                        {formatMoney(item.amountOutstanding, item.currency)}
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[item.status]}>
@@ -413,7 +423,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(item.amountOriginal)}
+                      {formatMoney(item.amountOriginal, item.currency)}
                     </TableCell>
                     <TableCell>
                       {format(new Date(item.updatedAt), "MMM dd, yyyy")}
@@ -450,13 +460,13 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
       )}
 
       {/* Empty State */}
-      {moneyOwed.length === 0 && (
+      {openMoneyOwed.length === 0 && paidMoneyOwed.length === 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
+          <CardContent className="flex flex-col items-center justify-center py-6">
             <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No money owed records yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No money owed records in {currency}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Start tracking money owed to you to see your receivables and manage incoming payments.
+              Choose another currency above to check your other records, or add a new one in {currency}.
             </p>
             <Button onClick={handleCreateMoneyOwed}>
               <DollarSign className="h-4 w-4 mr-2" />
@@ -488,7 +498,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
               {selectedMoneyOwed.payments?.map((payment: any) => (
                 <div key={payment.id} className="flex justify-between items-center p-2 border rounded">
                   <div>
-                    <div className="font-medium">{formatCurrency(payment.amount)}</div>
+                    <div className="font-medium">{formatMoney(payment.amount, selectedMoneyOwed.currency)}</div>
                     <div className="text-sm text-muted-foreground">
                       {format(new Date(payment.date), "MMM dd, yyyy")}
                     </div>

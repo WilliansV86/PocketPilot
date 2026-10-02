@@ -1,17 +1,18 @@
 import * as React from "react";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { COLORS, TYPOGRAPHY } from "@/lib/theme/tokens";
 import { cn } from "@/lib/utils";
 
 interface TransactionAmountProps extends React.HTMLAttributes<HTMLSpanElement> {
   amount: number;
+  currency?: string;
   type: string; // INCOME, EXPENSE, TRANSFER
   size?: 'sm' | 'md' | 'lg' | 'xl';
   animated?: boolean;
 }
 
 const TransactionAmount = React.forwardRef<HTMLSpanElement, TransactionAmountProps>(
-  ({ className, amount, type, size = 'md', animated = true, ...props }, ref) => {
+  ({ className, amount, currency = "USD", type, size = 'md', animated = true, ...props }, ref) => {
     const [displayAmount, setDisplayAmount] = React.useState(amount);
     const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -67,7 +68,7 @@ const TransactionAmount = React.forwardRef<HTMLSpanElement, TransactionAmountPro
     };
 
     const { sign, color, displayValue } = getDisplayInfo();
-    const formattedAmount = formatCurrency(displayValue);
+    const formattedAmount = formatCurrency(displayValue, currency);
 
     return (
       <span

@@ -338,7 +338,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
                   <SelectContent>
                     {mergedAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
-                        {account.name}
+                        {account.name} ({account.currency})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -370,7 +370,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
                         .filter(account => account.id !== form.getValues().accountId)
                         .map((account) => (
                           <SelectItem key={account.id} value={account.id}>
-                            {account.name}
+                            {account.name} ({account.currency})
                           </SelectItem>
                         ))}
                     </SelectContent>

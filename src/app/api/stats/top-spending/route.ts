@@ -3,9 +3,9 @@ import { getTopSpending, getDateRangePreset } from "@/lib/actions/stats";
 
 export async function POST(request: Request) {
   try {
-    const { preset } = await request.json();
+    const { preset, currency } = await request.json();
     const dateRange = getDateRangePreset(preset);
-    const result = await getTopSpending(dateRange);
+    const result = await getTopSpending(dateRange, currency === "CAD" ? "CAD" : "USD");
     
     if (!result.success) {
       return NextResponse.json(

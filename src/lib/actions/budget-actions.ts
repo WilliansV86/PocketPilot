@@ -22,7 +22,7 @@ async function getDefaultUser() {
 }
 
 // Get budget data for a specific month
-export async function getBudgetsForMonth(month: string, year: number) {
+export async function getBudgetsForMonth(month: string, year: number, currency = "USD") {
   try {
     const user = await getDefaultUser();
     
@@ -45,6 +45,7 @@ export async function getBudgetsForMonth(month: string, year: number) {
     const budgets = await prisma.budget.findMany({
       where: {
         userId: user.id,
+        currency,
         month: `${year}-${month.padStart(2, '0')}`,
       },
       include: {
@@ -64,6 +65,7 @@ export async function getBudgetsForMonth(month: string, year: number) {
           lte: monthEnd,
         },
         type: "EXPENSE",
+        account: { currency },
       },
       include: {
         category: true,
@@ -89,6 +91,7 @@ export async function getBudgetsForMonth(month: string, year: number) {
     const budgetMoves = await (prisma as any).budgetMove.findMany({
       where: {
         userId: user.id,
+        currency,
         month: `${year}-${month.padStart(2, '0')}`,
       },
     });
@@ -134,8 +137,8 @@ export async function getBudgetsForMonth(month: string, year: number) {
 
     // Use shared calculation logic for consistency
     const [monthlyIncome, monthlyExpenses] = await Promise.all([
-      getTotalIncome(parseInt(month), year),
-      getTotalExpenses(parseInt(month), year),
+      getTotalIncome(parseInt(month), year, currency),
+      getTotalExpenses(parseInt(month), year, currency),
     ]);
 
     return {
@@ -162,7 +165,7 @@ export async function getBudgetsForMonth(month: string, year: number) {
 }
 
 // Update or create budget for a category
-export async function updateBudget(categoryId: string, month: string, year: number, amount: number) {
+export async function updateBudget(categoryId: string, month: string, year: number, amount: number, currency = "USD") {
   try {
     const user = await getDefaultUser();
     const monthString = `${year}-${month.padStart(2, '0')}`;
@@ -170,8 +173,9 @@ export async function updateBudget(categoryId: string, month: string, year: numb
     // Upsert the budget
     const budget = await prisma.budget.upsert({
       where: {
-        userId_categoryId_month: {
+        userId_categoryId_month_currency: {
           userId: user.id,
+          currency,
           categoryId,
           month: monthString,
         },
@@ -181,6 +185,7 @@ export async function updateBudget(categoryId: string, month: string, year: numb
         year: year,
       },
       create: {
+        currency,
         userId: user.id,
         categoryId,
         month: monthString,
@@ -210,7 +215,8 @@ export async function moveBudgetMoney(
   toCategoryId: string,
   month: string,
   year: number,
-  amount: number
+  amount: number,
+  currency = "USD"
 ) {
   try {
     const user = await getDefaultUser();
@@ -219,8 +225,9 @@ export async function moveBudgetMoney(
     // Get source budget
     const fromBudget = await prisma.budget.findUnique({
       where: {
-        userId_categoryId_month: {
+        userId_categoryId_month_currency: {
           userId: user.id,
+          currency,
           categoryId: fromCategoryId,
           month: monthString,
         },
@@ -242,6 +249,7 @@ export async function moveBudgetMoney(
           fromCategoryId: fromCategoryId,
           toCategoryId: toCategoryId,
           userId: user.id,
+          currency,
         },
       });
 
@@ -258,15 +266,16 @@ export async function moveBudgetMoney(
 }
 
 // Delete budget for a category
-export async function deleteBudget(categoryId: string, month: string, year: number) {
+export async function deleteBudget(categoryId: string, month: string, year: number, currency = "USD") {
   try {
     const user = await getDefaultUser();
     const monthString = `${year}-${month.padStart(2, '0')}`;
 
     await prisma.budget.delete({
       where: {
-        userId_categoryId_month: {
+        userId_categoryId_month_currency: {
           userId: user.id,
+          currency,
           categoryId,
           month: monthString,
         },
@@ -278,5 +287,38 @@ export async function deleteBudget(categoryId: string, month: string, year: numb
   } catch (error) {
     console.error("Failed to delete budget:", error);
     return { success: false, error: "Failed to delete budget" };
+  }
+}
+
+
+// Copy planned amounts only. Transactions and moves belong to their original month.
+export async function copyMonthlyBudget(source: string, destination: string, currency: string, replaceExisting = false) {
+  const period = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+  if (!period.safeParse(source).success || !period.safeParse(destination).success || !["USD", "CAD"].includes(currency)) {
+    return { success: false, error: "Choose valid months and a currency" };
+  }
+  if (source === destination) return { success: false, error: "Choose a different destination month" };
+  try {
+    const user = await getDefaultUser();
+    const count = await prisma.$transaction(async tx => {
+      const budgets = await tx.budget.findMany({
+        where: { userId: user.id, month: source, currency, category: { userId: user.id, isArchived: false, group: { not: "INCOME" } } }
+      });
+      if (!budgets.length) throw new Error("There are no saved budget amounts to copy in this month");
+      const existing = await tx.budget.count({ where: { userId: user.id, month: destination, currency, categoryId: { in: budgets.map(b => b.categoryId) } } });
+      if (existing && !replaceExisting) throw new Error("That month already has amounts for these categories. Select replace to overwrite them.");
+      for (const budget of budgets) {
+        await tx.budget.upsert({
+          where: { userId_categoryId_month_currency: { userId: user.id, categoryId: budget.categoryId, month: destination, currency } },
+          create: { userId: user.id, categoryId: budget.categoryId, month: destination, year: Number(destination.slice(0, 4)), currency, amount: budget.amount },
+          update: { amount: budget.amount, year: Number(destination.slice(0, 4)) }
+        });
+      }
+      return budgets.length;
+    });
+    revalidatePath("/budgets");
+    return { success: true, count };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Could not copy the budget" };
   }
 }

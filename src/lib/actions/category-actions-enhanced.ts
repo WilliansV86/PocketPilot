@@ -339,7 +339,7 @@ export async function updateCategoryEnhanced(id: string, formData: FormData) {
     console.log('🔥🔥🔥 Paths revalidated, ABOUT TO REDIRECT 🔥🔥🔥');
     
     // Redirect back to categories list
-    redirect("/categories");
+    return { success: true, message: "Category updated successfully" };
   } catch (error) {
     // Check if this is a redirect error (which is expected behavior)
     if (error instanceof Error && 

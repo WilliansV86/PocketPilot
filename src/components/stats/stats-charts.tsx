@@ -1,11 +1,12 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency";
 import { format } from "date-fns";
 import { ChartTooltip, PieChartTooltip } from "@/components/charts/mobile-tooltip";
 
 interface StatsChartsProps {
+  currency?: string;
   type: "monthly-cashflow" | "category-spending" | "account-breakdown" | "daily-spend";
   data: any[];
   dateRange: any;
@@ -16,11 +17,12 @@ const COLORS = [
   "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16"
 ];
 
-export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
+export function StatsCharts({ currency = "USD", type, data, dateRange }: StatsChartsProps) {
+  const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const renderMonthlyCashflow = () => {
     if (data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        <div className="flex items-center justify-center min-h-[100px] py-6 text-sm text-muted-foreground">
           No cashflow data available for this period
         </div>
       );
@@ -46,13 +48,13 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
           />
           <YAxis 
             tickFormatter={(value) => {
-              if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
-              return `$${value}`;
+              if (value >= 1000) return `${currency} ${(value / 1000).toFixed(1)}k`;
+              return `${currency} ${value}`;
             }}
             fontSize={12}
             width={60}
           />
-          <Tooltip content={<ChartTooltip />} />
+          <Tooltip content={<ChartTooltip currency={currency} />} />
           <Bar dataKey="income" fill="#10b981" name="Income" />
           <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
         </BarChart>
@@ -63,7 +65,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
   const renderCategorySpending = () => {
     if (data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        <div className="flex items-center justify-center min-h-[100px] py-6 text-sm text-muted-foreground">
           No category spending data available
         </div>
       );
@@ -99,7 +101,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip content={<PieChartTooltip />} />
+            <Tooltip content={<PieChartTooltip currency={currency} />} />
           </PieChart>
         </ResponsiveContainer>
         
@@ -138,7 +140,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
   const renderAccountBreakdown = () => {
     if (data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        <div className="flex items-center justify-center min-h-[100px] py-6 text-sm text-muted-foreground">
           No account data available
         </div>
       );
@@ -170,7 +172,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip content={<PieChartTooltip />} />
+            <Tooltip content={<PieChartTooltip currency={currency} />} />
           </PieChart>
         </ResponsiveContainer>
         
@@ -210,7 +212,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
   const renderDailySpend = () => {
     if (data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        <div className="flex items-center justify-center min-h-[100px] py-6 text-sm text-muted-foreground">
           No daily spending data available for this month
         </div>
       );
@@ -226,7 +228,7 @@ export function StatsCharts({ type, data, dateRange }: StatsChartsProps) {
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis tickFormatter={(value) => `$${value}`} />
+          <YAxis tickFormatter={(value) => `${currency} ${value}`} />
           <Tooltip 
             formatter={(value: number | undefined) => [formatCurrency(value || 0), "Daily Spending"]}
             labelFormatter={(label) => `Date: ${label}`}

@@ -5,23 +5,24 @@ import { useRouter } from "next/navigation";
 import { DebtList } from "@/components/debts/debt-list";
 import { DebtForm } from "@/components/debts/debt-form";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
+import { formatMoney as formatCurrency } from "@/lib/currency";
 import { 
   Plus, 
   ArrowLeft, 
   CreditCard, 
-  Calendar, 
-  DollarSign, 
-  AlertCircle,
+  DollarSign,
   TrendingDown,
-  Clock
+  Clock,
+  Bell,
+  FileText,
 } from "lucide-react";
-import { deleteDebt, getDebts, getDebtSummary, makeDebtPayment, type DebtFormValues } from "@/lib/actions/debt-actions";
+import { deleteDebt, getDebts, getDebtSummary, makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { toast } from "sonner";
 
@@ -31,10 +32,17 @@ type Debt = {
   type: string;
   lender: string | null;
   originalAmount: number | null;
+  currency?: string;
   currentBalance: number;
   interestRateAPR: number | null;
   minimumPayment: number | null;
   dueDayOfMonth: number | null;
+  creditLimit: number | null;
+  statementClosingDay: number | null;
+  minimumPaymentPaid: number;
+  minimumPaymentRemaining: number | null;
+  nextDueDate: string | null;
+  nextStatementClosingDate: string | null;
   notes: string | null;
   isClosed: boolean;
   createdAt: Date;
@@ -57,10 +65,12 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>({
+    totalsByCurrency: [],
     totalBalance: 0,
     totalMinimumPayments: 0,
     openDebtCount: 0,
     nextDuePayments: [],
+    upcomingReminders: [],
   });
 
   useEffect(() => {
@@ -204,21 +214,8 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
     }
   };
 
-  const getDebtTypeColor = (type: string) => {
-    const colors = {
-      CREDIT_CARD: "#3b82f6",
-      PERSONAL_LOAN: "#10b981", 
-      AUTO_LOAN: "#f59e0b",
-      MORTGAGE: "#8b5cf6",
-      STUDENT_LOAN: "#ec4899",
-      MEDICAL: "#ef4444",
-      OTHER: "#6b7280",
-    };
-    return colors[type as keyof typeof colors] || "#6b7280";
-  };
-
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(`${dateString}T12:00:00`);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
@@ -266,15 +263,15 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
 
       {/* Summary Cards - Simplified to 3 cards to eliminate redundancy */}
       {debts.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
               <CardTitle className="text-sm font-medium">Total Debt</CardTitle>
               <CreditCard className="h-4 w-4 text-red-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(summary.totalBalance)}
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold text-red-600">
+                {(summary.totalsByCurrency || []).map((total: any) => <div key={total.currency}>{formatCurrency(total.totalBalance, total.currency)}</div>)}
               </div>
               <p className="text-xs text-muted-foreground">
                 {summary.openDebtCount} active debts
@@ -283,13 +280,13 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
               <CardTitle className="text-sm font-medium">Monthly Minimums</CardTitle>
               <DollarSign className="h-4 w-4 text-orange-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {formatCurrency(summary.totalMinimumPayments)}
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold text-orange-600">
+                {(summary.totalsByCurrency || []).map((total: any) => <div key={total.currency}>{formatCurrency(total.totalMinimumPayments, total.currency)}</div>)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Total minimum payments
@@ -298,12 +295,12 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
               <CardTitle className="text-sm font-medium">Payment Progress</CardTitle>
               <TrendingDown className="h-4 w-4 text-green-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold text-green-600">
                 {debts.length > 0 
                   ? Math.round((debts.filter(d => d.isClosed).length / debts.length) * 100)
                   : 0}%
@@ -315,6 +312,17 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
                 }
               </p>
             </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">Average APR</CardTitle></CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold">{(() => { const open = debts.filter(debt => !debt.isClosed); return open.length ? (open.reduce((sum, debt) => sum + (debt.interestRateAPR || 0), 0) / open.length).toFixed(2) : "0.00"; })()}%</div>
+              <p className="text-xs text-muted-foreground">Across open debts</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">Closed Debts</CardTitle></CardHeader>
+            <CardContent className="p-3 pt-0"><div className="text-lg font-bold text-green-600">{debts.filter(debt => debt.isClosed).length}</div><p className="text-xs text-muted-foreground">Paid off</p></CardContent>
           </Card>
         </div>
       )}
@@ -347,45 +355,46 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         />
       )}
 
-      {/* Next Due Payments */}
-      {summary.nextDuePayments.length > 0 && (
+      {/* Reminder Center */}
+      {summary.upcomingReminders.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 pb-2">
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Upcoming Payments
+              <Bell className="h-5 w-5" />
+              Reminder Center
             </CardTitle>
             <CardDescription>
-              Next 5 debt payments due
+              Red: payment within 3 days · Amber: within 7 days · Blue: statement closing soon
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {summary.nextDuePayments.map((payment: any, index: number) => (
-                <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getDebtTypeColor(payment.type) }}
-                    />
-                    <div>
-                      <div className="font-medium">{payment.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {payment.lender && `${payment.lender} • `}
-                        Due {formatDate(payment.dueDate)}
+          <CardContent className="p-4 pt-0">
+            <div className="grid gap-2 lg:grid-cols-2">
+              {summary.upcomingReminders.map((reminder: any) => {
+                const payment = reminder.kind === "PAYMENT_DUE";
+                const urgent = payment && reminder.daysUntil <= 3;
+                const soon = payment && reminder.daysUntil > 3 && reminder.daysUntil <= 7;
+                const closingSoon = !payment && reminder.daysUntil <= 3;
+                const rowStyle = urgent ? "border-red-500/60 border-l-red-500 bg-red-500/10" : soon ? "border-amber-500/50 border-l-amber-500 bg-amber-500/10" : closingSoon ? "border-blue-500/50 border-l-blue-500 bg-blue-500/10" : "border-border border-l-muted-foreground/30";
+                const alertStyle = urgent ? "bg-red-500 text-white" : soon ? "bg-amber-400 text-black" : closingSoon ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground";
+                const timing = reminder.daysUntil === 0 ? (payment ? "Due today" : "Closes today") : reminder.daysUntil === 1 ? (payment ? "Due tomorrow" : "Closes tomorrow") : `${reminder.daysUntil} days ${payment ? "to pay" : "to closing"}`;
+                return (
+                  <div key={reminder.id} className={`flex min-w-0 items-start justify-between gap-2 rounded-lg border border-l-4 p-3 ${rowStyle}`}>
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {payment ? <Clock className={`h-4 w-4 shrink-0 ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-muted-foreground"}`} /> : <FileText className="h-4 w-4 shrink-0 text-blue-500" />}
+                        <div className="text-sm font-medium break-words">{reminder.name}</div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded px-2 py-0.5 text-xs font-semibold ${alertStyle}`}>{timing}</span>
+                        <span className="text-xs text-muted-foreground">{payment ? "Payment" : "Statement"} · {formatDate(reminder.date)}</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium text-red-600">
-                      {formatCurrency(payment.minimumPayment)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatCurrency(payment.currentBalance)} remaining
+                    <div className="max-w-[180px] shrink-0 text-right">
+                      {payment ? reminder.amount > 0 ? <><div className={`text-sm font-semibold ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-foreground"}`}>{formatCurrency(reminder.amount, reminder.currency)}</div><div className="text-xs text-muted-foreground">Minimum remaining</div></> : <div className="text-xs font-medium">Check minimum amount</div> : <div className="text-xs text-muted-foreground">{reminder.detail}</div>}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -414,7 +423,7 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
                 onChange={(e) => setPaymentAmount(e.target.value)}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Current balance: {selectedDebt ? formatCurrency(selectedDebt.currentBalance) : "N/A"}
+                Current balance: {selectedDebt ? formatCurrency(selectedDebt.currentBalance, selectedDebt.currency) : "N/A"}
               </p>
             </div>
             
@@ -435,9 +444,9 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
                   <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account) => (
+                  {accounts.filter(account => account.currency === (selectedDebt?.currency || "USD")).map((account) => (
                     <SelectItem key={account.id} value={account.id}>
-                      {account.name} ({formatCurrency(Number(account.balance))})
+                      {account.name} ({formatCurrency(Number(account.balance), account.currency)})
                     </SelectItem>
                   ))}
                 </SelectContent>
