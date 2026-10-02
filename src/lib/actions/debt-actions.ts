@@ -38,7 +38,19 @@ const debtSchema = z.object({
 
 export type DebtFormValues = z.infer<typeof debtSchema>;
 
-function formatDebt(debt: any, today = new Date()) {
+// Calendar date in Alberta, represented at local noon for the date-only helpers.
+function albertaCalendarDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Edmonton",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(now);
+  const part = (type: string) => Number(parts.find(item => item.type === type)?.value);
+  return new Date(part("year"), part("month") - 1, part("day"), 12);
+}
+
+function formatDebt(debt: any, today = albertaCalendarDate()) {
   const currentCycle = debt.dueDayOfMonth
     ? paymentCycleKey(debt.dueDayOfMonth, today)
     : null;
@@ -388,7 +400,7 @@ export async function getDebtSummary() {
     const totalBalance = debts.reduce((sum, debt) => sum + Number(debt.currentBalance), 0);
     const totalMinimumPayments = debts.reduce((sum, debt) => sum + (Number(debt.minimumPayment) || 0), 0);
     
-    const today = new Date();
+    const today = albertaCalendarDate();
     const formattedDebts = debts.map(debt => formatDebt(debt, today));
     const totalsByCurrency = ["USD", "CAD"].map(currency => {
       const matching = debts.filter(debt => debt.currency === currency);
