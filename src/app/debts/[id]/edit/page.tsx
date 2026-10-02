@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { DebtForm } from "@/components/debts/debt-form";
@@ -6,8 +7,10 @@ import { ArrowLeft } from "lucide-react";
 import { getDebtById } from "@/lib/actions/debt-actions";
 import Link from "next/link";
 
-export default async function EditDebtPage({ params }: { params: { id: string } }) {
-  const { data: debt, success } = await getDebtById(params.id);
+export default async function EditDebtPage({ params }: { params: Promise<{ id: string }> }) {
+  await auth.protect();
+
+  const { data: debt, success } = await getDebtById((await params).id);
 
   if (!success || !debt) {
     notFound();

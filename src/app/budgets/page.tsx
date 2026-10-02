@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BudgetsClientEnhanced } from "@/components/budgets/budgets-client-enhanced";
 
@@ -6,6 +7,8 @@ interface BudgetsPageProps {
 }
 
 export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
+  await auth.protect();
+
   // Get current month and year from search params or default to current
   const params = await searchParams;
   const currentDate = new Date();

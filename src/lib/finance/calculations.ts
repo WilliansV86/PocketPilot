@@ -1,20 +1,9 @@
+import { getDefaultUser } from "@/lib/get-default-user";
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth } from "date-fns";
 
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: "dev@pocketpilot.local",
-    },
-  });
+// Resolve the signed-in owner through getDefaultUser.
 
-  if (!user) {
-    throw new Error("Default user not found. Please run the seed script.");
-  }
-
-  return user;
-}
 
 /**
  * Get total income for a specific month and year

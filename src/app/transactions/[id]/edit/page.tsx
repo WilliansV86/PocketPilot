@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { TransactionForm } from "@/components/transactions/transaction-form-new";
@@ -13,6 +14,8 @@ interface EditTransactionPageProps {
 }
 
 export default async function EditTransactionPage({ params }: EditTransactionPageProps) {
+  await auth.protect();
+
   const { id } = await params;
   const { data: transaction, success } = await getTransactionById(id);
   

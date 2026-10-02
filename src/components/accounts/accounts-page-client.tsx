@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +21,9 @@ export function AccountsPageClient({ children }: AccountsPageClientProps) {
   useEffect(() => {
     // Update counts when component mounts or localStorage changes
     const updateCounts = () => {
-      const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
-      const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
-      const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+      const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
+      const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
+      const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
       setDeletedCount(deletedIds.length);
       setUpdatedCount(Object.keys(updatedAccounts).length);
       setNewCount(newAccounts.length);
@@ -44,9 +46,9 @@ export function AccountsPageClient({ children }: AccountsPageClientProps) {
   const clearPreviewChanges = () => {
     setIsClearing(true);
     try {
-      localStorage.removeItem('deletedAccounts');
-      localStorage.removeItem('updatedAccounts');
-      localStorage.removeItem('newAccounts');
+      retiredPreviewStorage.removeItem('deletedAccounts');
+      retiredPreviewStorage.removeItem('updatedAccounts');
+      retiredPreviewStorage.removeItem('newAccounts');
       setDeletedCount(0);
       setUpdatedCount(0);
       setNewCount(0);

@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AccountForm } from "@/components/accounts/account-form";
@@ -11,6 +12,8 @@ interface EditAccountPageProps {
 }
 
 export default async function EditAccountPage({ params }: EditAccountPageProps) {
+  await auth.protect();
+
   const { id } = await params;
   const { data: account, success } = await getAccountById(id);
   

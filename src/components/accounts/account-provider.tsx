@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Account = {
@@ -28,9 +30,9 @@ export function AccountProvider({ children, initialAccounts }: {
 
   const refreshAccounts = () => {
     // Apply localStorage changes
-    const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
-    const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
-    const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+    const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
+    const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
+    const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
     
     // Filter out deleted accounts
     const filteredAccounts = initialAccounts.filter(a => !deletedIds.includes(a.id));

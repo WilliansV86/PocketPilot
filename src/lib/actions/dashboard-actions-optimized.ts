@@ -1,25 +1,15 @@
 "use server";
 
+import { getDefaultUser } from "@/lib/get-default-user";
+
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { getMonthlyFinancialData, getUncategorizedCount } from "@/lib/finance/calculations";
 import { getNetWorthSummary } from "./net-worth-actions";
 import { getGoals } from "./goal-actions";
 
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: "dev@pocketpilot.local",
-    },
-  });
+// All dashboard queries use the authenticated owner.
 
-  if (!user) {
-    throw new Error("Default user not found. Please run the seed script.");
-  }
-
-  return user;
-}
 
 // Consolidated dashboard data fetch - reduces multiple round trips
 export async function getDashboardData() {
@@ -54,27 +44,19 @@ export async function getDashboardData() {
       getMonthlyFinancialData(new Date().getMonth() + 1, new Date().getFullYear()),
       
       // Expense by category (raw query)
-      prisma.$queryRaw<Array<{
-        categoryId: string;
-        categoryName: string;
-        categoryGroup: string;
-        amount: bigint;
-      }>>`
-        SELECT 
-          t."categoryId",
-          c.name as "categoryName",
-          c.group as "categoryGroup",
-          COALESCE(SUM(t.amount), 0) as amount
-        FROM "Transaction" t
-        LEFT JOIN "Category" c ON t."categoryId" = c.id
-        WHERE t."userId" = ${userId}
-          AND t.type = 'EXPENSE'
-          AND t.date >= ${startOfMonth(new Date())}
-          AND t.date <= ${endOfMonth(new Date())}
-          AND t."categoryId" IS NOT NULL
-        GROUP BY t."categoryId", c.name, c.group
-        ORDER BY amount DESC
-      `,
+      (async () => {
+        const rows = await prisma.transaction.findMany({
+          where: { userId, type: "EXPENSE", date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) }, categoryId: { not: null } },
+          include: { category: true },
+        });
+        const groups = new Map<string, { categoryId: string; categoryName: string; categoryGroup: string; amount: number }>();
+        for (const row of rows) {
+          if (!row.category || !row.categoryId) continue;
+          const item = groups.get(row.categoryId) ?? { categoryId: row.categoryId, categoryName: row.category.name, categoryGroup: row.category.group, amount: 0 };
+          item.amount += Number(row.amount); groups.set(row.categoryId, item);
+        }
+        return [...groups.values()].sort((a,b) => b.amount-a.amount);
+      })(),
       
       // Recent transactions
       prisma.transaction.findMany({
@@ -159,22 +141,18 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
       dailySpend
     ] = await Promise.all([
       // Monthly cashflow for the last 12 months
-      prisma.$queryRaw<Array<{
-        month: Date;
-        income: bigint;
-        expenses: bigint;
-      }>>`
-        SELECT 
-          DATE_TRUNC('month', date) as month,
-          SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END) as income,
-          SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END) as expenses
-        FROM "Transaction" 
-        WHERE "userId" = ${userId}
-          AND date >= ${subMonths(dateRange.from, 11)}
-          AND date <= ${dateRange.to}
-        GROUP BY DATE_TRUNC('month', date)
-        ORDER BY month ASC
-      `,
+      (async () => {
+        const rows = await prisma.transaction.findMany({ where: { userId, date: { gte: subMonths(dateRange.from, 11), lte: dateRange.to } }, select: { date: true, type: true, amount: true } });
+        const groups = new Map<string, { month: Date; income: number; expenses: number }>();
+        for (const row of rows) {
+          const key = row.date.toISOString().slice(0,7);
+          const item = groups.get(key) ?? { month: new Date(key + "-01T00:00:00Z"), income: 0, expenses: 0 };
+          if (row.type === "INCOME") item.income += Number(row.amount);
+          if (row.type === "EXPENSE") item.expenses += Number(row.amount);
+          groups.set(key, item);
+        }
+        return [...groups.values()].sort((a,b) => a.month.getTime()-b.month.getTime());
+      })(),
       
       // Category spending
       prisma.transaction.groupBy({
@@ -202,21 +180,16 @@ export async function getStatsData(dateRange: { from: Date; to: Date }) {
       }),
       
       // Daily spending
-      prisma.$queryRaw<Array<{
-        date: Date;
-        amount: bigint;
-      }>>`
-        SELECT 
-          DATE(date) as date,
-          SUM(amount) as amount
-        FROM "Transaction" 
-        WHERE "userId" = ${userId}
-          AND type = 'EXPENSE'
-          AND date >= ${dateRange.from}
-          AND date <= ${dateRange.to}
-        GROUP BY DATE(date)
-        ORDER BY date ASC
-      `,
+      (async () => {
+        const rows = await prisma.transaction.findMany({ where: { userId, type: "EXPENSE", date: { gte: dateRange.from, lte: dateRange.to } }, select: { date: true, amount: true } });
+        const groups = new Map<string, { date: Date; amount: number }>();
+        for (const row of rows) {
+          const key = row.date.toISOString().slice(0,10);
+          const item = groups.get(key) ?? { date: new Date(key + "T00:00:00Z"), amount: 0 };
+          item.amount += Number(row.amount); groups.set(key, item);
+        }
+        return [...groups.values()].sort((a,b) => a.date.getTime()-b.date.getTime());
+      })(),
     ]);
 
     return {

@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,7 +113,7 @@ export function AccountForm({ account, mode }: AccountFormProps) {
             // Fallback function for browser preview - persist new account in localStorage
             async () => {
               // For browser preview, store the new account in localStorage
-              const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+              const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
               const newAccount = {
                 id: 'preview-' + Date.now(),
                 name: values.name,
@@ -123,7 +125,7 @@ export function AccountForm({ account, mode }: AccountFormProps) {
                 updatedAt: new Date()
               };
               newAccounts.push(newAccount);
-              localStorage.setItem('newAccounts', JSON.stringify(newAccounts));
+              retiredPreviewStorage.setItem('newAccounts', JSON.stringify(newAccounts));
               return { 
                 success: true, 
                 message: "Account created (preview mode)",
@@ -145,7 +147,7 @@ export function AccountForm({ account, mode }: AccountFormProps) {
             // Fallback function for browser preview - persist update in localStorage
             async () => {
               // For browser preview, store the updated account in localStorage
-              const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
+              const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
               updatedAccounts[account.id] = {
                 id: account.id,
                 name: values.name,
@@ -156,7 +158,7 @@ export function AccountForm({ account, mode }: AccountFormProps) {
                 createdAt: new Date(),
                 updatedAt: new Date()
               };
-              localStorage.setItem('updatedAccounts', JSON.stringify(updatedAccounts));
+              retiredPreviewStorage.setItem('updatedAccounts', JSON.stringify(updatedAccounts));
               return { 
                 success: true, 
                 message: "Account updated (preview mode)",

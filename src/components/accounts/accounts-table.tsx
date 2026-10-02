@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { 
@@ -85,11 +87,11 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
     // Only update if the accounts prop actually changed
     if (JSON.stringify(previousAccountsRef.current) !== JSON.stringify(accounts)) {
       // Filter out any accounts that were "deleted" in preview mode
-      const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
+      const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
       const filteredAccounts = (accounts || []).filter(a => !deletedIds.includes(a.id));
       
       // Apply any updates from localStorage
-      const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
+      const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
       const finalAccounts = filteredAccounts.map(account => {
         if (updatedAccounts[account.id]) {
           return updatedAccounts[account.id];
@@ -98,7 +100,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
       });
       
       // Add any new accounts created in preview mode
-      const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+      const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
       const allAccounts = [...finalAccounts, ...newAccounts];
       
       setAccountsList(allAccounts);
@@ -117,10 +119,10 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
         // Fallback function for browser preview - persist deletion in localStorage
         async () => {
           // For browser preview, store the deleted ID in localStorage
-          const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
+          const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
           if (!deletedIds.includes(id)) {
             deletedIds.push(id);
-            localStorage.setItem('deletedAccounts', JSON.stringify(deletedIds));
+            retiredPreviewStorage.setItem('deletedAccounts', JSON.stringify(deletedIds));
           }
           return { success: true, message: "Account removed from view (preview mode)" };
         }
@@ -138,9 +140,9 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
         } else {
           toast.success(result.message || "Account deleted successfully");
           // Clear localStorage when actual deletion succeeds
-          const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
+          const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
           const updatedIds = deletedIds.filter((deletedId: string) => deletedId !== id);
-          localStorage.setItem('deletedAccounts', JSON.stringify(updatedIds));
+          retiredPreviewStorage.setItem('deletedAccounts', JSON.stringify(updatedIds));
           window.location.reload();
         }
       } else {

@@ -1,7 +1,10 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getMonthlyCashflow, getDateRangePreset } from "@/lib/actions/stats";
 
 export async function POST(request: Request) {
+  await auth.protect();
+
   try {
     const { preset, currency } = await request.json();
     const dateRange = getDateRangePreset(preset);

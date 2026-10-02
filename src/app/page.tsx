@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { getAccountBalances, getMonthlyFinancials, getExpensesByCategory, getRecentTransactions } from "@/lib/actions/dashboard-actions";
@@ -5,6 +6,8 @@ import { getNetWorthSummary } from "@/lib/actions/net-worth-actions";
 import { getGoals } from "@/lib/actions/goal-actions";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ currency?: string }> }) {
+  await auth.protect();
+
   const params = await searchParams;
   const currency = params.currency === "CAD" ? "CAD" : "USD";
   // Get dashboard data

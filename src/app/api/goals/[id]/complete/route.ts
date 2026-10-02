@@ -1,9 +1,12 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await auth.protect();
+
   try {
     const { id } = await params;
     const { completeGoal } = await import("@/lib/actions/goal-actions");

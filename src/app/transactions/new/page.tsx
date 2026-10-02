@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { TransactionForm } from "@/components/transactions/transaction-form-new";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,8 @@ import { getAccounts } from "@/lib/actions/account-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 
 export default async function NewTransactionPage() {
+  await auth.protect();
+
   // Fetch accounts and categories for the form dropdowns
   const { data: accounts = [], success: accountsSuccess } = await getAccounts();
   const { data: categories = [], success: categoriesSuccess } = await getCategories();

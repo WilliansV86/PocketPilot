@@ -2,8 +2,7 @@ import { formatMoney } from "@/lib/currency";
 import type { NextRequest } from "next/server";
 import nodemailer from "nodemailer";
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/db";
-import { getDefaultUser } from "@/lib/get-default-user";
+import { servicePrisma as prisma } from "@/lib/db-service";
 import { buildDebtReminders, paymentCycleKey } from "@/lib/debt-reminders";
 import { selectEmailReminders } from "@/lib/email-reminder-policy";
 
@@ -82,7 +81,8 @@ export async function GET(request: NextRequest) {
     const part = (name: Intl.DateTimeFormatPartTypes) =>
       Number(parts.find(item => item.type === name)?.value);
     const today = new Date(part("year"), part("month") - 1, part("day"), 12);
-    const user = await getDefaultUser();
+    const user = await prisma.user.findUnique({ where: { id: "user-1" } });
+    if (!user) throw new Error("REMINDER_OWNER_NOT_FOUND");
     const debts = await prisma.debt.findMany({ where: { userId: user.id, isClosed: false } });
     const sources = debts.map(debt => {
       const cycle = debt.dueDayOfMonth ? paymentCycleKey(debt.dueDayOfMonth, today) : null;

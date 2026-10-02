@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,9 +94,9 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
   useEffect(() => {
     const mergeAccountData = () => {
       // Get localStorage changes
-      const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
-      const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
-      const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+      const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
+      const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
+      const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
       
       // Filter out deleted accounts
       const filteredAccounts = data.balanceData.accounts.filter((a: any) => !deletedIds.includes(a.id));

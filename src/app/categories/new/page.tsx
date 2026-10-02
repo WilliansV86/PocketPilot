@@ -1,8 +1,11 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoryForm } from "@/components/categories/category-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function NewCategoryPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
+  await auth.protect();
+
   const params = await searchParams;
   const returnTo = params.returnTo && /^\/budgets(?:\?[^#]*)?$/.test(params.returnTo) ? params.returnTo : "/categories";
   return (

@@ -1,6 +1,9 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  await auth.protect();
+
   try {
     const { getDebts } = await import("@/lib/actions/goal-actions");
     const result = await getDebts();

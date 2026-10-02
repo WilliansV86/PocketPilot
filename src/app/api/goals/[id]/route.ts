@@ -1,9 +1,12 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await auth.protect();
+
   try {
     const { id } = await params;
     const { getGoal } = await import("@/lib/actions/goal-actions");
@@ -30,6 +33,8 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await auth.protect();
+
   try {
     const { id } = await params;
     const { updateGoal } = await import("@/lib/actions/goal-actions");
@@ -58,6 +63,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await auth.protect();
+
   try {
     const { id } = await params;
     const { deleteGoal } = await import("@/lib/actions/goal-actions");

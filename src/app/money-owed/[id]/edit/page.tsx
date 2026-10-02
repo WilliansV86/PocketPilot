@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { MoneyOwedForm } from "@/components/money-owed/money-owed-form";
@@ -6,8 +7,10 @@ import { ArrowLeft } from "lucide-react";
 import { getMoneyOwedById } from "@/lib/actions/money-owed-actions";
 import Link from "next/link";
 
-export default async function EditMoneyOwedPage({ params }: { params: { id: string } }) {
-  const { data: moneyOwed, success } = await getMoneyOwedById(params.id);
+export default async function EditMoneyOwedPage({ params }: { params: Promise<{ id: string }> }) {
+  await auth.protect();
+
+  const { data: moneyOwed, success } = await getMoneyOwedById((await params).id);
 
   if (!success || !moneyOwed) {
     notFound();

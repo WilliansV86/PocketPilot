@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
+import { useLegacyOwner } from "@/components/auth-session-boundary";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,21 +9,34 @@ import { toast } from "sonner";
 const CURRENCY_KEY = "pocketpilot-default-currency";
 
 export function usePreferredCurrency(section: string) {
+  const { userId } = useAuth();
+  const legacyOwner = useLegacyOwner();
   const [currency, setCurrency] = useState("USD");
   useEffect(() => {
+    setCurrency("USD");
+    if (!userId) return;
     try {
-      const saved = localStorage.getItem(`${CURRENCY_KEY}:${section}`);
+      const key = `${CURRENCY_KEY}:${userId}:${section}`;
+      let saved = localStorage.getItem(key);
+      if (!saved && legacyOwner) {
+        const legacy = localStorage.getItem(`${CURRENCY_KEY}:${section}`);
+        if (legacy === "USD" || legacy === "CAD") {
+          saved = legacy;
+          localStorage.setItem(key, legacy);
+        }
+      }
       if (saved === "USD" || saved === "CAD") setCurrency(saved);
     } catch { /* Storage may be unavailable in private browsers. */ }
-  }, [section]);
+  }, [section, userId, legacyOwner]);
   return [currency, setCurrency] as const;
 }
 
 export function CurrencyPicker({ value, onChange, disabled = false, remember = false, preferenceKey }: { value: string; onChange: (value: string) => void; disabled?: boolean; remember?: boolean; preferenceKey?: string }) {
+  const { userId } = useAuth();
   function saveDefault() {
     try {
-      if (!preferenceKey) return;
-      localStorage.setItem(`${CURRENCY_KEY}:${preferenceKey}`, value);
+      if (!preferenceKey || !userId) return;
+      localStorage.setItem(`${CURRENCY_KEY}:${userId}:${preferenceKey}`, value);
       toast.success(`${value} is now your default currency for this tab`);
     } catch {
       toast.error("Your browser could not save the currency preference");

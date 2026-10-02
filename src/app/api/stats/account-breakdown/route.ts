@@ -1,7 +1,10 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getAccountBreakdown } from "@/lib/actions/stats";
 
 export async function GET(request: Request) {
+  await auth.protect();
+
   try {
     const result = await getAccountBreakdown(new URL(request.url).searchParams.get("currency") === "CAD" ? "CAD" : "USD");
     

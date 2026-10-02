@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,9 +90,9 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
   useEffect(() => {
     const mergeAccountData = () => {
       // Get localStorage changes
-      const deletedIds = JSON.parse(localStorage.getItem('deletedAccounts') || '[]');
-      const updatedAccounts = JSON.parse(localStorage.getItem('updatedAccounts') || '{}');
-      const newAccounts = JSON.parse(localStorage.getItem('newAccounts') || '[]');
+      const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedAccounts') || '[]');
+      const updatedAccounts = JSON.parse(retiredPreviewStorage.getItem('updatedAccounts') || '{}');
+      const newAccounts = JSON.parse(retiredPreviewStorage.getItem('newAccounts') || '[]');
       
       // Filter out deleted accounts
       const filteredAccounts = accounts.filter(a => !deletedIds.includes(a.id));

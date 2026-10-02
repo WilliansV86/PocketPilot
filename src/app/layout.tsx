@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/current-user";
+import { AuthSessionBoundary } from "@/components/auth-session-boundary";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
@@ -21,25 +25,29 @@ export const metadata: Metadata = {
   description: "Track your finances, manage accounts, and monitor spending with PocketPilot",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId } = await auth();
+  const user = userId ? await getCurrentUser() : null;
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
+        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AuthSessionBoundary legacyOwner={user?.id === "user-1"}>{children}</AuthSessionBoundary>
         </ThemeProvider>
         <Toaster position="bottom-right" />
+        </ClerkProvider>
       </body>
     </html>
   );

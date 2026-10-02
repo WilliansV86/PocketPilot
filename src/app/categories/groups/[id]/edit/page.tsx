@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoryGroupForm } from "@/components/categories/category-group-form";
@@ -11,6 +12,8 @@ interface EditCategoryGroupPageProps {
 }
 
 export default async function EditCategoryGroupPage({ params }: EditCategoryGroupPageProps) {
+  await auth.protect();
+
   const { id } = await params;
   const { data: categoryGroup, success } = await getCategoryById(id);
   

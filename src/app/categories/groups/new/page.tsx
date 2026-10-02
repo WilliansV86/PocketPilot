@@ -1,8 +1,11 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoryGroupForm } from "@/components/categories/category-group-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function NewCategoryGroupPage() {
+  await auth.protect();
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">

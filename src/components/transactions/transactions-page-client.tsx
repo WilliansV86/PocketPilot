@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye } from "lucide-react";
@@ -17,7 +19,7 @@ export function TransactionsPageClient({ children }: TransactionsPageClientProps
     // Update deleted count when component mounts or localStorage changes
     const updateDeletedCount = () => {
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('deletedTransactions') || '[]');
+        const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedTransactions') || '[]');
         setDeletedCount(deletedIds.length);
       } catch (error) {
         console.error('Error updating deleted count:', error);
@@ -42,7 +44,7 @@ export function TransactionsPageClient({ children }: TransactionsPageClientProps
   const clearPreviewDeletions = () => {
     setIsClearing(true);
     try {
-      localStorage.removeItem('deletedTransactions');
+      retiredPreviewStorage.removeItem('deletedTransactions');
       setDeletedCount(0);
       toast.success("Preview deletions cleared. Refreshing page...");
       setTimeout(() => {

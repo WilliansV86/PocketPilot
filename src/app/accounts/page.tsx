@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AccountsTable } from "@/components/accounts/accounts-table";
 import { AccountsPageClient } from "@/components/accounts/accounts-page-client";
@@ -7,6 +8,8 @@ import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 
 export default async function AccountsPage() {
+  await auth.protect();
+
   // Move data fetching to client side for faster navigation
   return (
     <DashboardLayout>

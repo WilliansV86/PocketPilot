@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -95,12 +96,7 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
             <ThemeToggle />
 
             {/* User Avatar */}
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
+            <UserButton />
           </div>
         </div>
       </header>

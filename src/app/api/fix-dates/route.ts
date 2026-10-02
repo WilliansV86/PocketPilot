@@ -1,7 +1,7 @@
-import { fixTransactionDates } from "@/lib/actions/fix-transaction-dates";
-
-export async function GET() {
-  const result = await fixTransactionDates();
-  
-  return Response.json(result);
-}
+import { NextResponse } from "next/server";
+function retiredEndpoint() { return NextResponse.json({ error: "Not found" }, { status: 404 }); }
+export const GET = retiredEndpoint;
+export const POST = retiredEndpoint;
+export const PUT = retiredEndpoint;
+export const PATCH = retiredEndpoint;
+export const DELETE = retiredEndpoint;

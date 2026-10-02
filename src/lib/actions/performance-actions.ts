@@ -140,28 +140,17 @@ export async function getCachedSummaryData(userId: string) {
   // This would typically use Redis or another cache
   // For now, we'll implement a simple version
   try {
-    const summary = await prisma.$queryRaw`
-      SELECT 
-        (SELECT COALESCE(SUM(balance), 0) FROM "FinancialAccount" WHERE "userId" = ${userId}) as total_balance,
-        (SELECT COUNT(*) FROM "Transaction" WHERE "userId" = ${userId} AND date >= NOW() - INTERVAL '30 days') as recent_transactions_count,
-        (SELECT COUNT(*) FROM "Goal" WHERE "userId" = ${userId} AND status != 'COMPLETED') as active_goals_count,
-        (SELECT COUNT(*) FROM "Category" WHERE "userId" = ${userId} AND "isArchived" = false) as active_categories_count
-    ` as {
-      total_balance: bigint;
-      recent_transactions_count: bigint;
-      active_goals_count: bigint;
-      active_categories_count: bigint;
-    };
+    const [balance, transactions, goals, categories] = await Promise.all([
+      prisma.financialAccount.aggregate({ where: { userId }, _sum: { balance: true } }),
+      prisma.transaction.count({ where: { userId, date: { gte: new Date(Date.now() - 30 * 86400000) } } }),
+      prisma.goal.count({ where: { userId, isCompleted: false } }),
+      prisma.category.count({ where: { userId, isArchived: false } }),
+    ]);
+    return { success: true, data: {
+      totalBalance: Number(balance._sum.balance ?? 0), recentTransactionsCount: transactions,
+      activeGoalsCount: goals, activeCategoriesCount: categories,
+    } };
 
-    return {
-      success: true,
-      data: {
-        totalBalance: Number(summary.total_balance),
-        recentTransactionsCount: Number(summary.recent_transactions_count),
-        activeGoalsCount: Number(summary.active_goals_count),
-        activeCategoriesCount: Number(summary.active_categories_count),
-      },
-    };
   } catch (error) {
     console.error("Summary fetch error:", error);
     return {

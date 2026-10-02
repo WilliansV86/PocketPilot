@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { DebtList } from "@/components/debts/debt-list";
 import { DebtForm } from "@/components/debts/debt-form";
@@ -26,6 +27,8 @@ type Debt = {
 };
 
 export default async function DebtsPage() {
+  await auth.protect();
+
   // Fetch all debts
   const { data: debts = [], success } = await getDebts();
 

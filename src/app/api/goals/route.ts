@@ -1,7 +1,10 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getGoals } from "@/lib/actions/goal-actions";
 
 export async function GET() {
+  await auth.protect();
+
   try {
     console.log("=== GOALS API: Starting request ===");
     const result = await getGoals();
@@ -35,6 +38,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  await auth.protect();
+
   try {
     const { createGoal } = await import("@/lib/actions/goal-actions");
     const formData = await request.formData();

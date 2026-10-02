@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { MoneyOwedClient } from "./money-owed-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,8 @@ type MoneyOwed = {
 };
 
 export default async function MoneyOwedPage() {
+  await auth.protect();
+
   // Fetch all money owed records
   const { data: moneyOwed = [], success, error } = await getMoneyOwed();
 

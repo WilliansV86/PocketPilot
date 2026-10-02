@@ -1,25 +1,15 @@
 "use server";
 
+import { getDefaultUser } from "@/lib/get-default-user";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { getTotalIncome, getTotalExpenses } from "@/lib/finance/calculations";
 
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: "dev@pocketpilot.local",
-    },
-  });
+// Resolve the signed-in owner through getDefaultUser.
 
-  if (!user) {
-    throw new Error("Default user not found. Please run the seed script.");
-  }
-
-  return user;
-}
 
 // Get budget data for a specific month
 export async function getBudgetsForMonth(month: string, year: number, currency = "USD") {

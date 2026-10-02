@@ -1,5 +1,7 @@
 "use client";
 
+import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -115,7 +117,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   // Update the local state when transactions prop changes
   useEffect(() => {
     // Filter out any transactions that were "deleted" in preview mode
-    const deletedIds = JSON.parse(localStorage.getItem('deletedTransactions') || '[]');
+    const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedTransactions') || '[]');
     const filteredTransactions = transactions.filter(t => !deletedIds.includes(t.id));
     setTransactionsList(filteredTransactions);
   }, [transactions]);
@@ -133,10 +135,10 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
         // Fallback function for browser preview - persist deletion in localStorage
         async () => {
           // For browser preview, store the deleted ID in localStorage
-          const deletedIds = JSON.parse(localStorage.getItem('deletedTransactions') || '[]');
+          const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedTransactions') || '[]');
           if (!deletedIds.includes(id)) {
             deletedIds.push(id);
-            localStorage.setItem('deletedTransactions', JSON.stringify(deletedIds));
+            retiredPreviewStorage.setItem('deletedTransactions', JSON.stringify(deletedIds));
           }
           return { success: true, isPreview: true } as any;
         }
@@ -155,9 +157,9 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           toast.success("Transaction deleted successfully");
           
           // Clear localStorage when actual deletion succeeds
-          const deletedIds = JSON.parse(localStorage.getItem('deletedTransactions') || '[]');
+          const deletedIds = JSON.parse(retiredPreviewStorage.getItem('deletedTransactions') || '[]');
           const updatedIds = deletedIds.filter((deletedId: string) => deletedId !== id);
-          localStorage.setItem('deletedTransactions', JSON.stringify(updatedIds));
+          retiredPreviewStorage.setItem('deletedTransactions', JSON.stringify(updatedIds));
         }
       } else {
         toast.error((result as any)?.error || "Failed to delete transaction");

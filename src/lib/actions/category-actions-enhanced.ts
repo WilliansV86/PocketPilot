@@ -1,5 +1,7 @@
 "use server";
 
+import { getDefaultUser } from "@/lib/get-default-user";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -19,23 +21,7 @@ const categorySchema = z.object({
 export type CategoryFormValues = z.infer<typeof categorySchema>;
 
 // Helper function to get the default user
-async function getDefaultUser() {
-  // Try the hardcoded email first
-  let user = await prisma.user.findUnique({
-    where: { email: "dev@pocketpilot.local" },
-  });
 
-  // If not found, get the first available user
-  if (!user) {
-    user = await prisma.user.findFirst();
-  }
-
-  if (!user) {
-    throw new Error("No users found in database");
-  }
-
-  return user;
-}
 
 // Get categories with proper ordering
 export async function getCategoriesEnhanced(includeArchived: boolean = false) {

@@ -1,24 +1,14 @@
 "use server";
 
+import { getDefaultUser } from "@/lib/get-default-user";
+
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { getMonthlyFinancialData, getUncategorizedCount } from "@/lib/finance/calculations";
 import { getNetWorthSummary } from "./net-worth-actions";
 
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: "dev@pocketpilot.local",
-    },
-  });
+// Resolve the signed-in owner through getDefaultUser.
 
-  if (!user) {
-    throw new Error("Default user not found. Please run the seed script.");
-  }
-
-  return user;
-}
 
 // Function to get account balances
 export async function getAccountBalances(currency = "USD") {

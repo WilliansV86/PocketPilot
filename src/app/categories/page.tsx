@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoriesTable } from "@/components/categories/categories-table";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,12 @@ import { PlusCircle, Archive } from "lucide-react";
 import { CategoriesClient } from "@/components/categories/categories-client";
 
 interface CategoriesPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
+  await auth.protect();
+
   // Move data fetching to client side for faster navigation
   return (
     <DashboardLayout>
@@ -26,7 +29,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
         </div>
         
         <div className="mt-3">
-          <CategoriesClient searchParams={searchParams} />
+          <CategoriesClient searchParams={await searchParams} />
         </div>
       </div>
     </DashboardLayout>
