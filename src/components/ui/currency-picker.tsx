@@ -19,10 +19,26 @@ export function usePreferredCurrency(section: string) {
 }
 
 export function CurrencyPicker({ value, onChange, disabled = false, remember = false, preferenceKey, compact = false }: { value: string; onChange: (value: string) => void; disabled?: boolean; remember?: boolean; preferenceKey?: string; compact?: boolean }) {
+  const [savedDefault, setSavedDefault] = useState<string | null>(null);
+  useEffect(() => {
+    function readDefault() {
+      try {
+        const saved = preferenceKey ? localStorage.getItem(`${CURRENCY_KEY}:${preferenceKey}`) : null;
+        setSavedDefault(saved === "USD" || saved === "CAD" ? saved : null);
+      } catch { setSavedDefault(null); }
+    }
+    readDefault();
+    window.addEventListener("storage", readDefault);
+    return () => window.removeEventListener("storage", readDefault);
+  }, [preferenceKey]);
+  const isDefault = savedDefault === value;
+  const defaultLabel = isDefault ? `${value} is the default currency for this tab` : `Set ${value} as default currency for this tab`;
+
   function saveDefault() {
     try {
       if (!preferenceKey) return;
       localStorage.setItem(`${CURRENCY_KEY}:${preferenceKey}`, value);
+      setSavedDefault(value);
       toast.success(`${value} is now your default currency for this tab`);
     } catch {
       toast.error("Your browser could not save the currency preference");
@@ -37,7 +53,7 @@ export function CurrencyPicker({ value, onChange, disabled = false, remember = f
           <option value="CAD">{compact ? "CAD" : "CAD — Canadian Dollar"}</option>
         </select>
       </label>
-      {remember && preferenceKey && <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={saveDefault} aria-label={`Set ${value} as default currency for this tab`} title={`Set ${value} as default`} className={compact ? "h-9 w-9 px-0" : undefined}>{compact ? <Star aria-hidden="true" className="h-4 w-4" /> : "Set as default"}</Button>}
+      {remember && preferenceKey && <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={saveDefault} aria-label={defaultLabel} aria-pressed={isDefault} title={defaultLabel} className={`${compact ? "h-9 w-9 px-0" : ""} ${isDefault ? "border-teal-500/30 bg-teal-500/10 text-teal-700 hover:bg-teal-500/20 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-400" : ""}`}>{compact ? <Star aria-hidden="true" className="h-4 w-4" fill={isDefault ? "currentColor" : "none"} /> : isDefault ? "Default currency" : "Set as default"}</Button>}
     </div>
   );
 }
