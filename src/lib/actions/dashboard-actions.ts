@@ -4,12 +4,11 @@ import { transactionDisplay } from "@/lib/transaction-display";
 import { getDefaultUser } from "@/lib/get-default-user";
 
 import { prisma } from "@/lib/db";
-import { startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { dashboardMonth, dashboardMonthRange, dashboardChartMonths } from "@/lib/dashboard-month";
 import { getMonthlyFinancialData, getUncategorizedCount } from "@/lib/finance/calculations";
 import { getNetWorthSummary } from "./net-worth-actions";
 
 // Resolve the signed-in owner through getDefaultUser.
-
 
 // Function to get account balances
 export async function getAccountBalances(currency = "USD") {
@@ -57,24 +56,19 @@ export async function getAccountBalances(currency = "USD") {
 }
 
 // Function to get monthly income vs expenses using shared calculation logic
-export async function getMonthlyFinancials(currency = "USD") {
+export async function getMonthlyFinancials(currency = "USD", selectedMonth?: string) {
   try {
-    const now = new Date();
-    const months = 6; // Get data for the last 6 months
-    
+    const chosen = dashboardMonth(selectedMonth);
     const monthlyData = [];
-    
-    // Loop through last N months
-    for (let i = 0; i < months; i++) {
-      const date = subMonths(now, i);
-      const month = date.getMonth() + 1; // JavaScript months are 0-indexed
-      const year = date.getFullYear();
-      const monthName = date.toLocaleString('default', { month: 'short' });
-      
+    for (const date of dashboardChartMonths(chosen)) {
+      const month = date.getUTCMonth() + 1;
+      const year = date.getUTCFullYear();
+      const monthName = date.toLocaleString('en-CA', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+
       // Use shared calculation logic
       const financialData = await getMonthlyFinancialData(month, year, currency);
       
-      monthlyData.unshift({
+      monthlyData.push({
         month: monthName,
         income: financialData.income,
         expenses: financialData.expenses,
@@ -100,8 +94,7 @@ export async function getMonthlyFinancials(currency = "USD") {
       savingsRate - ((previousMonthData.savings / previousMonthData.income) * 100) : 0;
     
     // Get uncategorized transactions count for current month
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
+    const [currentYear, currentMonth] = chosen.split("-").map(Number);
     const uncategorizedCount = await getUncategorizedCount(currentMonth, currentYear, currency);
     
     return { 
@@ -129,12 +122,10 @@ export async function getMonthlyFinancials(currency = "USD") {
 }
 
 // Function to get expense breakdown by category
-export async function getExpensesByCategory(currency = "USD") {
+export async function getExpensesByCategory(currency = "USD", selectedMonth?: string) {
   try {
     const user = await getDefaultUser();
-    const now = new Date();
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
+    const { start: monthStart, end: monthEnd } = dashboardMonthRange(selectedMonth);
     
     // Get transactions with categories
     const transactions = await prisma.transaction.findMany({
@@ -143,7 +134,7 @@ export async function getExpensesByCategory(currency = "USD") {
         OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: monthStart,
-          lte: monthEnd,
+          lt: monthEnd,
         },
         type: "EXPENSE",
         categoryId: {
@@ -228,10 +219,22 @@ export async function getRecentTransactions(currency = "USD") {
     
     // Convert Decimal amounts to numbers and account balances to numbers for frontend compatibility
     const formattedTransactions = transactions.map(transactionDisplay);
-
+    
     return { success: true, data: formattedTransactions };
   } catch (error) {
     console.error("Failed to fetch recent transactions:", error);
     return { success: false, error: "Failed to load recent transactions" };
   }
+}
+
+export async function getDashboardMonthData(currency = "USD", selectedMonth?: string) {
+  const month = dashboardMonth(selectedMonth);
+  const [financials, expenses] = await Promise.all([
+    getMonthlyFinancials(currency === "CAD" ? "CAD" : "USD", month),
+    getExpensesByCategory(currency === "CAD" ? "CAD" : "USD", month),
+  ]);
+  if (!financials.success || !expenses.success || !financials.data || !expenses.data) {
+    return { success: false as const, error: "Could not load this month's dashboard. Please try again." };
+  }
+  return { success: true as const, financialsData: financials.data, expenseData: expenses.data };
 }

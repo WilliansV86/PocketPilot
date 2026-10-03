@@ -2,11 +2,14 @@
 
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutDashboard, Wallet, ReceiptText, ArrowDownUp, PiggyBank, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { LayoutDashboard, Wallet, ReceiptText, ArrowDownUp, PiggyBank, AlertTriangle, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
 import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
+import { getDashboardMonthData } from "@/lib/actions/dashboard-actions";
+import { dashboardMonth } from "@/lib/dashboard-month";
+import { toast } from "sonner";
 import { formatMoney } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -74,19 +77,46 @@ type DashboardData = {
 interface DashboardClientProps {
   data: DashboardData;
   currency?: string;
+  selectedPeriod?: string;
 }
 
-export function DashboardClient({ data, currency = "USD" }: DashboardClientProps) {
+export function DashboardClient({ data: initialData, currency = "USD", selectedPeriod }: DashboardClientProps) {
+  const [monthlyData, setMonthlyData] = useState({ financialsData: initialData.financialsData, expenseData: initialData.expenseData });
+  const data = { ...initialData, ...monthlyData };
+  const initialPeriod = dashboardMonth(selectedPeriod);
+  const [period, setPeriod] = useState(initialPeriod);
+  const [loadingMonth, setLoadingMonth] = useState(false);
+  const loadedPeriod = useRef(`${currency}:${initialPeriod}`);
+  useEffect(() => {
+    const target = `${currency}:${period}`;
+    if (loadedPeriod.current === target) return;
+    let active = true;
+    setLoadingMonth(true);
+    getDashboardMonthData(currency, period).then(result => {
+      if (!active) return;
+      if (!result.success) { changePeriod(loadedPeriod.current.split(":")[1]); toast.error(result.error); return; }
+      setMonthlyData({ financialsData: result.financialsData, expenseData: result.expenseData });
+      loadedPeriod.current = target;
+    }).catch(() => { if (active) { changePeriod(loadedPeriod.current.split(":")[1]); toast.error("Could not load this month's dashboard. Please try again."); } })
+      .finally(() => { if (active) setLoadingMonth(false); });
+    return () => { active = false; };
+  }, [currency, period]);
+  function changePeriod(next: string) {
+    setPeriod(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("month", next);
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }
   const [preferredCurrency] = usePreferredCurrency("dashboard");
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("currency") && preferredCurrency !== currency) {
-      router.replace(`/?currency=${preferredCurrency}`);
+      router.replace(`/?currency=${preferredCurrency}&month=${period}`);
     }
   }, [preferredCurrency, currency]);
   const router = useRouter();
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const selectedMonth = Number(period.slice(5)) - 1;
+  const selectedYear = Number(period.slice(0, 4));
   
   // Merge localStorage accounts with server accounts
   const [mergedAccounts, setMergedAccounts] = useState(data.balanceData.accounts);
@@ -143,15 +173,15 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
 
   // Generate year options (current year and 2 years back)
   const currentYear = new Date().getFullYear();
-  const years = [currentYear, currentYear - 1, currentYear - 2];
+  const years = Array.from(new Set([currentYear + 1, ...Array.from({ length: 11 }, (_, i) => currentYear - i), selectedYear])).sort((a, b) => b - a);
 
   return (
     <>
       <div className="pp-dashboard-toolbar flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight">Dashboard — {currency}</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <CurrencyPicker remember preferenceKey="dashboard" value={currency} onChange={value => router.push(`/?currency=${value}`)} />
-          <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+          <CurrencyPicker compact remember preferenceKey="dashboard" value={currency} onChange={value => router.push(`/?currency=${value}&month=${period}`)} />
+          <Select value={selectedMonth.toString()} onValueChange={(value) => changePeriod(`${selectedYear}-${String(Number(value) + 1).padStart(2, "0")}`)}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
@@ -163,7 +193,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
               ))}
             </SelectContent>
           </Select>
-          <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+          <Select value={selectedYear.toString()} onValueChange={(value) => changePeriod(`${value}-${String(selectedMonth + 1).padStart(2, "0")}`)}>
             <SelectTrigger className="w-[80px]">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
@@ -178,11 +208,12 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
         </div>
       </div>
       
-      <div className="pp-dashboard-summary mt-4 md:mt-6 grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <p role="status" className="mt-3 text-xs text-muted-foreground">{loadingMonth ? "Updating monthly figures…" : `${months[selectedMonth]} ${selectedYear} · Monthly activity`} · Balances show your current position</p>
+      <div aria-busy={loadingMonth} className="mt-4 grid grid-cols-2 gap-3 md:mt-6 md:gap-4 lg:grid-cols-4">
         {/* Net Worth Card - Spans 2 columns */}
-        <Card className="md:col-span-2">
+        <Card className="col-span-2 border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-background lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium">Current Net Worth</CardTitle>
             {data.netWorthData && (
               getNetWorthStatus(data.netWorthData.netWorth) === 'positive' ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
@@ -196,15 +227,15 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
           <CardContent>
             {data.netWorthData ? (
               <>
-                <div className="text-2xl font-bold">{formatCurrency(data.netWorthData.netWorth)}</div>
-                <div className="text-xs text-muted-foreground space-y-1">
+                <div className="break-words text-3xl font-bold tracking-tight md:text-4xl">{formatCurrency(data.netWorthData.netWorth)}</div>
+                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
                   <div>Assets: {formatCurrency(data.netWorthData.totalAssets)}</div>
                   <div>Liabilities: {formatCurrency(data.netWorthData.totalLiabilities)}</div>
                 </div>
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold">Loading...</div>
+                <div className="break-words text-xl font-bold md:text-2xl">Loading...</div>
                 <p className="text-xs text-muted-foreground">Calculating net worth</p>
               </>
             )}
@@ -214,11 +245,11 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
         {/* Total Balance Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
+            <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(totalBalance)}</div>
             <p className="text-xs text-muted-foreground">{mergedAccounts.length} active accounts</p>
           </CardContent>
         </Card>
@@ -230,9 +261,9 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
             <ArrowDownUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.financialsData.current.income)}</div>
+            <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.income)}</div>
             <p className="text-xs text-muted-foreground">
-              {data.financialsData.changes.incomeChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.incomeChange)} from last month`}
+              {data.financialsData.changes.incomeChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.incomeChange)} from previous month`}
             </p>
           </CardContent>
         </Card>
@@ -244,77 +275,49 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
             <ReceiptText className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.financialsData.current.expenses)}</div>
+            <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.expenses)}</div>
             <p className="text-xs text-muted-foreground">
-              {data.financialsData.changes.expensesChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.expensesChange)} from last month`}
+              {data.financialsData.changes.expensesChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.expensesChange)} from previous month`}
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Net</CardTitle>
+            <PiggyBank aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.income - data.financialsData.current.expenses)}</div>
+            <p className="text-xs text-muted-foreground">Income minus expenses</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Second row for additional details */}
       {data.netWorthData && (
-        <div className="pp-dashboard-totals grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Account Assets</CardTitle>
-              <Wallet className="h-3 w-3 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">{formatCurrency(data.netWorthData.accountAssets)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Receivables</CardTitle>
-              <TrendingUp className="h-3 w-3 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">{formatCurrency(data.netWorthData.receivables)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Total Assets</CardTitle>
-              <TrendingUp className="h-3 w-3 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-green-600">{formatCurrency(data.netWorthData.totalAssets)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Debts</CardTitle>
-              <TrendingDown className="h-3 w-3 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">{formatCurrency(data.netWorthData.debts)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Account Liabilities</CardTitle>
-              <TrendingDown className="h-3 w-3 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">{formatCurrency(data.netWorthData.accountLiabilities)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium">Total Liabilities</CardTitle>
-              <TrendingDown className="h-3 w-3 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-red-600">{formatCurrency(data.netWorthData.totalLiabilities)}</div>
-            </CardContent>
-          </Card>
-        </div>
+        <details className="group mt-3 rounded-xl border bg-card text-card-foreground">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+            Assets and liabilities breakdown
+            <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="grid gap-5 border-t px-4 py-4 sm:grid-cols-2">
+            <div>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Wallet aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />Assets</h2>
+              <dl className="space-y-2 text-sm">
+                {[['Accounts', data.netWorthData.accountAssets], ['Money owed to you', data.netWorthData.receivables], ['Total assets', data.netWorthData.totalAssets]].map(([label, amount]) => (
+                  <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{formatCurrency(Number(amount))}</dd></div>
+                ))}
+              </dl>
+            </div>
+            <div>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><TrendingDown aria-hidden="true" className="h-4 w-4 text-red-500" />Liabilities</h2>
+              <dl className="space-y-2 text-sm">
+                {[['Debts', data.netWorthData.debts], ['Account liabilities', data.netWorthData.accountLiabilities], ['Total liabilities', data.netWorthData.totalLiabilities]].map(([label, amount]) => (
+                  <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{formatCurrency(Number(amount))}</dd></div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </details>
       )}
 
       {/* Uncategorized Transactions Warning */}
@@ -328,9 +331,9 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
           </CardHeader>
           <CardContent>
             <div className="text-sm text-yellow-700">
-              You have <strong>{data.financialsData.uncategorizedCount}</strong> uncategorized transaction{data.financialsData.uncategorizedCount !== 1 ? 's' : ''} this month.
+              You have <strong>{data.financialsData.uncategorizedCount}</strong> uncategorized transaction{data.financialsData.uncategorizedCount !== 1 ? 's' : ''} in the selected month.
               <br />
-              <a href="/transactions" className="text-yellow-800 underline hover:text-yellow-900">
+              <a href={`/transactions?month=${period}`} className="text-yellow-800 underline hover:text-yellow-900">
                 Categorize them now
               </a>{' '}
               to see accurate expense tracking.
@@ -344,7 +347,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
           <CardHeader>
             <CardTitle>Income vs Expenses</CardTitle>
             <CardDescription>
-              Monthly financial overview for the past 6 months
+              Six months ending {months[selectedMonth]} {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -358,7 +361,7 @@ export function DashboardClient({ data, currency = "USD" }: DashboardClientProps
           <CardHeader>
             <CardTitle>Expense Breakdown</CardTitle>
             <CardDescription>
-              Current month spending by category
+              Spending in {months[selectedMonth]} {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>

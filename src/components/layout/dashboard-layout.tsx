@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { format } from "date-fns";
-import { Calendar, User } from "lucide-react";
+import { Calendar, User, Wallet } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -52,10 +52,12 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-12 md:h-16 items-center px-3 md:px-6">
           {/* Logo and Title */}
-          <div className="flex items-center gap-4 flex-1">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl font-bold hidden md:block">PocketPilot</span>
-              <span className="text-base font-bold md:hidden">PP</span>
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <Link href="/" aria-label="PocketPilot home" className="inline-flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-400 md:h-8 md:w-8">
+                <Wallet className="h-4 w-4 md:h-5 md:w-5" />
+              </span>
+              <span className="whitespace-nowrap text-base font-semibold tracking-tight md:text-xl">Pocket<span className="text-teal-700 dark:text-teal-400">Pilot</span></span>
             </Link>
             
             {/* Page Title */}
