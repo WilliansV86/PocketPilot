@@ -83,7 +83,7 @@ export async function getCashFlow(month: number, year: number, currency = "USD")
 
 /**
  * Get count of uncategorized transactions for a specific month and year
- * Uncategorized = transactions with categoryId IS NULL
+ * Uncategorized = income or expense transactions with categoryId IS NULL
  */
 export async function getUncategorizedCount(month: number, year: number, currency = "USD"): Promise<number> {
   try {
@@ -99,6 +99,7 @@ export async function getUncategorizedCount(month: number, year: number, currenc
           gte: monthStart,
           lte: monthEnd,
         },
+        type: { in: ["INCOME", "EXPENSE"] },
         categoryId: null,
       },
     });
