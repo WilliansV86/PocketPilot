@@ -147,6 +147,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
             duration: 3000,
           });
         } else {
+          setTransactionsList(prev => prev.filter(t => t.id !== id));
           toast.success("Transaction deleted successfully");
         }
       } else {

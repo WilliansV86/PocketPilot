@@ -1,3 +1,4 @@
+import { getCreditCardPaymentSources } from "@/lib/actions/transaction-actions";
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -23,6 +24,8 @@ export default async function EditTransactionPage({ params }: EditTransactionPag
     notFound();
   }
 
+  const { data: creditCards = [] } = await getCreditCardPaymentSources();
+
   // Fetch accounts and categories for the form dropdowns
   const { data: accounts = [], success: accountsSuccess } = await getAccounts();
   const { data: categories = [], success: categoriesSuccess } = await getCategories();
@@ -42,6 +45,7 @@ export default async function EditTransactionPage({ params }: EditTransactionPag
             <TransactionForm 
               transaction={transaction}
               accounts={accounts}
+              creditCards={creditCards}
               categories={categories}
               mode="edit"
             />

@@ -70,17 +70,19 @@ type TransactionFormProps = {
     amount: number;
     date: Date;
     type: TransactionType;
-    accountId: string;
+    accountId: string | null;
+    creditCardId?: string | null;
     toAccountId?: string | null;
     categoryId?: string | null;
     notes?: string | null;
   };
   accounts: Account[];
+  creditCards?: { id: string; name: string; currency: string }[];
   categories: Category[];
   mode: "create" | "edit";
 };
 
-export function TransactionForm({ transaction, accounts, categories, mode }: TransactionFormProps) {
+export function TransactionForm({ transaction, accounts, creditCards = [], categories, mode }: TransactionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -122,21 +124,6 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [accounts]);
   
-  // If no accounts exist, show a message
-  if (!mergedAccounts || mergedAccounts.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Accounts Available</h3>
-        <p className="text-gray-600 mb-4">
-          You need to create at least one account before you can add transactions.
-        </p>
-        <Button onClick={() => window.location.href = '/accounts/new'}>
-          Create Account
-        </Button>
-      </div>
-    );
-  }
-
   // State to track the selected transaction type
   const [selectedType, setSelectedType] = useState<TransactionType>(
     transaction?.type || TransactionType.EXPENSE
@@ -166,7 +153,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
         amount: transaction.amount.toString(),
         date: format(new Date(transaction.date), "yyyy-MM-dd"),
         type: transaction.type,
-        accountId: transaction.accountId,
+        accountId: transaction.creditCardId ? `card:${transaction.creditCardId}` : transaction.accountId || "",
         toAccountId: transaction.toAccountId || "",
         categoryId: transaction?.categoryId ? transaction.categoryId : "__none__",
         notes: transaction.notes || "",
@@ -176,7 +163,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
         amount: "",
         date: format(new Date(), "yyyy-MM-dd"),
         type: TransactionType.EXPENSE,
-        accountId: mergedAccounts && mergedAccounts.length > 0 ? mergedAccounts[0].id : "",
+        accountId: mergedAccounts && mergedAccounts.length > 0 ? mergedAccounts[0].id : creditCards[0] ? `card:${creditCards[0].id}` : "",
         toAccountId: "",
         categoryId: "__none__",
         notes: "",
@@ -193,6 +180,8 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
       if (name === "type" && value.type) {
         setSelectedType(value.type as TransactionType);
         setShowToAccount(value.type === TransactionType.TRANSFER);
+        if (value.type !== TransactionType.EXPENSE && form.getValues("accountId").startsWith("card:")) form.setValue("accountId", accounts[0]?.id || "");
+        form.setValue("categoryId", "__none__");
       }
     });
     return () => subscription.unsubscribe();
@@ -244,6 +233,15 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
     });
   };
 
+  const source = form.watch("accountId");
+  const sources = selectedType === TransactionType.EXPENSE ? creditCards : [];
+  const selectedCard = creditCards.find(card => `card:${card.id}` === source);
+  const unavailableCard = transaction?.creditCardId && !creditCards.some(card => card.id === transaction.creditCardId);
+  if (accounts.length === 0 && creditCards.length === 0 && !transaction) return <div className="py-8 text-center">
+    <p className="mb-4 text-muted-foreground">Add a bank account or an open credit card before recording a transaction.</p>
+    <Button type="button" onClick={() => router.push("/accounts/new")}>Add account</Button>
+    <Button type="button" variant="outline" className="ml-2" onClick={() => router.push("/debts/new")}>Add credit card</Button>
+  </div>;
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -330,21 +328,26 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
             name="accountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{selectedType === TransactionType.TRANSFER ? "From Account" : "Account"}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormLabel>{selectedType === TransactionType.TRANSFER ? "From Account" : selectedType === TransactionType.EXPENSE ? "Paid with" : "Account"}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Accounts</div>
                     {mergedAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.name} ({account.currency})
                       </SelectItem>
                     ))}
+                    {sources.length > 0 && <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Credit cards</div>}
+                    {sources.map(card => <SelectItem key={card.id} value={`card:${card.id}`}>{card.name} ({card.currency}) · Credit card</SelectItem>)}
+                    {unavailableCard && selectedType === TransactionType.EXPENSE && <SelectItem value={`card:${transaction!.creditCardId}`} disabled>Previous card (closed) — choose an open payment source</SelectItem>}
                   </SelectContent>
                 </Select>
+                {selectedCard && <FormDescription>This purchase adds to {selectedCard.name}'s debt balance in {selectedCard.currency} and counts toward your category budget.</FormDescription>}
                 <FormMessage />
               </FormItem>
             )}

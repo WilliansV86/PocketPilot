@@ -14,7 +14,7 @@ export async function getMonthlyCashflow(range: DateRange, currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: range.start,
           lte: range.end,
@@ -70,7 +70,7 @@ export async function getCategorySpending(range: DateRange, currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         type: "EXPENSE",
         date: {
           gte: range.start,
@@ -164,7 +164,7 @@ export async function getDailySpend(month: DateRange, currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         type: "EXPENSE",
         date: {
           gte: month.start,
@@ -207,7 +207,7 @@ export async function getTopSpending(range: DateRange, currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         type: "EXPENSE",
         date: {
           gte: range.start,

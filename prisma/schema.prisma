@@ -97,9 +97,15 @@ model Transaction {
   type        TransactionType
   notes       String?          // Optional notes field
 
-  accountId   String           // From account for all types
-  account     FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId   String?          // Bank account, or null for a card purchase
+  account     FinancialAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   
+  debtPaymentId String?
+  debtPayment Debt? @relation("DebtPaymentTransactions", fields: [debtPaymentId], references: [id], onDelete: Restrict)
+  debtPaymentCycle String?
+  creditCardId String?
+  creditCard   Debt? @relation("CreditCardTransactions", fields: [creditCardId], references: [id], onDelete: Restrict)
+
   // For transfers only - the destination account
   toAccountId String?          
   toAccount   FinancialAccount? @relation("TransferToAccount", fields: [toAccountId], references: [id], onDelete: SetNull)
@@ -112,6 +118,8 @@ model Transaction {
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  @@index([creditCardId])
 }
 
 model Budget {
@@ -216,7 +224,9 @@ model Debt {
   userId           String
   user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  linkedGoals      Goal[]     @relation("GoalDebt")  // Goals linked to this debt
+  linkedGoals      Goal[]     @relation("GoalDebt")
+  payments         Transaction[] @relation("DebtPaymentTransactions")
+  transactions     Transaction[] @relation("CreditCardTransactions")  // Goals linked to this debt
   
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt

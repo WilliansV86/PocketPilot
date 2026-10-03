@@ -55,7 +55,7 @@ export async function getBudgetsForMonth(month: string, year: number, currency =
           lte: monthEnd,
         },
         type: "EXPENSE",
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
       },
       include: {
         category: true,

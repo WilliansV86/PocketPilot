@@ -1,4 +1,5 @@
 "use server";
+import { transactionDisplay } from "@/lib/transaction-display";
 
 import { getDefaultUser } from "@/lib/get-default-user";
 
@@ -64,6 +65,7 @@ export async function getDashboardData() {
         take: 10,
         orderBy: { date: "desc" },
         include: {
+          creditCard: { select: { id: true, name: true, currency: true } },
           account: {
             select: { id: true, name: true },
           },
@@ -94,11 +96,7 @@ export async function getDashboardData() {
       balance: Number(account.balance),
     }));
 
-    const formattedTransactions = recentTransactions.map(transaction => ({
-      ...transaction,
-      amount: Number(transaction.amount),
-      date: transaction.date,
-    }));
+    const formattedTransactions = recentTransactions.map(transactionDisplay);
 
     const totalExpenses = expenseData.reduce((sum, cat) => sum + cat.amount, 0);
 

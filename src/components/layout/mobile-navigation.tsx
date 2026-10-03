@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { PrefetchLink } from "@/components/layout/prefetch-link";
 
+import { SwipeBottomSheet } from "@/components/layout/swipe-bottom-sheet";
+
 const sections = [
   {
     name: "Finance", icon: Wallet,
@@ -65,7 +67,7 @@ export function MobileNavigation({ className }: { className?: string }) {
                     {active && <span className="sr-only">Current section</span>}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="max-h-[80dvh] overflow-y-auto rounded-t-2xl pb-[calc(16px+env(safe-area-inset-bottom))]">
+                <SwipeBottomSheet open={openSection === section.name} onDismiss={() => setOpenSection(null)}>
                   <SheetHeader>
                     <SheetTitle>{section.name}</SheetTitle>
                     <SheetDescription>Choose a page in {section.name.toLowerCase()}.</SheetDescription>
@@ -83,7 +85,7 @@ export function MobileNavigation({ className }: { className?: string }) {
                       );
                     })}
                   </nav>
-                </SheetContent>
+                </SwipeBottomSheet>
               </Sheet>
             );
           })}

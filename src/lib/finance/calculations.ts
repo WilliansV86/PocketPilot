@@ -18,7 +18,7 @@ export async function getTotalIncome(month: number, year: number, currency = "US
     const result = await prisma.transaction.aggregate({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -50,7 +50,7 @@ export async function getTotalExpenses(month: number, year: number, currency = "
     const result = await prisma.transaction.aggregate({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -94,7 +94,7 @@ export async function getUncategorizedCount(month: number, year: number, currenc
     const count = await prisma.transaction.count({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: monthStart,
           lte: monthEnd,

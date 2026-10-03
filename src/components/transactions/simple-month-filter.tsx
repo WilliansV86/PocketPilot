@@ -7,7 +7,7 @@ interface SimpleMonthFilterProps {
 export function SimpleMonthFilter({ defaultValue }: SimpleMonthFilterProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMonth = e.target.value;
-    window.location.href = newMonth ? `/transactions?month=${newMonth}` : '/transactions';
+    window.location.href = newMonth ? `/transactions?month=${newMonth}` : '/transactions?month=all';
   };
 
   return (

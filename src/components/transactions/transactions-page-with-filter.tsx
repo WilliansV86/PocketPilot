@@ -10,7 +10,7 @@ import { ClearButton } from "@/components/transactions/clear-button";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-import { format } from "date-fns";
+import { resolveTransactionMonth } from "@/lib/transaction-month";
 
 export default function TransactionsPageWithFilter() {
   const searchParams = useSearchParams();
@@ -19,10 +19,11 @@ export default function TransactionsPageWithFilter() {
   const [error, setError] = useState<string | null>(null);
   
   // Get month from URL params
-  const monthFilter = searchParams.get("month");
+  const monthFilter = resolveTransactionMonth(searchParams.get("month"));
   
   // Fetch transactions when month filter changes
   useEffect(() => {
+    let active = true;
     async function fetchTransactions() {
       try {
         setLoading(true);
@@ -31,6 +32,7 @@ export default function TransactionsPageWithFilter() {
         
         const result = await getTransactions(monthFilter || undefined);
         
+        if (!active) return;
         if (result && result.success) {
           setTransactions(result.data || []);
           setError(null);
@@ -43,15 +45,16 @@ export default function TransactionsPageWithFilter() {
         setError("An unexpected error occurred while loading transactions");
         setTransactions([]);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
     
     fetchTransactions();
+    return () => { active = false; };
   }, [monthFilter]);
   
   // Format current month for default value in filter
-  const currentMonthFilter = format(new Date(), "yyyy-MM");
+
   
   return (
     <div className="pp-transactions-page space-y-4 md:space-y-6">
@@ -67,7 +70,7 @@ export default function TransactionsPageWithFilter() {
       
       <div className="flex items-center space-x-4">
         <SimpleMonthFilter defaultValue={monthFilter || ""} />
-        {monthFilter && <ClearButton href="/transactions" children="Clear Filter" />}
+        {monthFilter && <ClearButton href="/transactions?month=all" children="Show all" />}
       </div>
       
       {loading ? (

@@ -17,10 +17,12 @@ interface Transaction {
   account?: {
     id: string;
     name: string;
+    currency?: string;
   } | null;
   toAccount?: {
     id: string;
     name: string;
+    currency?: string;
   } | null;
   category?: {
     id: string;
@@ -51,7 +53,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
         toast.success("Transaction deleted successfully");
         // Force a full page redirect to ensure fresh data
         setTimeout(() => {
-          window.location.href = "/transactions";
+          window.location.reload();
         }, 1000);
       } else {
         toast.error(result.error || "Failed to delete transaction");
@@ -188,7 +190,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
               <td className="px-4 py-3 text-sm text-right font-semibold">
                 <span className={getTransactionColor(transaction.type)}>
                   {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
-                  ${transaction.amount.toFixed(2)}
+                  {new Intl.NumberFormat("en-CA", { style: "currency", currency: transaction.account?.currency || "USD", currencyDisplay: "code" }).format(transaction.amount)}
                 </span>
               </td>
               <td className="px-4 py-3 text-sm">

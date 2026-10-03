@@ -1,3 +1,4 @@
+import { getCreditCardPaymentSources } from "@/lib/actions/transaction-actions";
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { TransactionForm } from "@/components/transactions/transaction-form-new";
@@ -7,6 +8,8 @@ import { getCategories } from "@/lib/actions/category-actions";
 
 export default async function NewTransactionPage() {
   await auth.protect();
+
+  const { data: creditCards = [] } = await getCreditCardPaymentSources();
 
   // Fetch accounts and categories for the form dropdowns
   const { data: accounts = [], success: accountsSuccess } = await getAccounts();
@@ -27,6 +30,7 @@ export default async function NewTransactionPage() {
             <TransactionForm 
               mode="create" 
               accounts={accounts}
+              creditCards={creditCards}
               categories={categories}
             />
           </CardContent>

@@ -1,4 +1,5 @@
 "use server";
+import { transactionDisplay } from "@/lib/transaction-display";
 
 import { getDefaultUser } from "@/lib/get-default-user";
 
@@ -139,7 +140,7 @@ export async function getExpensesByCategory(currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
         date: {
           gte: monthStart,
           lte: monthEnd,
@@ -212,7 +213,7 @@ export async function getRecentTransactions(currency = "USD") {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        account: { currency },
+        OR: [{ account: { currency } }, { creditCard: { currency } }],
       },
       take: 5,
       orderBy: {
@@ -220,20 +221,14 @@ export async function getRecentTransactions(currency = "USD") {
       },
       include: {
         account: true,
+        creditCard: { select: { id: true, name: true, currency: true } },
         category: true,
       },
     });
     
     // Convert Decimal amounts to numbers and account balances to numbers for frontend compatibility
-    const formattedTransactions = transactions.map(transaction => ({
-      ...transaction,
-      amount: Number(transaction.amount),
-      account: {
-        ...transaction.account,
-        balance: Number(transaction.account.balance),
-      },
-    }));
-    
+    const formattedTransactions = transactions.map(transactionDisplay);
+
     return { success: true, data: formattedTransactions };
   } catch (error) {
     console.error("Failed to fetch recent transactions:", error);
