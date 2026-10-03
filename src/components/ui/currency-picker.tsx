@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 import { toast } from "sonner";
 
 const CURRENCY_KEY = "pocketpilot-default-currency";
@@ -17,7 +18,7 @@ export function usePreferredCurrency(section: string) {
   return [currency, setCurrency] as const;
 }
 
-export function CurrencyPicker({ value, onChange, disabled = false, remember = false, preferenceKey }: { value: string; onChange: (value: string) => void; disabled?: boolean; remember?: boolean; preferenceKey?: string }) {
+export function CurrencyPicker({ value, onChange, disabled = false, remember = false, preferenceKey, compact = false }: { value: string; onChange: (value: string) => void; disabled?: boolean; remember?: boolean; preferenceKey?: string; compact?: boolean }) {
   function saveDefault() {
     try {
       if (!preferenceKey) return;
@@ -30,13 +31,13 @@ export function CurrencyPicker({ value, onChange, disabled = false, remember = f
   return (
     <div className="pp-currency-picker flex flex-wrap items-center gap-2">
       <label className="flex min-w-0 items-center gap-2 text-sm">
-        Currency
+        <span className={compact ? "sr-only" : undefined}>Currency</span>
         <select disabled={disabled} aria-label="Currency" className="min-w-0 max-w-full rounded-md border bg-background p-2 disabled:opacity-50" value={value} onChange={event => onChange(event.target.value)}>
-          <option value="USD">USD — US Dollar</option>
-          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="USD">{compact ? "USD" : "USD — US Dollar"}</option>
+          <option value="CAD">{compact ? "CAD" : "CAD — Canadian Dollar"}</option>
         </select>
       </label>
-      {remember && preferenceKey && <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={saveDefault}>Set as default</Button>}
+      {remember && preferenceKey && <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={saveDefault} aria-label={`Set ${value} as default currency for this tab`} title={`Set ${value} as default`} className={compact ? "h-9 w-9 px-0" : undefined}>{compact ? <Star aria-hidden="true" className="h-4 w-4" /> : "Set as default"}</Button>}
     </div>
   );
 }
