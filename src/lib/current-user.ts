@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { servicePrisma } from "@/lib/db-service";
+import { starterCategoryRecords } from "@/lib/starter-categories";
 
 // React cache is scoped to the current server request, never shared among users.
 export const getCurrentUser = cache(async () => {
@@ -25,6 +26,9 @@ export const getCurrentUser = cache(async () => {
   // email, selecting the first user, or falling back to the legacy owner.
   // A Clerk ID is stable and unique; upsert also handles simultaneous requests.
   return servicePrisma.$transaction(async tx => {
+    // Serialize first-time provisioning so simultaneous page requests cannot seed twice.
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${clerkUserId}))::text`;
+    const existed = await tx.user.findUnique({ where: { id: clerkUserId }, select: { id: true } });
     const user = await tx.user.upsert({
       where: { id: clerkUserId },
       create: {
@@ -34,6 +38,9 @@ export const getCurrentUser = cache(async () => {
       },
       update: {},
     });
+    if (!existed) {
+      await tx.category.createMany({ data: starterCategoryRecords(user.id) });
+    }
     await tx.$executeRaw`
       INSERT INTO "AuthIdentity" ("clerkUserId", "userId")
       VALUES (${clerkUserId}, ${user.id}) ON CONFLICT ("clerkUserId") DO NOTHING
