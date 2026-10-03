@@ -41,6 +41,7 @@ export default function TransactionsPageWithFilter() {
           setTransactions([]);
         }
       } catch (err: any) {
+        if (!active) return;
         console.error("Error fetching transactions:", err);
         setError("An unexpected error occurred while loading transactions");
         setTransactions([]);
@@ -73,12 +74,14 @@ export default function TransactionsPageWithFilter() {
         {monthFilter && <ClearButton href="/transactions?month=all" children="Show all" />}
       </div>
       
-      {loading ? (
+      {loading && transactions.length === 0 ? (
         <div className="text-center py-8">Loading transactions...</div>
       ) : error ? (
         <div className="text-center py-8 text-red-600">{error}</div>
       ) : (
-        <div className="space-y-4">
+        <div className="relative space-y-4" aria-busy={loading}>
+          {loading && <div role="status" className="absolute inset-x-0 top-0 z-10 rounded-md border bg-background/95 px-3 py-2 text-center text-sm shadow-sm">Updating transactions...</div>}
+          <div className={loading ? "pointer-events-none opacity-50" : ""}>
           {/* Mobile Layout */}
           <div className="md:hidden">
             <MobileTransactionsTable transactions={transactions} />
@@ -87,6 +90,7 @@ export default function TransactionsPageWithFilter() {
           {/* Desktop Layout */}
           <div className="hidden md:block">
             <TransactionsTable transactions={transactions} />
+          </div>
           </div>
         </div>
       )}
