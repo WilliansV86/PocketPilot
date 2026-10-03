@@ -105,14 +105,14 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
             {mode === "create"
               ? "Add a new record for money owed to you"
               : hasPayments
-              ? "Edit the details of this money owed record. Amount cannot be changed as payments have been recorded."
+              ? "Edit the details of this money owed record. You can correct the original amount; recorded payments will be preserved."
               : "Edit the details of this money owed record."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <CurrencyPicker value={form.watch("currency")} onChange={value => form.setValue("currency", value as "USD" | "CAD")} />
+              <CurrencyPicker disabled={!!hasPayments} value={form.watch("currency")} onChange={value => form.setValue("currency", value as "USD" | "CAD")} />
               <p className="text-sm text-muted-foreground">All amounts use this currency. Changing currency does not convert amounts.</p>
               <FormField
                 control={form.control}
@@ -161,13 +161,12 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        disabled={hasPayments}
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
                       {hasPayments
-                        ? "Cannot be changed as payments have been recorded"
+                        ? "Correcting this amount recalculates what is still owed. It cannot be less than the total already repaid."
                         : "The original amount owed to you"}
                     </FormDescription>
                     <FormMessage />

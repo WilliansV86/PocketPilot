@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { correctedReceivable } from "@/lib/receivable-correction";
 import { prisma } from "@/lib/db";
 import { getDefaultUser } from "@/lib/get-default-user";
 import { getAccounts } from "./account-actions";
@@ -232,25 +233,6 @@ export async function updateMoneyOwed(id: string, formData: FormData) {
   try {
     const user = await getDefaultUser();
 
-    // Get existing record
-    const existing = await prisma.moneyOwed.findFirst({
-      where: {
-        id,
-        userId: user.id,
-        isArchived: false,
-      },
-      include: {
-        payments: true,
-      },
-    });
-
-    if (!existing) {
-      return {
-        success: false,
-        error: "Money owed record not found",
-      };
-    }
-
     // Validate form data
     const validatedFields = moneyOwedSchema.safeParse({
       personName: formData.get("personName"),
@@ -270,33 +252,34 @@ export async function updateMoneyOwed(id: string, formData: FormData) {
 
     const { personName, description, amountOriginal, dueDate, currency } = validatedFields.data;
 
-    // Check if there are payments - if so, don't allow changing amountOriginal
-    const hasPayments = existing.payments.length > 0;
-    
-    if (hasPayments && currency !== existing.currency) return { success: false, error: "Currency cannot change after payments have been recorded." };
-    const updateData: any = {
-      currency,
-      personName,
-      description,
-      dueDate: dueDate ? new Date(dueDate) : null,
-    };
-
-    // Only allow updating amountOriginal if no payments exist
-    if (!hasPayments) {
-      updateData.amountOriginal = amountOriginal;
-      updateData.amountOutstanding = amountOriginal;
-      updateData.status = "OPEN";
-    }
-
-    // Update record
-    const moneyOwed = await prisma.moneyOwed.update({
-      where: { id },
-      data: updateData,
-    });
+    const result = await prisma.$transaction(async tx => {
+      const existing = await tx.moneyOwed.findFirst({
+        where: { id, userId: user.id, isArchived: false },
+        include: { payments: true },
+      });
+      if (!existing) return { success: false as const, error: "Money owed record not found" };
+      if (existing.payments.length > 0 && currency !== existing.currency) {
+        return { success: false as const, error: "Currency cannot change after payments have been recorded." };
+      }
+      let correction;
+      try {
+        correction = correctedReceivable(amountOriginal, existing.payments.map(payment => Number(payment.amount)));
+      } catch (error) {
+        return { success: false as const, error: error instanceof Error ? error.message : "Invalid original amount." };
+      }
+      const moneyOwed = await tx.moneyOwed.update({
+        where: { id, userId: user.id },
+        data: { currency, personName, description, dueDate: dueDate ? new Date(dueDate) : null, ...correction },
+      });
+      return { success: true as const, moneyOwed };
+    }, { isolationLevel: "Serializable" });
+    if (!result.success) return result;
+    const moneyOwed = result.moneyOwed;
 
     // Revalidate relevant paths
     revalidatePath("/money-owed");
     revalidatePath("/dashboard");
+    revalidatePath("/");
     revalidatePath("/accounts");
     revalidatePath("/debts");
 
@@ -428,177 +411,78 @@ export async function deleteMoneyOwed(id: string) {
 }
 
 // Record payment for money owed
-export async function recordMoneyOwedPayment(moneyOwedId: string, formData: FormData) {
+function parseReceivablePayment(formData: FormData) {
+  const parsed = paymentSchema.safeParse({ amount: formData.get("amount"), date: formData.get("date"), accountId: formData.get("accountId"), note: formData.get("note") });
+  if (!parsed.success) throw new Error("Enter a valid payment amount, date, and receiving account.");
+  const { amount, date, accountId, note } = parsed.data;
+  correctedReceivable(amount, []);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("Enter a valid payment date.");
+  const paymentDate = new Date(`${date}T12:00:00.000Z`);
+  if (!Number.isFinite(paymentDate.getTime()) || paymentDate.toISOString().slice(0, 10) !== date) throw new Error("Enter a valid payment date.");
+  return { amount, date: paymentDate, accountId, note };
+}
+
+async function saveReceivablePayment(moneyOwedId: string, formData: FormData, paymentId?: string) {
   try {
     const user = await getDefaultUser();
-
-    // Validate form data
-    const validatedFields = paymentSchema.safeParse({
-      amount: formData.get("amount"),
-      date: formData.get("date"),
-      accountId: formData.get("accountId"),
-      note: formData.get("note"),
-    });
-
-    if (!validatedFields.success) {
-      return {
-        success: false,
-        error: "Invalid payment data",
-        fieldErrors: validatedFields.error.flatten().fieldErrors,
-      };
-    }
-
-    const { amount, date, accountId, note } = validatedFields.data;
-
-    // Get money owed record
-    const moneyOwed = await prisma.moneyOwed.findFirst({
-      where: {
-        id: moneyOwedId,
-        userId: user.id,
-        isArchived: false,
-      },
-    });
-
-    if (!moneyOwed) {
-      return {
-        success: false,
-        error: "Money owed record not found",
-      };
-    }
-
-    // Validate payment amount
-    if (amount > Number(moneyOwed.amountOutstanding)) {
-      return {
-        success: false,
-        error: "Payment amount cannot exceed outstanding amount",
-      };
-    }
-
-    // Get account to validate it exists and belongs to user
-    const account = await prisma.financialAccount.findFirst({
-      where: {
-        id: accountId,
-        userId: user.id,
-      },
-    });
-
-    if (!account) {
-      return {
-        success: false,
-        error: "Account not found",
-      };
-    }
-
-    // Create payment record
-    if (account.currency !== moneyOwed.currency) {
-      return { success: false, error: "Choose an account with the same currency as this receivable." };
-    }
-    const payment = await prisma.moneyOwedPayment.create({
-      data: {
-        amount,
-        date: (() => {
-          // Parse the date string and create a consistent UTC date
-          const [year, month, day] = date.split('-').map(Number);
-          
-          // Validate the parsed components
-          if (isNaN(year) || isNaN(month) || isNaN(day)) {
-            throw new Error(`Invalid date format: ${date}`);
-          }
-          
-          const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-          console.log(`Payment date parsed: ${date} -> ${utcDate.toISOString()}`);
-          
-          // Validate the created date
-          if (isNaN(utcDate.getTime())) {
-            throw new Error(`Invalid date created from: ${date}`);
-          }
-          
-          return utcDate;
-        })(),
-        note,
-        moneyOwedId,
-        accountId,
-        userId: user.id,
-      },
-    });
-
-    // Update money owed record
-    const newOutstanding = Number(moneyOwed.amountOutstanding) - amount;
-    const newStatus = newOutstanding === 0 ? "PAID" : "PARTIAL";
-
-    await prisma.moneyOwed.update({
-      where: { id: moneyOwedId },
-      data: {
-        amountOutstanding: newOutstanding,
-        status: newStatus,
-      },
-    });
-
-    // Update account balance (increase for received money)
-    await prisma.financialAccount.update({
-      where: { id: accountId },
-      data: {
-        balance: {
-          increment: amount,
-        },
-      },
-    });
-
-    // Create corresponding transaction
-    const receivableCategory = await ensureReceivableCategory(user.id);
-
-    await prisma.transaction.create({
-      data: {
-        date: (() => {
-          // Parse the date string and create a consistent UTC date
-          const [year, month, day] = date.split('-').map(Number);
-          
-          // Validate the parsed components
-          if (isNaN(year) || isNaN(month) || isNaN(day)) {
-            throw new Error(`Invalid date format: ${date}`);
-          }
-          
-          const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-          console.log(`Transaction date parsed: ${date} -> ${utcDate.toISOString()}`);
-          
-          // Validate the created date
-          if (isNaN(utcDate.getTime())) {
-            throw new Error(`Invalid date created from: ${date}`);
-          }
-          
-          return utcDate;
-        })(),
-        amount: amount, // Positive for income
-        description: `Payment received from ${moneyOwed.personName}`,
-        type: "INCOME",
-        notes: note || `Receivable payment: ${moneyOwed.personName}`,
-        accountId,
-        categoryId: receivableCategory.id,
-        userId: user.id,
-      },
-    });
-
-    // Revalidate all relevant paths
-    revalidatePath("/money-owed");
-    revalidatePath("/transactions");
-    revalidatePath("/accounts");
-    revalidatePath("/dashboard");
-
-    return {
-      success: true,
-      message: `Payment of ${formatCurrency(amount, moneyOwed.currency)} recorded successfully`,
-      data: {
-        payment,
-        updatedMoneyOwed: moneyOwed,
-      },
-    };
+    const values = parseReceivablePayment(formData);
+    const result = await prisma.$transaction(async tx => {
+      const owed = await tx.moneyOwed.findFirst({ where: { id: moneyOwedId, userId: user.id, isArchived: false }, include: { payments: true } });
+      if (!owed) throw new Error("Money owed record not found.");
+      const previous = paymentId ? owed.payments.find(p => p.id === paymentId && p.userId === user.id) : undefined;
+      if (paymentId && !previous) throw new Error("Payment not found.");
+      const receiving = await tx.financialAccount.findFirst({ where: { id: values.accountId, userId: user.id } });
+      if (!receiving || receiving.currency !== owed.currency) throw new Error("Choose a receiving account in the same currency as the money owed.");
+      const correction = correctedReceivable(Number(owed.amountOriginal), [
+        ...owed.payments.filter(p => p.id !== paymentId).map(p => Number(p.amount)), values.amount,
+      ]);
+      let linked;
+      if (previous) {
+        if (previous.transactionId) {
+          linked = await tx.transaction.findFirst({ where: { id: previous.transactionId, userId: user.id, type: "INCOME" } });
+        } else {
+          // Older payments predate the explicit link. Match only when unambiguous.
+          const candidates = await tx.transaction.findMany({ where: {
+            userId: user.id, accountId: previous.accountId, date: previous.date, amount: previous.amount,
+            type: "INCOME", description: { startsWith: "Payment received from " }, category: { name: "Receivable Payment" },
+          }, take: 2 });
+          const duplicates = await tx.moneyOwedPayment.count({ where: { userId: user.id, accountId: previous.accountId, date: previous.date, amount: previous.amount } });
+          if (candidates.length === 1 && duplicates === 1) linked = candidates[0];
+        }
+        if (!linked || linked.accountId !== previous.accountId || Number(linked.amount) !== Number(previous.amount)) {
+          throw new Error("This older payment could not be safely matched to its transaction. No changes were saved.");
+        }
+        await tx.financialAccount.update({ where: { id: previous.accountId, userId: user.id }, data: { balance: { decrement: previous.amount } } });
+      }
+      let category = await tx.category.findFirst({ where: { userId: user.id, name: "Receivable Payment", group: "INCOME" } });
+      if (!category) category = await tx.category.create({ data: { userId: user.id, name: "Receivable Payment", group: "INCOME", color: "#10B981", isArchived: false, icon: "dollar-sign" } });
+      const transactionData = { userId: user.id, date: values.date, amount: values.amount,
+        description: `Payment received from ${owed.personName}`, type: "INCOME" as const,
+        notes: values.note || `Receivable payment: ${owed.personName}`, accountId: values.accountId, categoryId: category.id };
+      const transaction = linked
+        ? await tx.transaction.update({ where: { id: linked.id, userId: user.id }, data: transactionData })
+        : await tx.transaction.create({ data: transactionData });
+      const paymentData = { ...values, transactionId: transaction.id };
+      if (previous) await tx.moneyOwedPayment.update({ where: { id: previous.id, userId: user.id }, data: paymentData });
+      else await tx.moneyOwedPayment.create({ data: { ...paymentData, moneyOwedId, userId: user.id } });
+      await tx.financialAccount.update({ where: { id: values.accountId, userId: user.id }, data: { balance: { increment: values.amount } } });
+      await tx.moneyOwed.update({ where: { id: moneyOwedId, userId: user.id }, data: correction });
+      return { success: true as const, message: previous ? "Payment updated successfully" : "Payment recorded successfully" };
+    }, { isolationLevel: "Serializable" });
+    for (const path of ["/money-owed", "/transactions", "/accounts", "/dashboard", "/", "/budgets", "/stats"]) revalidatePath(path);
+    return result;
   } catch (error) {
-    console.error("Error recording payment:", error);
-    return {
-      success: false,
-      error: "Failed to record payment",
-    };
+    if (error && typeof error === "object" && "code" in error) return { success: false as const, error: "Could not save the payment. Refresh and try again." };
+    return { success: false as const, error: error instanceof Error ? error.message : "Failed to save payment." };
   }
+}
+
+export async function recordMoneyOwedPayment(moneyOwedId: string, formData: FormData) {
+  return saveReceivablePayment(moneyOwedId, formData);
+}
+
+export async function updateMoneyOwedPayment(moneyOwedId: string, paymentId: string, formData: FormData) {
+  return saveReceivablePayment(moneyOwedId, formData, paymentId);
 }
 
 // Mark money owed as paid (manual override)
