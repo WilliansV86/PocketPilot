@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTransactionById } from "@/lib/actions/transaction-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { getCategories } from "@/lib/actions/category-actions";
+import { getCreditCardPaymentSources } from "@/lib/actions/transaction-actions";
 
 interface EditTransactionPageProps {
   params: Promise<{
@@ -20,6 +21,7 @@ export default async function EditTransactionPage({ params }: EditTransactionPag
     notFound();
   }
 
+  const { data: creditCards = [] } = await getCreditCardPaymentSources();
   // Fetch accounts and categories for the form dropdowns
   const { data: accounts = [], success: accountsSuccess } = await getAccounts();
   const { data: categories = [], success: categoriesSuccess } = await getCategories();
@@ -40,6 +42,7 @@ export default async function EditTransactionPage({ params }: EditTransactionPag
               transaction={transaction}
               accounts={accounts}
               categories={categories}
+              creditCards={creditCards}
               mode="edit"
             />
           </CardContent>

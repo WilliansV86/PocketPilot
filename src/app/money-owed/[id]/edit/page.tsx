@@ -6,8 +6,9 @@ import { ArrowLeft } from "lucide-react";
 import { getMoneyOwedById } from "@/lib/actions/money-owed-actions";
 import Link from "next/link";
 
-export default async function EditMoneyOwedPage({ params }: { params: { id: string } }) {
-  const { data: moneyOwed, success } = await getMoneyOwedById(params.id);
+export default async function EditMoneyOwedPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { data: moneyOwed, success } = await getMoneyOwedById(id);
 
   if (!success || !moneyOwed) {
     notFound();

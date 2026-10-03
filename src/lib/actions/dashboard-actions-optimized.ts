@@ -1,4 +1,5 @@
 "use server";
+import { transactionDisplay } from "@/lib/transaction-display";
 
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -6,20 +7,7 @@ import { getMonthlyFinancialData, getUncategorizedCount } from "@/lib/finance/ca
 import { getNetWorthSummary } from "./net-worth-actions";
 import { getGoals } from "./goal-actions";
 
-// Helper function to get the default user (dev@pocketpilot.local)
-async function getDefaultUser() {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: "dev@pocketpilot.local",
-    },
-  });
-
-  if (!user) {
-    throw new Error("Default user not found. Please run the seed script.");
-  }
-
-  return user;
-}
+import { getDefaultUser } from "@/lib/get-default-user";
 
 // Consolidated dashboard data fetch - reduces multiple round trips
 export async function getDashboardData() {
@@ -82,8 +70,9 @@ export async function getDashboardData() {
         take: 10,
         orderBy: { date: "desc" },
         include: {
+          creditCard: { select: { id: true, name: true, currency: true } },
           account: {
-            select: { id: true, name: true },
+            select: { id: true, name: true, currency: true },
           },
           category: {
             select: { id: true, name: true },
@@ -112,11 +101,7 @@ export async function getDashboardData() {
       balance: Number(account.balance),
     }));
 
-    const formattedTransactions = recentTransactions.map(transaction => ({
-      ...transaction,
-      amount: Number(transaction.amount),
-      date: transaction.date,
-    }));
+    const formattedTransactions = recentTransactions.map(transactionDisplay);
 
     const totalExpenses = expenseData.reduce((sum, cat) => sum + cat.amount, 0);
 

@@ -1,5 +1,6 @@
+import { getDateRangePreset } from "@/lib/stats-date-range";
 import { NextResponse } from "next/server";
-import { getTopSpending, getDateRangePreset } from "@/lib/actions/stats";
+import { getTopSpending } from "@/lib/actions/stats";
 
 export async function POST(request: Request) {
   try {

@@ -7,7 +7,7 @@ import { PlusCircle, Archive } from "lucide-react";
 import { CategoriesClient } from "@/components/categories/categories-client";
 
 interface CategoriesPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
@@ -26,7 +26,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
         </div>
         
         <div className="mt-3">
-          <CategoriesClient searchParams={searchParams} />
+          <CategoriesClient searchParams={await searchParams} />
         </div>
       </div>
     </DashboardLayout>

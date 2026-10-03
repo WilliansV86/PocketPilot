@@ -4,8 +4,8 @@ const DEFAULT_USER_EMAIL = "dev@pocketpilot.local";
 
 export async function getDefaultUser() {
   try {
-    // Try to find any user first
-    let user = await prisma.user.findFirst();
+    // Production remains the personal app and always selects the legacy owner.
+    let user = await prisma.user.findUnique({ where: { id: "user-1" } });
 
     // If no users exist, create the default user
     if (!user) {

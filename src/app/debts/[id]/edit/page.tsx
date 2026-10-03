@@ -6,8 +6,9 @@ import { ArrowLeft } from "lucide-react";
 import { getDebtById } from "@/lib/actions/debt-actions";
 import Link from "next/link";
 
-export default async function EditDebtPage({ params }: { params: { id: string } }) {
-  const { data: debt, success } = await getDebtById(params.id);
+export default async function EditDebtPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { data: debt, success } = await getDebtById(id);
 
   if (!success || !debt) {
     notFound();

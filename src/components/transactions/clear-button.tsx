@@ -7,7 +7,12 @@ interface ClearButtonProps {
 
 export function ClearButton({ href, children }: ClearButtonProps) {
   const handleClick = () => {
-    window.location.href = href;
+    const destination = new URL(href, window.location.href);
+    if (destination.pathname === window.location.pathname && destination.origin === window.location.origin) {
+      window.history.pushState(null, "", destination.pathname + destination.search + destination.hash);
+    } else {
+      window.location.assign(href);
+    }
   };
 
   return (

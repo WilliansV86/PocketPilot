@@ -319,50 +319,26 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
     }
     const parsedPaymentDate = new Date(Date.UTC(year, month - 1, day, 12));
 
-    // Update debt balance and this cycle's minimum-payment progress.
-    const newBalance = Number(debt.currentBalance) - paymentAmount;
-    const isClosed = debt.type === "CREDIT_CARD" ? debt.isClosed : newBalance <= 0;
-    const cycleKey = debt.dueDayOfMonth
-      ? paymentCycleKey(debt.dueDayOfMonth, parsedPaymentDate)
-      : null;
-    const previousCycleAmount = cycleKey && debt.minimumPaymentCycle === cycleKey
-      ? Number(debt.minimumPaymentPaid)
-      : 0;
-    
-    await prisma.debt.update({
-      where: { id: debtId },
-      data: {
-        currentBalance: newBalance,
-        isClosed,
-        minimumPaymentCycle: cycleKey,
-        minimumPaymentPaid: previousCycleAmount + paymentAmount,
-      },
-    });
-    
-    // Create corresponding transaction
-    await prisma.transaction.create({
-      data: {
-        date: parsedPaymentDate,
-        amount: paymentAmount,
-        description: `Payment to ${debt.name}`,
-        type: "EXPENSE",
-        notes: `Debt payment: ${debt.name}`,
-        accountId,
-        categoryId: debtPaymentCategoryId,
-        userId: user.id,
-      },
-    });
-    
-    // Update account balance
-    await prisma.financialAccount.update({
-      where: { id: accountId },
-      data: {
-        balance: {
-          decrement: paymentAmount,
-        },
-      },
-    });
-    
+    // Repayments of credit cards are transfers: the purchase was already an expense.
+    await prisma.$transaction(async tx => {
+      const current = await tx.debt.findFirst({ where: { id: debtId, userId: user.id } });
+      if (!current || paymentAmount > Number(current.currentBalance)) throw new Error("Payment exceeds current balance");
+      const cycleKey = current.dueDayOfMonth ? paymentCycleKey(current.dueDayOfMonth, parsedPaymentDate) : null;
+      const paid = cycleKey && current.minimumPaymentCycle === cycleKey ? Number(current.minimumPaymentPaid) : 0;
+      await tx.debt.update({ where: { id: debtId }, data: {
+        currentBalance: { decrement: paymentAmount },
+        isClosed: current.type === "CREDIT_CARD" ? current.isClosed : Number(current.currentBalance) <= paymentAmount,
+        minimumPaymentCycle: cycleKey, minimumPaymentPaid: paid + paymentAmount,
+      } });
+      await tx.transaction.create({ data: {
+        date: parsedPaymentDate, amount: paymentAmount, description: `Payment to ${current.name}`,
+        type: current.type === "CREDIT_CARD" ? "TRANSFER" : "EXPENSE",
+        notes: `Debt payment: ${current.name}`, accountId, categoryId: current.type === "CREDIT_CARD" ? null : debtPaymentCategoryId,
+        userId: user.id, debtPaymentId: debtId, debtPaymentCycle: cycleKey,
+      } });
+      await tx.financialAccount.update({ where: { id: accountId }, data: { balance: { decrement: paymentAmount } } });
+    }, { isolationLevel: "Serializable" });
+
     // Revalidate all relevant paths
     revalidatePath("/debts");
     revalidatePath("/transactions");

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmptyState } from "@/components/ui/empty-state";
 import { PATTERNS, TYPOGRAPHY, BUTTON, SPACING, LAYOUT } from "@/lib/ui-constants";
 import { StatsTable } from "@/components/stats/stats-table";
-import { getDateRangePreset, type DateRange } from "@/lib/actions/stats";
+import { getDateRangePreset, type DateRange } from "@/lib/stats-date-range";
 import { SkeletonChart, SkeletonPieChart } from "@/components/charts/skeleton-chart";
 import { MobileStatsCharts } from "@/components/stats/mobile-stats-charts-v2";
 
