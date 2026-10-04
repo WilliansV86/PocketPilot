@@ -6,7 +6,7 @@ export default clerkMiddleware(async (auth, request) => {
   const path = request.nextUrl.pathname;
   // The scheduled route has independent CRON_SECRET bearer authorization.
   if (path === "/api/cron/debt-reminders") return NextResponse.next();
-  if (path.startsWith("/api/") && !path.startsWith("/api/goals") && !path.startsWith("/api/stats")) {
+  if (path !== "/api/diagnostics/database" && path.startsWith("/api/") && !path.startsWith("/api/goals") && !path.startsWith("/api/stats")) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   if (!publicRoute(request)) {
