@@ -1,5 +1,7 @@
 "use client";
 
+import { NetWorthHistory } from "@/components/dashboard/net-worth-history";
+
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
 
 import { useState, useEffect, useRef } from "react";
@@ -214,7 +216,9 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         <Card className="col-span-2 border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-background lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Current Net Worth</CardTitle>
-            {data.netWorthData && (
+            <NetWorthHistory currency={currency} month={period} />
+
+      {data.netWorthData && (
               getNetWorthStatus(data.netWorthData.netWorth) === 'positive' ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
               ) : getNetWorthStatus(data.netWorthData.netWorth) === 'negative' ? (

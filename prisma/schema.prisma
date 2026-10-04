@@ -14,6 +14,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  netWorthSnapshots NetWorthSnapshot[]
   recurringPayments RecurringPayment[]
   recurringOccurrences RecurringOccurrence[]
   accounts     FinancialAccount[]
@@ -363,4 +364,18 @@ model RecurringOccurrence {
   createdAt DateTime @default(now())
   @@unique([recurringId, scheduledDate])
   @@index([userId])
+}
+
+model NetWorthSnapshot {
+ id String @id @default(cuid())
+ userId String
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ currency String
+ month String
+ assets Decimal @db.Decimal(18,2)
+ liabilities Decimal @db.Decimal(18,2)
+ source String @default("AUTO")
+ capturedAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@unique([userId, currency, month])
 }
