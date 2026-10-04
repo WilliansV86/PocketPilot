@@ -37,10 +37,14 @@ export async function recordDueRecurring(){const user=await getDefaultUser();con
 export async function wiseTransfer(form:FormData){
  try{const user=await getDefaultUser(),from=String(form.get("from")||""),to=String(form.get("to")||""),date=String(form.get("date")||""),sent=money(form.get("sent")),received=money(form.get("received"));
  if(from===to||!validDate(date))throw new Error("Choose different accounts and a valid date");
+ const international=form.get("transferKind")==="INTERNATIONAL";
+ const provider=international?String(form.get("provider")||"").trim():"";
+ if(international&&(!provider||provider.length>80))throw new Error("Enter the transfer provider name");
  await prisma.$transaction(async tx=>{
  const a=await tx.financialAccount.findFirst({where:{id:from,userId:user.id}}),b=await tx.financialAccount.findFirst({where:{id:to,userId:user.id}});
- if(!a||!b)throw new Error("Account not found");if(a.currency===b.currency&&sent!==received)throw new Error("For a same-currency transfer, use equal amounts and record any fee separately");
- await tx.transaction.create({data:{userId:user.id,type:"TRANSFER",accountId:from,toAccountId:to,amount:sent,toAmount:received,description:`Transfer: ${a.name} → ${b.name}`,date:new Date(`${date}T12:00:00Z`),notes:`${sent} ${a.currency} deducted; ${received} ${b.currency} received. Any fee included in these amounts is already reflected in balances.`}});
+ if(!a||!b)throw new Error("Account not found");
+ if(international){const direction=String(form.get("direction")||"");if(!['CAD-USD','USD-CAD'].includes(direction)||`${a.currency}-${b.currency}`!==direction)throw new Error("Choose accounts matching the selected Canada/US direction");}if(a.currency===b.currency&&sent!==received)throw new Error("For a same-currency transfer, use equal amounts and record any fee separately");
+ await tx.transaction.create({data:{userId:user.id,type:"TRANSFER",accountId:from,toAccountId:to,amount:sent,toAmount:received,description:`${international?provider+" transfer":"Transfer"}: ${a.name} → ${b.name}`,date:new Date(`${date}T12:00:00Z`),notes:`${international?"Provider: "+provider+". ":""}${sent} ${a.currency} deducted; ${received} ${b.currency} received. Any fee included in these amounts is already reflected in balances.`}});
  await tx.financialAccount.update({where:{id:from},data:{balance:{decrement:sent}}});await tx.financialAccount.update({where:{id:to},data:{balance:{increment:received}}});
  },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable});refresh();return {success:true};
  }catch(e){return {success:false,error:e instanceof Error&&!('code' in e)?e.message:"Unable to record transfer"};}
