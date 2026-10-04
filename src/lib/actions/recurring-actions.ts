@@ -19,7 +19,7 @@ export async function recurringData(){
 export async function saveRecurring(form:FormData){
  try {
  const user=await getDefaultUser(),id=String(form.get("id")||""),sourceId=String(form.get("sourceId")||""),categoryId=String(form.get("categoryId")||""),nextDate=String(form.get("nextDate")||""),frequency=String(form.get("frequency")||""),name=String(form.get("name")||"").trim();
- if(!name||name.length>150||!validDate(nextDate)||!['WEEKLY','MONTHLY','QUARTERLY','YEARLY'].includes(frequency)) throw new Error("Check name, date and frequency");
+ if(!name||name.length>150||!validDate(nextDate)||!['WEEKLY','BIWEEKLY','MONTHLY','QUARTERLY','YEARLY'].includes(frequency)) throw new Error("Check name, date and frequency");
  if(nextDate<albertaDate()) throw new Error("Choose today or a future date; historical charges should be recorded manually");
  const amount=money(form.get("amount"));
  await prisma.$transaction(async tx=>{
