@@ -1,10 +1,11 @@
 "use client";
 
+
 import { useState, useEffect, useRef } from "react";
+import { ActionMenuButton } from "@/components/ui/action-menu-button";
 import Link from "next/link";
 import { 
   Edit, 
-  MoreHorizontal, 
   Trash,
   Wallet, CreditCard, PiggyBank, TrendingUp, Banknote, ArrowLeftRight, Home
 } from "lucide-react";
@@ -216,7 +217,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
             <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 ${style.tint}`}>
               <div className="flex items-center gap-3">
                 <span className={`flex size-9 items-center justify-center rounded-xl ${style.tint} ${style.color}`}><Icon className="size-5" /></span>
-                <div><h2 className="text-xl font-semibold tracking-tight">{labels[type] || formatAccountType(type)}</h2>
+                <div><h2 className="text-lg font-semibold tracking-tight">{labels[type] || formatAccountType(type)}</h2>
                 <div className="text-xs text-muted-foreground">{groupAccounts.length} {groupAccounts.length === 1 ? "account" : "accounts"}</div></div>
               </div>
               <div className="space-y-0.5 text-right">
@@ -224,7 +225,15 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
                 <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">{currencies.map(currency => <div key={currency} className="text-base font-semibold">{formatMoney(groupAccounts.filter(account => (account.currency || "USD") === currency).reduce((sum, account) => sum + Number(account.balance), 0), currency)}</div>)}</div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="divide-y md:hidden">
+              {groupAccounts.map(account => <article key={account.id} aria-label={account.name} className="min-w-0 space-y-2 p-4">
+                <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words text-base font-medium">{account.name}</h3><p className="mt-1 text-xs text-muted-foreground">{account.currency || "USD"}</p></div>
+                  <DropdownMenu><DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${account.name}`} disabled={isDeleting===account.id} /></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link href={`/accounts/${account.id}/edit`}><Edit className="mr-2 h-4 w-4" />Edit account</Link></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem disabled={isDeleting===account.id} className="text-destructive" onClick={()=>handleDelete(account.id)}><Trash className="mr-2 h-4 w-4" />Delete account</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                </div>
+                <div className="flex flex-wrap items-end justify-between gap-2"><span className="text-xs text-muted-foreground">Balance</span><span className="break-words text-lg font-semibold tabular-nums">{formatMoney(account.balance,account.currency)}</span></div>
+              </article>)}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader><TableRow><TableHead>Account</TableHead><TableHead className="text-right">Balance</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader>
                 <TableBody>
@@ -242,10 +251,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
               <TableCell className="w-10 py-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="size-8 p-0">
-                      <span className="sr-only">Actions for {account.name}</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <ActionMenuButton label={`Actions for ${account.name}`} disabled={isDeleting===account.id} />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel className={TYPOGRAPHY.STATUS}>Actions</DropdownMenuLabel>

@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { Target, TrendingUp, Calendar, Plus } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { FinancialProgress } from "@/components/charts/financial-charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/currency";
-import { getGoalTypeInfo, getProgressColor } from "@/lib/finance/goals";
+import { getGoalTypeInfo } from "@/lib/finance/goals";
 
 interface GoalProgress {
   goal: any;
@@ -60,9 +60,9 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
 
   if (loading) {
     return (
-      <Card>
+      <Card className="pp-chart-card min-w-0 gap-3 py-4 lg:col-span-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Target className="h-5 w-5" />
             Goals Progress
           </CardTitle>
@@ -86,9 +86,9 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
 
   if (goalsData.length === 0) {
     return (
-      <Card>
+      <Card className="pp-chart-card min-w-0 gap-3 py-4 lg:col-span-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Target className="h-5 w-5" />
             Goals Progress
           </CardTitle>
@@ -97,8 +97,8 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6">
-            <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <div className="text-center py-3">
+            <Target className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
             <h3 className="text-lg font-semibold mb-2">No Goals Yet</h3>
             <p className="text-muted-foreground mb-4">
               Create your first financial goal to start tracking progress
@@ -116,11 +116,11 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
   }
 
   return (
-    <Card>
+    <Card className="pp-chart-card min-w-0 gap-3 py-4 lg:col-span-2">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Target className="h-5 w-5" />
               Goals Progress
             </CardTitle>
@@ -136,19 +136,18 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid items-start gap-4 sm:grid-cols-3">
           {topGoals.length > 0 ? (
             topGoals.map((goalProgress) => {
               const goal = goalProgress.goal;
               const typeInfo = getGoalTypeInfo(goal.type);
-              const progressColorClass = getProgressColor(goalProgress.percentage);
 
               return (
                 <div key={goal.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{typeInfo.icon}</span>
-                      <span className="font-medium text-sm truncate max-w-[150px]">
+                      <span className="min-w-0 break-words font-medium text-sm">
                         {goal.name}
                       </span>
                     </div>
@@ -162,10 +161,7 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
                     </div>
                   </div>
                   
-                  <Progress 
-                    value={goalProgress.percentage} 
-                    className="h-2"
-                  />
+                  <FinancialProgress value={goalProgress.percentage} label={`${goal.name} progress`} status={goalProgress.status} />
                   
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{formatCurrency(goalProgress.currentAmount)}</span>
@@ -183,7 +179,7 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
           )}
 
           {activeGoals.length > 3 && (
-            <div className="pt-2 border-t">
+            <div className="border-t pt-2 sm:col-span-3">
               <p className="text-xs text-muted-foreground text-center">
                 And {activeGoals.length - 3} more goal{activeGoals.length - 3 !== 1 ? 's' : ''}
               </p>

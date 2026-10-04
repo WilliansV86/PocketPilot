@@ -1,40 +1,16 @@
 "use client";
-import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
-
-
 import { useState } from "react";
-import { format } from "date-fns";
-import { 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  Flag, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  CheckCircle, 
-  Circle,
-  DollarSign,
-  AlertCircle
-} from "lucide-react";
-
+import { Target, TrendingUp, Calendar, Flag, Plus, Edit, Trash2, CheckCircle } from "lucide-react";
+import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ActionMenuButton } from "@/components/ui/action-menu-button";
+import { SummaryStrip } from "@/components/ui/summary-strip";
+import { FinancialProgress } from "@/components/charts/financial-charts";
 import { formatMoney } from "@/lib/currency";
-import { 
-  getGoalTypeInfo, 
-  getPriorityColor, 
-  getProgressColor, 
-  formatGoalProgress 
-} from "@/lib/finance/goals";
+import { statsDateLabel } from "@/lib/stats-date-range";
+import { getGoalTypeInfo, getPriorityColor, formatGoalProgress } from "@/lib/finance/goals";
 
 interface Goal {
   id: string;
@@ -72,289 +48,43 @@ interface GoalProgress {
 
 interface GoalListProps {
   goals: GoalProgress[];
+  onCreate?: () => void;
   onEdit: (goal: Goal) => void;
   onDelete: (goalId: string) => void;
   onComplete: (goalId: string) => void;
   onAddContribution: (goalId: string) => void;
 }
 
-export function GoalList({ 
-  goals, 
-  onEdit, 
-  onDelete, 
-  onComplete, 
-  onAddContribution 
-}: GoalListProps) {
-  const [currency, setCurrency] = usePreferredCurrency("goals");
-  const formatCurrency = (amount: number) => formatMoney(amount, currency);
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
-
-  const filteredGoals = goals.filter(goal => {
-    if ((goal.goal.currency || "USD") !== currency) return false;
-    if (filter === 'active') return !goal.isCompleted;
-    if (filter === 'completed') return goal.isCompleted;
-    return true;
-  });
-
-  const activeGoals = filteredGoals.filter(g => !g.isCompleted);
-  const completedGoals = filteredGoals.filter(g => g.isCompleted);
-
-  const totalSaved = activeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
-  const totalTarget = activeGoals.reduce((sum, g) => sum + g.targetAmount, 0);
-
-  return (
-    <div className="space-y-4">
-      <CurrencyPicker remember preferenceKey="goals" value={currency} onChange={setCurrency} />
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Total Goals</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-xl font-bold">{filteredGoals.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {activeGoals.length} active, {completedGoals.length} completed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Total Saved</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-xl font-bold">{formatCurrency(totalSaved)}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {activeGoals.length} active goals
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Total Target</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-xl font-bold">{formatCurrency(totalTarget)}</div>
-            <p className="text-xs text-muted-foreground">
-              Combined goal targets
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-xl font-bold">
-              {filteredGoals.length > 0 
-                ? `${Math.round((completedGoals.length / filteredGoals.length) * 100)}%`
-                : '0%'
-              }
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Goals completed
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex space-x-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          All ({filteredGoals.length})
-        </Button>
-        <Button
-          variant={filter === 'active' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('active')}
-        >
-          Active ({activeGoals.length})
-        </Button>
-        <Button
-          variant={filter === 'completed' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('completed')}
-        >
-          Completed ({completedGoals.length})
-        </Button>
-      </div>
-
-      {/* Goals List */}
-      <div className="space-y-4">
-        {filteredGoals.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-6">
-              <Target className="h-8 w-8 text-muted-foreground mb-2" />
-              <h3 className="text-lg font-semibold mb-2">No goals found</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                {filter === 'completed' 
-                  ? "You haven't completed any goals yet."
-                  : filter === 'active'
-                  ? "No active goals. Create your first goal to get started!"
-                  : "No goals yet. Create your first goal to get started!"
-                }
-              </p>
-              {filter !== 'completed' && (
-                <Button onClick={() => onEdit(null as any)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Goal
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          filteredGoals.map((goalProgress) => {
-            const goal = goalProgress.goal;
-            const typeInfo = getGoalTypeInfo(goal.type);
-            const priorityColors = getPriorityColor(goal.priority);
-            const progressColors = formatGoalProgress(goalProgress);
-            const progressColorClass = getProgressColor(goalProgress.percentage);
-
-            return (
-              <Card key={goal.id} className={goalProgress.isCompleted ? 'opacity-75' : ''}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{typeInfo.icon}</span>
-                        <CardTitle className="text-lg">{goal.name}</CardTitle>
-                        {goalProgress.isCompleted && (
-                          <Badge variant="secondary" className="text-green-600">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Completed
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge className={priorityColors}>
-                          <Flag className="h-3 w-3 mr-1" />
-                          {goal.priority}
-                        </Badge>
-                        {goal.targetDate && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(goal.targetDate), 'MMM d, yyyy')}
-                          </div>
-                        )}
-                        {goalProgress.daysRemaining !== undefined && !goalProgress.isCompleted && (
-                          <div className="flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            {goalProgress.daysRemaining} days remaining
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(goal)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        {!goalProgress.isCompleted && goal.type !== 'DEBT_PAYOFF' && (
-                          <DropdownMenuItem onClick={() => onAddContribution(goal.id)}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Contribution
-                          </DropdownMenuItem>
-                        )}
-                        {!goalProgress.isCompleted && (
-                          <DropdownMenuItem onClick={() => onComplete(goal.id)}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Mark Complete
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => onDelete(goal.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span className={progressColors.statusColor}>
-                        {progressColors.percentage}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={goalProgress.percentage} 
-                      className="h-2"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>{progressColors.currentAmount}</span>
-                      <span>{progressColors.targetAmount}</span>
-                    </div>
-                  </div>
-
-                  {/* Status and Details */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${progressColors.statusColor}`}>
-                        {progressColors.status}
-                      </span>
-                      {goalProgress.monthlyProgressNeeded && !goalProgress.isCompleted && (
-                        <span className="text-muted-foreground">
-                          Need {formatCurrency(goalProgress.monthlyProgressNeeded)}/month
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {formatCurrency(goalProgress.remainingAmount)} remaining
-                    </div>
-                  </div>
-
-                  {/* Linked Information */}
-                  {goal.autoTrack && (
-                    <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        Auto-tracking enabled
-                        {goal.linkedAccount && (
-                          <span> • Linked to {goal.linkedAccount.name}</span>
-                        )}
-                        {goal.linkedDebt && (
-                          <span> • Linked to {goal.linkedDebt.name}</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {goal.notes && (
-                    <div className="text-sm text-muted-foreground italic">
-                      {goal.notes}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
+export function GoalList({ goals, onCreate, onEdit, onDelete, onComplete, onAddContribution }: GoalListProps) {
+ const [currency,setCurrency] = usePreferredCurrency("goals");
+ const [filter,setFilter] = useState<"all"|"active"|"completed">("all");
+ const currencyGoals = goals.filter(item => (item.goal.currency || "USD") === currency);
+ const activeGoals = currencyGoals.filter(item => !item.isCompleted);
+ const completedGoals = currencyGoals.filter(item => item.isCompleted);
+ const filteredGoals = currencyGoals.filter(item => filter === "all" || (filter === "completed" ? item.isCompleted : !item.isCompleted));
+ const money = (value:number) => formatMoney(value,currency);
+ return <div className="space-y-4">
+  <CurrencyPicker remember compact preferenceKey="goals" value={currency} onChange={setCurrency} />
+  <SummaryStrip items={[
+   { label:"Goals",value:currencyGoals.length,detail:`${activeGoals.length} active · ${completedGoals.length} completed`,icon:Target },
+   { label:"Tracked progress",value:money(activeGoals.reduce((sum,item)=>sum+item.currentAmount,0)),detail:"Across active goals",icon:TrendingUp },
+   { label:"Active targets",value:money(activeGoals.reduce((sum,item)=>sum+item.targetAmount,0)),icon:Flag },
+   { label:"Completed",value:`${currencyGoals.length ? Math.round(completedGoals.length/currencyGoals.length*100) : 0}%`,icon:CheckCircle,tone:"good" },
+  ]} />
+  <div className="flex flex-wrap gap-2" aria-label="Filter goals">{([['all','All',currencyGoals.length],['active','Active',activeGoals.length],['completed','Completed',completedGoals.length]] as const).map(([value,label,count])=><Button key={value} type="button" size="sm" className="min-h-10" aria-pressed={filter===value} variant={filter===value ? "default":"outline"} onClick={()=>setFilter(value)}>{label} ({count})</Button>)}</div>
+  <div className="grid items-start gap-3 lg:grid-cols-2">
+   {!filteredGoals.length && <div className="rounded-xl border p-5 text-center lg:col-span-2"><Target aria-hidden="true" className="mx-auto mb-2 h-6 w-6 text-muted-foreground" /><h2 className="font-semibold">No {filter === "all" ? "" : filter+" "}goals in {currency}</h2><p className="mt-1 text-sm text-muted-foreground">Choose another currency or create a goal.</p>{onCreate && filter!=="completed" && <Button className="mt-3" onClick={onCreate}><Plus className="h-4 w-4" />Create goal</Button>}</div>}
+   {filteredGoals.map(progress=>{
+    const goal=progress.goal;const info=getGoalTypeInfo(goal.type);const formatted=formatGoalProgress(progress);
+    return <article key={goal.id} aria-label={goal.name} className="min-w-0 space-y-3 rounded-xl border bg-card p-4">
+     <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="break-words text-base font-semibold"><span aria-hidden="true" className="mr-2">{info.icon}</span>{goal.name}</h2><div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs"><Badge className={getPriorityColor(goal.priority)}>{goal.priority}</Badge><span className={formatted.statusColor}>{formatted.status}</span></div></div>
+      <DropdownMenu><DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${goal.name}`} /></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={()=>onEdit(goal)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>{!progress.isCompleted && goal.type!=="DEBT_PAYOFF" && <DropdownMenuItem onClick={()=>onAddContribution(goal.id)}><Plus className="mr-2 h-4 w-4" />Add contribution</DropdownMenuItem>}{!progress.isCompleted && <DropdownMenuItem onClick={()=>onComplete(goal.id)}><CheckCircle className="mr-2 h-4 w-4" />Mark complete</DropdownMenuItem>}<DropdownMenuItem className="text-destructive" onClick={()=>onDelete(goal.id)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+     </div>
+     <div className="space-y-2"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="font-semibold tabular-nums">{money(progress.currentAmount)}</span><span className="text-muted-foreground">of {money(progress.targetAmount)}</span></div><FinancialProgress value={progress.percentage} label={`${goal.name} progress`} status={progress.status} /><div className="flex flex-wrap justify-between gap-2 text-xs"><span className={formatted.statusColor}>{formatted.percentage}</span><span className="text-muted-foreground">{money(progress.remainingAmount)} remaining</span></div></div>
+     {(goal.targetDate || progress.monthlyProgressNeeded) && <div className="flex flex-wrap gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">{goal.targetDate && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />Target {statsDateLabel(goal.targetDate)}</span>}{!!progress.monthlyProgressNeeded && !progress.isCompleted && <span>Need {money(progress.monthlyProgressNeeded)}/month</span>}</div>}
+     {(goal.autoTrack || goal.notes) && <details className="text-xs text-muted-foreground"><summary className="cursor-pointer py-1">Tracking details</summary>{goal.autoTrack && <p className="mt-1">Auto-tracking{goal.linkedAccount ? ` · ${goal.linkedAccount.name}` : goal.linkedDebt ? ` · ${goal.linkedDebt.name}` : ""}</p>}{goal.notes && <p className="mt-1 break-words">{goal.notes}</p>}</details>}
+    </article>;
+   })}
+  </div>
+ </div>;
 }
