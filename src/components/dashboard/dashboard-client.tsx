@@ -299,9 +299,19 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
 
       {data.netWorthData && (
         <details className="group mt-3 rounded-xl border bg-card text-card-foreground">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-            Assets and liabilities breakdown
-            <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+            <span className="sr-only">Assets and liabilities breakdown.</span>
+            <span className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:gap-3">
+              <span className="min-w-0 rounded-lg border border-teal-500/15 bg-teal-500/5 px-3 py-2">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400"><Wallet aria-hidden="true" className="h-4 w-4 shrink-0" />Assets</span>
+                <span className="mt-1 block break-words text-sm font-semibold tabular-nums sm:text-base">{formatCurrency(data.netWorthData.totalAssets)}</span>
+              </span>
+              <span className="min-w-0 rounded-lg border border-rose-500/15 bg-rose-500/5 px-3 py-2">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400"><TrendingDown aria-hidden="true" className="h-4 w-4 shrink-0" />Liabilities</span>
+                <span className="mt-1 block break-words text-sm font-semibold tabular-nums sm:text-base">{formatCurrency(data.netWorthData.totalLiabilities)}</span>
+              </span>
+            </span>
+            <span className="flex shrink-0 flex-col items-center gap-1 px-1 text-muted-foreground"><ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" /><span className="hidden text-xs sm:block">Details</span></span>
           </summary>
           <div className="grid gap-5 border-t px-4 py-4 sm:grid-cols-2">
             <div>
