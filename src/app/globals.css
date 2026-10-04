@@ -179,7 +179,8 @@
 /* These pages already provide their own title and compact summaries. */
 @media (max-width: 767px) {
   .pp-main:has(.pp-goals-page) .pp-mobile-page-title,
-  .pp-main:has(.pp-money-owed-page) .pp-mobile-page-title { display: none; }
+  .pp-main:has(.pp-money-owed-page) .pp-mobile-page-title,
+  .pp-main:has(.pp-recurring-page) .pp-mobile-page-title { display: none; }
   .pp-main .pp-chart-card { padding-block: 12px; gap: 12px; }
   .pp-main .pp-dashboard-charts { grid-template-columns: minmax(0, 1fr); }
 }
