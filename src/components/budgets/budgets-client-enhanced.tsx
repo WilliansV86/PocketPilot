@@ -1,4 +1,5 @@
 "use client";
+import { IncomePlan } from "./income-plan";
 import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 
 
@@ -372,6 +373,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
           <Button onClick={handleCopy} disabled={copying || !copyTarget}>{copying ? "Copying..." : "Copy budget"}</Button>
         </DialogContent>
       </Dialog>
+      <IncomePlan month={`${year}-${month.padStart(2,"0")}`} currency={currency} received={data.totals.income} budgeted={data.totals.budgeted} loadingBudget={loading} />
       {/* Mobile Layout */}
       <div className="md:hidden">
         <MobileBudgets currency={currency}

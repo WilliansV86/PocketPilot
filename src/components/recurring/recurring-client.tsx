@@ -1,4 +1,5 @@
 "use client";
+import { FundingForecast } from "./funding-forecast";
 import { useEffect, useState } from "react";
 import { recurringData, saveRecurring, toggleRecurring, recordDueRecurring, wiseTransfer } from "@/lib/actions/recurring-actions";
 import { Button } from "@/components/ui/button";
@@ -30,15 +31,6 @@ export function RecurringClient(){
  let scheduledTotal=0;
  for(const p of upcoming){let date=p.nextDate,n=0;while(date<=end&&n++<200){scheduledTotal+=p.amount;date=nextOccurrence(date,p.anchorDate,p.frequency);}}
  const fromAccount=data.sources.find(a=>a.id===fromId),toAccount=data.sources.find(a=>a.id===toId);
- // Each source is evaluated independently: money at Chase cannot fund a Wells Fargo debit.
- const funding=data.sources.filter(s=>!s.card&&s.currency===currency).map(s=>{
-  let total=0;
-  for(const p of upcoming.filter(p=>p.sourceId===s.id)){
-   let date=p.nextDate,n=0;
-   while(date<=end&&n++<200){total+=p.amount;date=nextOccurrence(date,p.anchorDate,p.frequency);}
-  }
-  return {...s,total:Math.round(total*100)/100};
- }).filter(s=>s.total>0);
  function open(p:Payment|null){setEditing(p);setSource(p?.sourceId||"");setFormOpen(true);}
  async function submit(form:FormData){setBusy(true);try{const result=await saveRecurring(form);if(!result.success){toast.error(result.error);return;}toast.success("Schedule saved");setNotice("Schedule saved. Your upcoming payments are updated.");setFormOpen(false);setEditing(null);await load();}catch{toast.error("Unable to save payment. Please try again.");}finally{setBusy(false);}}
  return <div className="pp-recurring-page space-y-5 p-4 md:p-6">
@@ -53,7 +45,7 @@ export function RecurringClient(){
    {label:'Paused',value:payments.filter(p=>!p.active).length,icon:PauseCircle}
   ]}/>
   <details className="rounded-lg border bg-card px-3 py-2 text-sm"><summary className="cursor-pointer text-muted-foreground">How automatic recording works</summary><p className="mt-2 text-muted-foreground">PocketPilot records expenses on their scheduled Alberta date; your bank handles actual autopay. Bank charges reduce account balances and credit card charges increase debt. Credit card repayments remain manual. Correct failed or changed charges in Transactions.</p></details>
-  <section aria-label="Account funding for upcoming payments" className="grid gap-3 sm:grid-cols-2">{funding.map(s=><div key={s.id} className="rounded-xl border bg-card p-3"><h2 className="font-semibold">{s.name} · next 30 days</h2><p className="text-sm">Scheduled {formatMoney(s.total,currency)} · Available {formatMoney(s.balance,currency)}</p><p className={s.total>s.balance?'text-amber-600 font-medium':'text-emerald-600'}>{s.total>s.balance?`Funding needed: ${formatMoney(s.total-s.balance,currency)}`:'Current balance covers scheduled bills'}</p></div>)}</section>
+  <FundingForecast payments={data.payments} sources={data.sources} currency={currency} today={data.today} />
   <Dialog open={formOpen} onOpenChange={value=>{if(!busy)setFormOpen(value);}}><DialogContent className="mx-0 w-[calc(100%-2rem)] max-h-[85dvh] overflow-y-auto rounded-xl sm:max-w-2xl"><DialogHeader><DialogTitle>{editing?'Edit recurring payment':'Add recurring payment'}</DialogTitle><DialogDescription>Choose the amount, source and next unpaid date. Changes apply to future charges.</DialogDescription></DialogHeader><form key={editing?.id||'new'} onSubmit={event=>{event.preventDefault();void submit(new FormData(event.currentTarget));}} className="grid gap-4 sm:grid-cols-2"><input type="hidden" name="id" value={editing?.id||''}/>
    {field('Name',<Input name="name" required maxLength={150} defaultValue={editing?.name||''} placeholder="Netflix"/>)}
    {field('Amount',<Input name="amount" inputMode="decimal" type="number" min="0.01" step="0.01" required defaultValue={editing?.amount} placeholder="0.00"/>)}

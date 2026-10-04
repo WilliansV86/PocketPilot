@@ -1,3 +1,4 @@
+import { captureNetWorth } from "@/lib/net-worth-history";
 import { runRecurring } from "@/lib/recurring-runner";
 import { formatMoney } from "@/lib/currency";
 import type { NextRequest } from "next/server";
@@ -76,6 +77,13 @@ export async function GET(request: NextRequest) {
   if (process.env.RECURRING_ENABLED === "true") {
     try { recurring = await runRecurring(prisma, "user-1"); if(recurring.failures.length) console.error("Recurring schedules need review", recurring.failures); }
     catch { console.error("Recurring processing failed; continuing debt reminders"); recurring = { created: 0, failures: ["PROCESSING_FAILED"] }; }
+  }
+  // Daily capture for the personal production owner; never mix Preview users.
+  if (process.env.NET_WORTH_HISTORY_ENABLED === "true" && process.env.VERCEL_ENV === "production") {
+    for (const currency of ["USD", "CAD"]) {
+      try { await captureNetWorth(prisma, "user-1", currency); }
+      catch { console.error("Net-worth history capture failed", { currency }); }
+    }
   }
   if (process.env.REMINDERS_ENABLED !== "true") {
     return Response.json({ success: true, skipped: "Automatic reminders are disabled", recurring });
