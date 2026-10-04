@@ -1,12 +1,10 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { formatCurrency } from "@/lib/utils";
-import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
 import { getDefaultUser } from "@/lib/get-default-user";
 
-import { getDateRangePreset, type DateRange } from "@/lib/stats-date-range";
+import { monthlyCashflow, categorySpending, dailySpending } from "@/lib/stats-aggregation";
+import type { DateRange } from "@/lib/stats-date-range";
 export { getDateRangePreset, type DateRange } from "@/lib/stats-date-range";
-
 export async function getMonthlyCashflow(range: DateRange, currency = "USD") {
   try {
     const user = await getDefaultUser();
@@ -27,34 +25,7 @@ export async function getMonthlyCashflow(range: DateRange, currency = "USD") {
       },
     });
 
-    // Group by month and type
-    const monthlyData: { [key: string]: { income: number; expenses: number } } = {};
-
-    transactions.forEach(transaction => {
-      const monthKey = transaction.date.toISOString().slice(0, 7); // YYYY-MM
-      
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { income: 0, expenses: 0 };
-      }
-
-      const amount = Number(transaction.amount);
-      
-      if (transaction.type === "INCOME") {
-        monthlyData[monthKey].income += amount;
-      } else if (transaction.type === "EXPENSE") {
-        monthlyData[monthKey].expenses += amount;
-      }
-    });
-
-    // Convert to array and sort by month
-    const result = Object.entries(monthlyData)
-      .map(([month, data]) => ({
-        month,
-        income: data.income,
-        expenses: data.expenses,
-        net: data.income - data.expenses,
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+    const result = monthlyCashflow(transactions, range);
 
     return { success: true, data: result };
   } catch (error) {
@@ -76,49 +47,13 @@ export async function getCategorySpending(range: DateRange, currency = "USD") {
           gte: range.start,
           lte: range.end,
         },
-        categoryId: {
-          not: null,
-        },
       },
       include: {
         category: true,
       },
     });
 
-    // Group by category
-    const categorySpending: { [key: string]: { name: string; amount: number; color: string } } = {};
-
-    transactions.forEach(transaction => {
-      const categoryName = transaction.category?.name || "Uncategorized";
-      const categoryColor = transaction.category?.color || "#6b7280";
-      
-      if (!categorySpending[categoryName]) {
-        categorySpending[categoryName] = { name: categoryName, amount: 0, color: categoryColor };
-      }
-      
-      categorySpending[categoryName].amount += Number(transaction.amount);
-    });
-
-    // Convert to array and sort by amount (descending)
-    let result = Object.values(categorySpending).sort((a, b) => b.amount - a.amount);
-
-    // Group categories < 3% into "Other"
-    const total = result.reduce((sum, cat) => sum + cat.amount, 0);
-    const threshold = total * 0.03; // 3%
-
-    const significantCategories = result.filter(cat => cat.amount >= threshold);
-    const otherCategories = result.filter(cat => cat.amount < threshold);
-
-    if (otherCategories.length > 0) {
-      const otherTotal = otherCategories.reduce((sum, cat) => sum + cat.amount, 0);
-      significantCategories.push({
-        name: "Other",
-        amount: otherTotal,
-        color: "#9ca3af"
-      });
-    }
-
-    return { success: true, data: significantCategories };
+    return { success: true, data: categorySpending(transactions) };
   } catch (error) {
     console.error("Error getting category spending:", error);
     return { success: false, error: "Failed to get category spending" };
@@ -177,21 +112,7 @@ export async function getDailySpend(month: DateRange, currency = "USD") {
       },
     });
 
-    // Group by day
-    const dailySpending: { [key: string]: number } = {};
-
-    transactions.forEach(transaction => {
-      const dayKey = transaction.date.toISOString().slice(0, 10); // YYYY-MM-DD
-      dailySpending[dayKey] = (dailySpending[dayKey] || 0) + Number(transaction.amount);
-    });
-
-    // Convert to array and sort by date
-    const result = Object.entries(dailySpending)
-      .map(([date, amount]) => ({
-        date,
-        amount,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const result = dailySpending(transactions, month);
 
     return { success: true, data: result };
   } catch (error) {

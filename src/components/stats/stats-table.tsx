@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/lib/currency";
-import { format } from "date-fns";
+import { statsDateLabel } from "@/lib/stats-date-range";
 import { Badge } from "@/components/ui/badge";
 
 interface StatsTableProps {
@@ -39,17 +39,17 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
                   <div className="font-medium">{item.description}</div>
                 </td>
                 <td className="py-3 px-4">
-                  {item.category && (
+                  {item.category ? (
                     <Badge 
                       variant="secondary" 
                       style={{ backgroundColor: `${item.category.color}20`, color: item.category.color }}
                     >
                       {item.category.name}
                     </Badge>
-                  )}
+                  ) : <span className="text-muted-foreground">Uncategorized</span>}
                 </td>
                 <td className="py-3 px-4 text-muted-foreground">
-                  {format(new Date(item.date), "MMM d, yyyy")}
+                  {statsDateLabel(item.date)}
                 </td>
                 <td className="py-3 px-4 text-right font-medium text-red-600">
                   {formatCurrency(item.amount)}
@@ -67,7 +67,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="font-medium">{item.description}</div>
-                {item.category && (
+                {item.category ? (
                   <Badge 
                     variant="secondary" 
                     className="mt-1"
@@ -75,7 +75,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
                   >
                     {item.category.name}
                   </Badge>
-                )}
+                ) : <span className="text-muted-foreground">Uncategorized</span>}
               </div>
               <div className="text-right">
                 <div className="font-medium text-red-600">
@@ -84,7 +84,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              {format(new Date(item.date), "MMM d, yyyy")}
+              {statsDateLabel(item.date)}
             </div>
           </div>
         ))}

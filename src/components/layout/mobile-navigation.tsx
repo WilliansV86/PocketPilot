@@ -17,17 +17,17 @@ const sections = [
     items: [
       { name: "Accounts", href: "/accounts", icon: Wallet, color: "text-emerald-700 dark:text-emerald-400" },
       { name: "Transactions", href: "/transactions", icon: ReceiptText, color: "text-blue-700 dark:text-blue-400" },
-      { name: "Categories", href: "/categories", icon: PieChart, color: "text-amber-700 dark:text-amber-400" },
+      { name: "Debts", href: "/debts", icon: TrendingDown, color: "text-orange-700 dark:text-orange-400" },
+      { name: "Money Owed", href: "/money-owed", icon: TrendingUp, color: "text-lime-700 dark:text-lime-400" },
     ],
   },
   {
     name: "Planning", icon: Target,
     color: "text-violet-700 dark:text-violet-400",
     items: [
-      { name: "Debts", href: "/debts", icon: TrendingDown, color: "text-orange-700 dark:text-orange-400" },
       { name: "Budgets", href: "/budgets", icon: Target, color: "text-violet-700 dark:text-violet-400" },
+      { name: "Categories", href: "/categories", icon: PieChart, color: "text-amber-700 dark:text-amber-400" },
       { name: "Goals", href: "/goals", icon: Flag, color: "text-teal-700 dark:text-teal-400" },
-      { name: "Money Owed", href: "/money-owed", icon: TrendingUp, color: "text-lime-700 dark:text-lime-400" },
     ],
   },
   {

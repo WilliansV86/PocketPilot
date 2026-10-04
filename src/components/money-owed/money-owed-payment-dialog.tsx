@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { recordMoneyOwedPayment } from "@/lib/actions/money-owed-actions";
+import { recordMoneyOwedPayment, updateMoneyOwedPayment } from "@/lib/actions/money-owed-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { formatMoney as formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
@@ -59,17 +59,19 @@ interface MoneyOwed {
 }
 
 interface MoneyOwedPaymentDialogProps {
+  payment?: { id: string; amount: number; date: string | Date; accountId: string; note?: string | null };
   moneyOwed: MoneyOwed;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSuccess }: MoneyOwedPaymentDialogProps) {
+export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange, onSuccess }: MoneyOwedPaymentDialogProps) {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const maximumPayment = moneyOwed.amountOutstanding + (payment ? Number(payment.amount) : 0);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
@@ -82,10 +84,12 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
 
   useEffect(() => {
     if (open) {
-      console.log("Money owed payment dialog opened for:", moneyOwed.personName);
+      form.reset({ amount: payment ? Number(payment.amount) : moneyOwed.amountOutstanding,
+        date: payment ? new Date(payment.date).toISOString().slice(0, 10) : format(new Date(), "yyyy-MM-dd"),
+        accountId: payment?.accountId || "", note: payment?.note || "" });
       loadAccounts();
     }
-  }, [open, moneyOwed.personName]);
+  }, [open, moneyOwed.id, payment]);
 
   const loadAccounts = async () => {
     try {
@@ -107,7 +111,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
   };
 
   const onSubmit = async (values: FormValues) => {
-    if (values.amount > moneyOwed.amountOutstanding) {
+    if (values.amount > maximumPayment) {
       toast.error("Payment amount cannot exceed outstanding amount");
       return;
     }
@@ -120,7 +124,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
       formData.append("accountId", values.accountId);
       formData.append("note", values.note || "");
 
-      const result = await recordMoneyOwedPayment(moneyOwed.id, formData);
+      const result = payment ? await updateMoneyOwedPayment(moneyOwed.id, payment.id, formData) : await recordMoneyOwedPayment(moneyOwed.id, formData);
       
       if (result.success) {
         toast.success(result.message || "Payment recorded successfully");
@@ -141,9 +145,9 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Record Payment - {moneyOwed.personName}</DialogTitle>
+          <DialogTitle>{payment ? "Edit Payment" : "Record Payment"} - {moneyOwed.personName}</DialogTitle>
           <DialogDescription>
-            Record a payment received from this person. This will create an income transaction and update your account balance.
+            {payment ? "Correct this payment. The remaining balance, receiving account, and income transaction will update together." : "Record a payment received from this person. This will create an income transaction and update your account balance."}
           </DialogDescription>
         </DialogHeader>
 
@@ -180,7 +184,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
                         type="number"
                         step="0.01"
                         min="0"
-                        max={moneyOwed.amountOutstanding}
+                        max={maximumPayment}
                         placeholder="0.00"
                         {...field}
                       />
@@ -253,7 +257,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, open, onOpenChange, onSucces
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting || loading}>
-                  {isSubmitting ? "Recording..." : "Record Payment"}
+                  {isSubmitting ? "Saving..." : payment ? "Save Payment" : "Record Payment"}
                 </Button>
               </DialogFooter>
             </form>

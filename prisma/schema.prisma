@@ -262,6 +262,7 @@ model MoneyOwedPayment {
   amount      Decimal  @db.Decimal(12,2)
   date        DateTime
   note        String?
+  transactionId String? @unique
   
   moneyOwedId  String
   moneyOwed    MoneyOwed @relation(fields: [moneyOwedId], references: [id], onDelete: Cascade)

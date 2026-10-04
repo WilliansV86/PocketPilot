@@ -77,6 +77,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
   const [currency, setCurrency] = usePreferredCurrency("money-owed");
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const [selectedMoneyOwed, setSelectedMoneyOwed] = useState<MoneyOwed | null>(null);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingMoneyOwed, setEditingMoneyOwed] = useState<MoneyOwed | null>(null);
@@ -97,11 +98,14 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
   ).length;
 
   const handleRecordPayment = (moneyOwed: MoneyOwed) => {
+    setEditingPayment(null);
     setSelectedMoneyOwed(moneyOwed);
     setPaymentDialogOpen(true);
   };
 
   const handlePaymentSuccess = () => {
+    setEditingPayment(null);
+    setShowHistoryDialog(false);
     setPaymentDialogOpen(false);
     setSelectedMoneyOwed(null);
     onUpdate?.();
@@ -479,6 +483,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
       {/* Payment Dialog */}
       {selectedMoneyOwed && (
         <MoneyOwedPaymentDialog
+          payment={editingPayment}
           moneyOwed={selectedMoneyOwed}
           open={paymentDialogOpen}
           onOpenChange={setPaymentDialogOpen}
@@ -489,7 +494,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
       {/* Simple History Dialog - Placeholder for now */}
       {showHistoryDialog && selectedMoneyOwed && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full">
+          <div className="max-h-[85dvh] overflow-y-auto bg-background text-foreground p-6 rounded-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Payment History</h3>
             <p className="text-muted-foreground mb-4">
               {selectedMoneyOwed.personName} - {selectedMoneyOwed.payments?.length || 0} payments
@@ -503,6 +508,9 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                       {format(new Date(payment.date), "MMM dd, yyyy")}
                     </div>
                   </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditingPayment(payment); setShowHistoryDialog(false); setPaymentDialogOpen(true); }}>
+                    <Edit aria-hidden="true" className="mr-1 h-3 w-3" />Edit
+                  </Button>
                   <div className="text-right">
                     <div className="text-sm">{payment.accountName}</div>
                     {payment.note && (

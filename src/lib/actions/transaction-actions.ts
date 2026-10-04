@@ -117,6 +117,9 @@ export async function updateTransaction(id: string, formData: FormData) {
     const row = await prisma.$transaction(async tx => {
       const original = await tx.transaction.findUnique({ where: { id, userId: user.id } });
       if (!original) throw new Error("Transaction not found");
+      if (await tx.moneyOwedPayment.findFirst({ where: { transactionId: id, userId: user.id } })) {
+        throw new Error("Edit this received payment from Money Owed > Payment History to keep balances consistent.");
+      }
       if (original.debtPaymentId) throw new Error("Manage debt payments from Debts; this entry cannot be edited here.");
       await validateSource(tx, data, user.id);
       // Claim the version before moving any balances, preventing stale concurrent edits.
@@ -135,6 +138,9 @@ export async function deleteTransaction(id: string) {
     await prisma.$transaction(async tx => {
       const original = await tx.transaction.findUnique({ where: { id, userId: user.id } });
       if (!original) throw new Error("Transaction not found");
+      if (await tx.moneyOwedPayment.findFirst({ where: { transactionId: id, userId: user.id } })) {
+        throw new Error("Edit this received payment from Money Owed > Payment History to keep balances consistent.");
+      }
       const removed = await tx.transaction.deleteMany({ where: { id, userId: user.id, updatedAt: original.updatedAt } });
       if (removed.count !== 1) throw new Error("Transaction changed. Refresh and try again.");
       await applyEffects(tx, { ...original, amount: Number(original.amount) }, -1);
