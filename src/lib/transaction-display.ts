@@ -4,6 +4,7 @@ export function transactionDisplay(transaction: any) {
   return {
     ...rest,
     amount: Number(transaction.amount),
+    toAmount: transaction.toAmount == null ? null : Number(transaction.toAmount),
     category: transaction.category ?? (transaction.type === "TRANSFER"
       ? { id: null, name: transaction.debtPaymentId ? "Credit card payment" : "Transfer", type: "TRANSFER", color: null, icon: null }
       : null),

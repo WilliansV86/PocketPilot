@@ -68,7 +68,7 @@ function refreshFinancialPages() {
 function actionError(error: unknown) {
   if (error instanceof z.ZodError) return error.issues[0]?.message || "Invalid transaction data";
   // Only validation/concurrency messages are returned; Prisma errors stay on the server.
-  const known = ["Manage debt payments from Debts; this entry cannot be edited here.","Invalid date", "Select one payment source", "Credit cards can only be selected for purchases", "Select a different destination account", "Transaction not found", "Transaction changed. Refresh and try again.", "Select an open credit card belonging to your account", "Account not found", "Destination account not found", "Category not found", "Cross-currency transfers need separate amounts and are not supported yet"];
+  const known = ["To correct a Wise transfer, delete it and record the corrected amounts in Recurring Payments.","Manage debt payments from Debts; this entry cannot be edited here.","Invalid date", "Select one payment source", "Credit cards can only be selected for purchases", "Select a different destination account", "Transaction not found", "Transaction changed. Refresh and try again.", "Select an open credit card belonging to your account", "Account not found", "Destination account not found", "Category not found", "Cross-currency transfers need separate amounts and are not supported yet"];
   return error instanceof Error && known.includes(error.message) ? error.message : "Unable to save this transaction. Please try again.";
 }
 export async function getCreditCardPaymentSources() {
@@ -120,12 +120,13 @@ export async function updateTransaction(id: string, formData: FormData) {
       if (await tx.moneyOwedPayment.findFirst({ where: { transactionId: id, userId: user.id } })) {
         throw new Error("Edit this received payment from Money Owed > Payment History to keep balances consistent.");
       }
+      if (original.toAmount !== null) throw new Error("To correct a Wise transfer, delete it and record the corrected amounts in Recurring Payments.");
       if (original.debtPaymentId) throw new Error("Manage debt payments from Debts; this entry cannot be edited here.");
       await validateSource(tx, data, user.id);
       // Claim the version before moving any balances, preventing stale concurrent edits.
       const updated = await tx.transaction.updateMany({ where: { id, userId: user.id, updatedAt: original.updatedAt }, data });
       if (updated.count !== 1) throw new Error("Transaction changed. Refresh and try again.");
-      await applyEffects(tx, { ...original, amount: Number(original.amount) }, -1);
+      await applyEffects(tx, { ...original, amount: Number(original.amount), toAmount: original.toAmount === null ? null : Number(original.toAmount) }, -1);
       await applyEffects(tx, data, 1);
       return { id, ...data, amount: Number(data.amount) };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -143,7 +144,7 @@ export async function deleteTransaction(id: string) {
       }
       const removed = await tx.transaction.deleteMany({ where: { id, userId: user.id, updatedAt: original.updatedAt } });
       if (removed.count !== 1) throw new Error("Transaction changed. Refresh and try again.");
-      await applyEffects(tx, { ...original, amount: Number(original.amount) }, -1);
+      await applyEffects(tx, { ...original, amount: Number(original.amount), toAmount: original.toAmount === null ? null : Number(original.toAmount) }, -1);
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshFinancialPages(); return { success: true };
   } catch (error) { console.error("Transaction delete failed", error); return { success: false, error: actionError(error) }; }

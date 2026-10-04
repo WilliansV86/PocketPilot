@@ -34,6 +34,7 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
       "/transactions": "Transactions",
       "/categories": "Categories",
       "/budgets": "Budgets",
+      "/recurring": "Recurring Payments",
       "/goals": "Goals",
       "/debts": "Debts",
       "/money-owed": "Money Owed",
