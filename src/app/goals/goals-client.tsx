@@ -158,7 +158,7 @@ export function GoalsClient() {
 
   if (loading) {
     return (
-      <div className="w-full space-y-4">
+      <div className="pp-goals-page w-full space-y-4">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
@@ -171,13 +171,13 @@ export function GoalsClient() {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="pp-goals-page w-full space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className={TYPOGRAPHY.PAGE_TITLE}>Financial Goals</h1>
-          <p className={TYPOGRAPHY.SECTION_SUBTITLE}>
-            Track your progress toward savings, debt payoff, and other financial targets
+          <h1 className="text-2xl font-bold">Goals</h1>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+            Track savings, debt payoff, and financial targets
           </p>
         </div>
         <Button onClick={handleCreateGoal} className={BUTTON.PRIMARY_ACTION}>
@@ -189,6 +189,7 @@ export function GoalsClient() {
       {/* Goals List */}
       <div className={SPACING.MARGIN.SECTION}>
         <GoalList
+          onCreate={handleCreateGoal}
           goals={goals}
           onEdit={handleEditGoal}
           onDelete={handleDeleteGoal}

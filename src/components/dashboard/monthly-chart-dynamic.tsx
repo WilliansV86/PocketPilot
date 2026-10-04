@@ -8,7 +8,7 @@ const MonthlyChartComponent = dynamic(
   () => import("./monthly-chart").then(mod => ({ default: mod.MonthlyChart })),
   { 
     ssr: false,
-    loading: () => <Skeleton className="h-[350px] w-full" />
+    loading: () => <Skeleton className="h-[240px] w-full" />
   }
 );
 

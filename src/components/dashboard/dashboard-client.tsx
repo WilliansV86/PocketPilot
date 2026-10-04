@@ -19,12 +19,12 @@ import { SkeletonChart, SkeletonPieChart } from "@/components/charts/skeleton-ch
 // Dynamic imports for better performance
 const MonthlyChart = dynamic(() => import("@/components/dashboard/monthly-chart-dynamic").then(mod => ({ default: mod.MonthlyChartDynamic })), {
   ssr: false,
-  loading: () => <SkeletonChart height="280px" className="md:h-[350px]" />
+  loading: () => <SkeletonChart height="240px" />
 });
 
 const ExpenseBreakdown = dynamic(() => import("@/components/dashboard/expense-breakdown").then(mod => ({ default: mod.ExpenseBreakdown })), {
   ssr: false,
-  loading: () => <SkeletonPieChart height="280px" className="md:h-[350px]" />
+  loading: () => <SkeletonPieChart height="240px" />
 });
 
 const RecentTransactions = dynamic(() => import("@/components/dashboard/recent-transactions").then(mod => ({ default: mod.RecentTransactions })), {
@@ -342,10 +342,10 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         </Card>
       )}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="md:col-span-2">
+      <div className="pp-dashboard-charts mt-4 grid items-start gap-4 lg:grid-cols-2">
+        <Card className="pp-chart-card min-w-0 gap-3 py-4">
           <CardHeader>
-            <CardTitle>Income vs Expenses</CardTitle>
+            <CardTitle className="text-base">Income vs expenses</CardTitle>
             <CardDescription>
               Six months ending {months[selectedMonth]} {selectedYear}
             </CardDescription>
@@ -355,11 +355,9 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
           </CardContent>
         </Card>
         
-        <GoalsWidget currency={currency} goals={data.goalsData} />
-        
-        <Card>
+        <Card className="pp-chart-card min-w-0 gap-3 py-4">
           <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
+            <CardTitle className="text-base">Spending by category</CardTitle>
             <CardDescription>
               Spending in {months[selectedMonth]} {selectedYear}
             </CardDescription>
@@ -368,12 +366,13 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
             {data.expenseData.categories.length > 0 ? (
               <ExpenseBreakdown currency={currency} categories={data.expenseData.categories} />
             ) : (
-              <div className="flex h-[180px] md:h-[350px] items-center justify-center">
+              <div className="flex min-h-20 items-center justify-center text-sm">
                 <p className="text-muted-foreground">No expense data available</p>
               </div>
             )}
           </CardContent>
         </Card>
+        <GoalsWidget currency={currency} goals={data.goalsData} />
       </div>
 
       <div className="mt-6">

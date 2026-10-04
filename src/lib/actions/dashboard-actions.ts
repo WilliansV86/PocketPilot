@@ -5,6 +5,7 @@ import { getDefaultUser } from "@/lib/get-default-user";
 
 import { prisma } from "@/lib/db";
 import { dashboardMonth, dashboardMonthRange, dashboardChartMonths } from "@/lib/dashboard-month";
+import { categorySpending } from "@/lib/stats-aggregation";
 import { getMonthlyFinancialData, getUncategorizedCount } from "@/lib/finance/calculations";
 import { getNetWorthSummary } from "./net-worth-actions";
 
@@ -137,52 +138,18 @@ export async function getExpensesByCategory(currency = "USD", selectedMonth?: st
           lt: monthEnd,
         },
         type: "EXPENSE",
-        categoryId: {
-          not: null,
-        },
       },
       include: {
         category: true,
       },
     });
     
-    // Group by category
-    const categoryMap = new Map();
-    let totalExpenses = 0;
-    
-    transactions.forEach((transaction) => {
-      // Skip if no category
-      if (!transaction.category || !transaction.categoryId) return;
-      
-      const categoryId = transaction.categoryId;
-      const amount = Math.abs(Number(transaction.amount));
-      totalExpenses += amount;
-      
-      if (categoryMap.has(categoryId)) {
-        categoryMap.set(categoryId, {
-          ...categoryMap.get(categoryId),
-          amount: categoryMap.get(categoryId).amount + amount,
-        });
-      } else {
-        categoryMap.set(categoryId, {
-          id: categoryId,
-          name: transaction.category.name,
-          color: transaction.category.color,
-          icon: transaction.category.icon,
-          amount,
-        });
-      }
-    });
-    
-    // Convert to array and calculate percentages
-    const categories = Array.from(categoryMap.values()).map((category) => ({
-      ...category,
-      percentage: (category.amount / totalExpenses) * 100,
+    const totals = categorySpending(transactions);
+    const totalExpenses = totals.reduce((sum, category) => sum + Math.round(category.amount * 100), 0) / 100;
+    const categories = totals.map((category, index) => ({
+      ...category, id: String(index), percentage: totalExpenses > 0 ? category.amount / totalExpenses * 100 : 0,
     }));
-    
-    // Sort by amount descending
-    categories.sort((a, b) => b.amount - a.amount);
-    
+
     return { 
       success: true, 
       data: {

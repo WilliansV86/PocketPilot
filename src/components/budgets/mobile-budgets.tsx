@@ -392,9 +392,8 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                         <ProgressBar
                           value={category.budgeted > 0 ? (category.activity / category.budgeted) * 100 : 0}
                           className="h-2"
-                          style={{ 
-                            backgroundColor: getProgressColor(category.activity, category.budgeted)
-                          }}
+                          variant={category.activity > category.budgeted ? "danger" : category.budgeted > 0 && category.activity / category.budgeted >= 0.8 ? "warning" : "success"}
+                          animated={false}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>{category.budgeted > 0 ? Math.round((category.activity / category.budgeted) * 100) : 0}% used</span>

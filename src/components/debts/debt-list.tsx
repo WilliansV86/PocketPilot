@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionMenuButton } from "@/components/ui/action-menu-button";
 import { useState } from "react";
 import { format } from "date-fns";
 import { 
@@ -165,7 +166,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                           <div className="min-w-0"><div className="font-medium break-words">{debt.name}</div><div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{debt.lender && <span>{debt.lender}</span>}<span>{debt.type.replace("_", " ")}</span></div></div>
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="sm">Actions</Button></DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${debt.name}`} /></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handlePayment(debt)}><TrendingDown className="mr-2 h-4 w-4" />Make Payment</DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -250,9 +251,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Actions
-                            </Button>
+                            <ActionMenuButton label={`Actions for ${debt.name}`} />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onEdit?.(debt)}>

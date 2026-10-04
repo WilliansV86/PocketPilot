@@ -2,6 +2,10 @@
 import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 
 
+import { ActionMenuButton } from "@/components/ui/action-menu-button";
+import { SummaryStrip } from "@/components/ui/summary-strip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { getDateRangePreset, statsDateLabel } from "@/lib/stats-date-range";
 import { useState } from "react";
 import { format } from "date-fns";
 import {
@@ -91,11 +95,9 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
   const partialCount = openMoneyOwed.filter(item => item.status === "PARTIAL").length;
   
   // Calculate overdue count
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const overdueCount = openMoneyOwed.filter(item => 
-    item.dueDate && new Date(item.dueDate) < today
-  ).length;
+  const today = getDateRangePreset("this_month").end.toISOString().slice(0, 10);
+  const isPastDue = (item: MoneyOwed) => !!item.dueDate && new Date(item.dueDate).toISOString().slice(0, 10) < today;
+  const overdueCount = openMoneyOwed.filter(isPastDue).length;
 
   const handleRecordPayment = (moneyOwed: MoneyOwed) => {
     setEditingPayment(null);
@@ -191,16 +193,28 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
     setEditingMoneyOwed(null);
   };
 
+  const mobileRecords = (items: MoneyOwed[], paid = false) => <div className="space-y-3 md:hidden">
+    {items.map(item => <article key={item.id} aria-label={`Money owed by ${item.personName}`} className="min-w-0 space-y-3 rounded-xl border bg-card p-4">
+      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words text-base font-semibold">{item.personName}</h3>{item.description && <p className="mt-1 break-words text-xs text-muted-foreground">{item.description}</p>}</div><Badge variant="outline" className="shrink-0">{item.currency || "USD"}</Badge></div>
+      <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-xs text-muted-foreground">{paid ? "Repaid" : "Outstanding"}</p><p className="break-words text-xl font-bold tabular-nums">{formatMoney(paid ? item.amountOriginal : item.amountOutstanding,item.currency)}</p></div><div className="text-right text-xs text-muted-foreground">Original<br /><span className="font-medium tabular-nums">{formatMoney(item.amountOriginal,item.currency)}</span></div></div>
+      <div className="flex flex-wrap items-center gap-2 text-xs"><Badge className={statusColors[item.status]}>{item.status === "PARTIAL" ? "Partially paid" : item.status === "PAID" ? "Paid" : "Open"}</Badge>{!paid && item.dueDate && <span className={isPastDue(item) ? "font-medium text-red-600 dark:text-red-400" : "text-muted-foreground"}>{isPastDue(item) ? "Overdue · " : "Due "}{statsDateLabel(item.dueDate)}</span>}{!paid && !item.dueDate && <span className="text-muted-foreground">No due date</span>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+        {!paid ? <Button type="button" size="sm" className="min-h-10" onClick={()=>handleRecordPayment(item)}><DollarSign className="mr-1 h-4 w-4" />Record payment</Button> : <Button type="button" variant="outline" size="sm" className="min-h-10" onClick={()=>handleViewHistory(item)}><Eye className="mr-1 h-4 w-4" />Payment history</Button>}
+        <DropdownMenu><DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${item.personName}`} /></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={()=>handleViewHistory(item)}><Eye className="mr-2 h-4 w-4" />Payment history</DropdownMenuItem><DropdownMenuItem onClick={()=>onEdit ? onEdit(item) : handleEdit(item)}><Edit className="mr-2 h-4 w-4" />Edit original amount</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={()=>handleArchive(item)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+      </div>
+    </article>)}
+  </div>;
+
   if (showCreateForm || editingMoneyOwed) {
     return (
-      <div className="space-y-6">
-      <CurrencyPicker remember preferenceKey="money-owed" value={currency} onChange={setCurrency} />
-        <div className="flex items-center justify-between">
+      <div className="pp-money-owed-page space-y-4">
+      <CurrencyPicker remember compact preferenceKey="money-owed" value={currency} onChange={setCurrency} />
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleCancel}>
               Back to Money Owed
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight">
               {editingMoneyOwed ? "Edit Money Owed" : "Create Money Owed"}
             </h1>
           </div>
@@ -218,74 +232,33 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="pp-money-owed-page space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Money Owed</h1>
-          <p className="text-muted-foreground">
-            Track money owed to you and manage incoming payments
+          <h1 className="text-2xl font-bold tracking-tight">Money Owed</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Track balances and payments received
           </p>
         </div>
         <Button onClick={handleCreateMoneyOwed}>
           <DollarSign className="h-4 w-4 mr-2" />
-          Add Money Owed
+          Add person
         </Button>
       </div>
 
-      <CurrencyPicker remember preferenceKey="money-owed" value={currency} onChange={setCurrency} />
+      <CurrencyPicker remember compact preferenceKey="money-owed" value={currency} onChange={setCurrency} />
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalOutstanding)}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {openCount + partialCount} records
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Open Records</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{openCount}</div>
-            <p className="text-xs text-muted-foreground">No payments received yet</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Partial Payments</CardTitle>
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{partialCount}</div>
-            <p className="text-xs text-muted-foreground">Some payments received</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <Calendar className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
-            <p className="text-xs text-muted-foreground">Past due date</p>
-          </CardContent>
-        </Card>
-      </div>
+      <SummaryStrip lead items={[
+        { label:"Total outstanding",value:formatCurrency(totalOutstanding),detail:`Across ${openMoneyOwed.length} records`,icon:DollarSign },
+        { label:"Open",value:openCount,icon:TrendingUp },
+        { label:"Partially paid",value:partialCount,icon:AlertCircle,tone:"warning" },
+        { label:"Overdue",value:overdueCount,icon:Calendar,tone:overdueCount ? "danger" : "default" },
+      ]} />
 
       {/* Open Money Owed */}
+      {openMoneyOwed.length > 0 && <section className="space-y-3 md:hidden" aria-label="Open money owed"><h2 className="text-base font-semibold">People who owe you</h2>{mobileRecords(openMoneyOwed)}</section>}
       {openMoneyOwed.length > 0 && (
-        <Card>
+        <Card className="hidden md:flex">
           <CardHeader>
             <CardTitle>Open Money Owed</CardTitle>
             <CardDescription>
@@ -307,7 +280,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
               <TableBody>
                 {openMoneyOwed.map((item) => {
                   const StatusIcon = statusIcons[item.status];
-                  const isOverdue = item.dueDate && new Date(item.dueDate) < today;
+                  const isOverdue = isPastDue(item);
                   
                   return (
                     <TableRow key={item.id}>
@@ -337,7 +310,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                             <>
                               <Calendar className="h-4 w-4" />
                               <span className={isOverdue ? "text-red-600 font-medium" : ""}>
-                                {format(new Date(item.dueDate), "MMM dd, yyyy")}
+                                {statsDateLabel(item.dueDate)}
                               </span>
                               {isOverdue && (
                                 <Badge variant="destructive" className="text-xs">
@@ -353,9 +326,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Actions
-                            </Button>
+                            <ActionMenuButton label={`Actions for ${item.personName}`} />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleRecordPayment(item)}>
@@ -367,7 +338,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                               View History
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => onEdit?.(item)}>
+                            <DropdownMenuItem onClick={() => onEdit ? onEdit(item) : handleEdit(item)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
@@ -397,8 +368,9 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
       )}
 
       {/* Paid Money Owed */}
+      {paidMoneyOwed.length > 0 && <details className="space-y-3 md:hidden"><summary className="cursor-pointer rounded-lg border px-3 py-3 text-sm font-medium">Paid records ({paidMoneyOwed.length})</summary>{mobileRecords(paidMoneyOwed,true)}</details>}
       {paidMoneyOwed.length > 0 && (
-        <Card>
+        <Card className="hidden md:flex">
           <CardHeader>
             <CardTitle>Paid Money Owed</CardTitle>
             <CardDescription>
@@ -435,9 +407,7 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            Actions
-                          </Button>
+                          <ActionMenuButton label={`Actions for ${item.personName}`} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleViewHistory(item)}>
@@ -491,41 +461,16 @@ export function MoneyOwedList({ moneyOwed, onEdit, onDelete, onUpdate }: MoneyOw
         />
       )}
 
-      {/* Simple History Dialog - Placeholder for now */}
-      {showHistoryDialog && selectedMoneyOwed && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="max-h-[85dvh] overflow-y-auto bg-background text-foreground p-6 rounded-lg max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Payment History</h3>
-            <p className="text-muted-foreground mb-4">
-              {selectedMoneyOwed.personName} - {selectedMoneyOwed.payments?.length || 0} payments
-            </p>
-            <div className="space-y-2 mb-4">
-              {selectedMoneyOwed.payments?.map((payment: any) => (
-                <div key={payment.id} className="flex justify-between items-center p-2 border rounded">
-                  <div>
-                    <div className="font-medium">{formatMoney(payment.amount, selectedMoneyOwed.currency)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {format(new Date(payment.date), "MMM dd, yyyy")}
-                    </div>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditingPayment(payment); setShowHistoryDialog(false); setPaymentDialogOpen(true); }}>
-                    <Edit aria-hidden="true" className="mr-1 h-3 w-3" />Edit
-                  </Button>
-                  <div className="text-right">
-                    <div className="text-sm">{payment.accountName}</div>
-                    {payment.note && (
-                      <div className="text-xs text-muted-foreground">{payment.note}</div>
-                    )}
-                  </div>
-                </div>
-              )) || (
-                <p className="text-muted-foreground">No payments recorded yet</p>
-              )}
-            </div>
-            <Button onClick={() => setShowHistoryDialog(false)}>Close</Button>
-          </div>
-        </div>
-      )}
+      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+          <DialogHeader><DialogTitle>Payment history</DialogTitle><DialogDescription>{selectedMoneyOwed?.personName} · {selectedMoneyOwed?.payments?.length || 0} payments</DialogDescription></DialogHeader>
+          <div className="space-y-2">{selectedMoneyOwed?.payments?.length ? selectedMoneyOwed.payments.map((payment:any)=><div key={payment.id} className="rounded-lg border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-semibold tabular-nums">{formatMoney(payment.amount,selectedMoneyOwed.currency)}</p><p className="text-xs text-muted-foreground">{statsDateLabel(payment.date)}</p></div><Button type="button" variant="outline" size="sm" className="min-h-10" onClick={()=>{setEditingPayment(payment);setShowHistoryDialog(false);setPaymentDialogOpen(true);}}><Edit className="mr-1 h-3 w-3" />Edit payment</Button></div>
+            <p className="mt-1 break-words text-xs text-muted-foreground">{payment.accountName}</p>{payment.note && <p className="mt-1 break-words text-xs text-muted-foreground">{payment.note}</p>}
+          </div>) : <p className="text-sm text-muted-foreground">No payments recorded yet.</p>}</div>
+          <Button variant="outline" onClick={()=>setShowHistoryDialog(false)}>Close</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
