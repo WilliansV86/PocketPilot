@@ -72,6 +72,9 @@ const navSections = [
         icon: Target,
       },
       {
+        name: "Recurring Payments", iconColor: "bg-teal-500/10 text-teal-700 dark:text-teal-400", href: "/recurring", icon: ReceiptText,
+      },
+      {
         name: "Categories",
         iconColor: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
         href: "/categories",

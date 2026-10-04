@@ -14,6 +14,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  recurringPayments RecurringPayment[]
+  recurringOccurrences RecurringOccurrence[]
   accounts     FinancialAccount[]
   transactions Transaction[]
   categories   Category[]
@@ -93,6 +95,7 @@ model Transaction {
   id          String           @id @default(cuid())
   date        DateTime
   amount      Decimal          @db.Decimal(12,2)
+  toAmount    Decimal?         @db.Decimal(12,2)
   description String
   type        TransactionType
   notes       String?          // Optional notes field
@@ -331,4 +334,33 @@ model GoalContribution {
   @@index([goalId])
   @@index([userId])
   @@index([date])
+}
+
+model RecurringPayment {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  amount Decimal @db.Decimal(12,2)
+  currency String
+  sourceId String
+  categoryId String
+  frequency String
+  anchorDate String
+  nextDate String
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId, active, nextDate])
+}
+model RecurringOccurrence {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recurringId String
+  scheduledDate String
+  transactionId String @unique
+  createdAt DateTime @default(now())
+  @@unique([recurringId, scheduledDate])
+  @@index([userId])
 }

@@ -1,4 +1,5 @@
 export type TransactionEffectInput = {
+  toAmount?: number | null;
   debtPaymentId?: string | null;
   type: string; amount: number; accountId: string | null; creditCardId?: string | null; toAccountId?: string | null;
 };
@@ -14,5 +15,5 @@ export function transactionEffects(input: TransactionEffectInput, direction: 1 |
   if (input.type === "INCOME") return [{ model: "account" as const, id: input.accountId!, amount }];
   if (input.type === "EXPENSE") return [{ model: "account" as const, id: input.accountId!, amount: -amount }];
   if (input.type !== "TRANSFER" || !input.toAccountId || input.toAccountId === input.accountId) throw new Error("Select a different destination account");
-  return [{ model: "account" as const, id: input.accountId!, amount: -amount }, { model: "account" as const, id: input.toAccountId, amount }];
+  return [{ model: "account" as const, id: input.accountId!, amount: -amount }, { model: "account" as const, id: input.toAccountId, amount: (input.toAmount ?? input.amount) * direction }];
 }

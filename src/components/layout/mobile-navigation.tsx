@@ -26,6 +26,7 @@ const sections = [
     color: "text-violet-700 dark:text-violet-400",
     items: [
       { name: "Budgets", href: "/budgets", icon: Target, color: "text-violet-700 dark:text-violet-400" },
+      { name: "Recurring Payments", href: "/recurring", icon: ReceiptText, color: "text-teal-700 dark:text-teal-400" },
       { name: "Categories", href: "/categories", icon: PieChart, color: "text-amber-700 dark:text-amber-400" },
       { name: "Goals", href: "/goals", icon: Flag, color: "text-teal-700 dark:text-teal-400" },
     ],

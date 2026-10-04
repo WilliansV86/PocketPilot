@@ -1,3 +1,4 @@
+import { runRecurring } from "@/lib/recurring-runner";
 import { formatMoney } from "@/lib/currency";
 import type { NextRequest } from "next/server";
 import nodemailer from "nodemailer";
@@ -71,8 +72,13 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
+  let recurring: Awaited<ReturnType<typeof runRecurring>> | undefined;
+  if (process.env.RECURRING_ENABLED === "true") {
+    try { recurring = await runRecurring(prisma, "user-1"); if(recurring.failures.length) console.error("Recurring schedules need review", recurring.failures); }
+    catch { console.error("Recurring processing failed; continuing debt reminders"); recurring = { created: 0, failures: ["PROCESSING_FAILED"] }; }
+  }
   if (process.env.REMINDERS_ENABLED !== "true") {
-    return Response.json({ success: true, skipped: "Automatic reminders are disabled" });
+    return Response.json({ success: true, skipped: "Automatic reminders are disabled", recurring });
   }
   let settings: ReturnType<typeof emailSettings> | undefined;
   try {
