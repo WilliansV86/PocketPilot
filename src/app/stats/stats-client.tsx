@@ -6,6 +6,7 @@ import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-p
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AnnualBudgetReport } from "@/components/stats/annual-budget-report";
 import { StatsTable } from "@/components/stats/stats-table";
 import { getDateRangePreset, statsDateLabel } from "@/lib/stats-date-range";
 import { formatMoney } from "@/lib/currency";
@@ -59,6 +60,7 @@ export function StatsClient() {
   <div className="flex items-center justify-between gap-3"><h1 className="text-2xl font-bold">Statistics</h1><Button variant="outline" size="sm" disabled={loading} onClick={() => void loadData()}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</Button></div>
   <CurrencyPicker remember compact preferenceKey="stats" value={currency} onChange={setCurrency} />
   <Select value={selectedRange} onValueChange={setSelectedRange}><SelectTrigger className="w-full sm:w-64"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="this_month">This month to date</SelectItem><SelectItem value="last_month">Last month</SelectItem><SelectItem value="last_3_months">Last 3 months</SelectItem><SelectItem value="last_6_months">Last 6 months</SelectItem><SelectItem value="ytd">Year to date (YTD)</SelectItem></SelectContent></Select>
+  <AnnualBudgetReport currency={currency} />
   {error && <div role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm">{error} <Button variant="link" onClick={() => void loadData()}>Retry</Button></div>}
   {loading && <p role="status" className="text-sm text-muted-foreground">Updating statistics…</p>}
   {snapshot && current ? <div className="space-y-4" aria-busy={loading}>
