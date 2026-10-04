@@ -7,7 +7,7 @@ export function validDate(value: string) { const d = new Date(`${value}T12:00:00
 export function nextOccurrence(current: string, anchor: string, frequency: string) {
  if (!validDate(current) || !validDate(anchor)) throw new Error("Invalid date");
  const d = new Date(`${current}T12:00:00Z`), a = new Date(`${anchor}T12:00:00Z`);
- if (frequency === "WEEKLY") d.setUTCDate(d.getUTCDate()+7);
+ if (frequency === "WEEKLY" || frequency === "BIWEEKLY") d.setUTCDate(d.getUTCDate()+(frequency === "BIWEEKLY" ? 14 : 7));
  else {
   const step = frequency === "MONTHLY" ? 1 : frequency === "QUARTERLY" ? 3 : frequency === "YEARLY" ? 12 : 0;
   if (!step) throw new Error("Invalid frequency");
