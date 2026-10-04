@@ -40,12 +40,32 @@ export async function wiseTransfer(form:FormData){
  const international=form.get("transferKind")==="INTERNATIONAL";
  const provider=international?String(form.get("provider")||"").trim():"";
  if(international&&(!provider||provider.length>80))throw new Error("Enter the transfer provider name");
+ for(let attempt=0;attempt<3;attempt++){
+ try {
  await prisma.$transaction(async tx=>{
  const a=await tx.financialAccount.findFirst({where:{id:from,userId:user.id}}),b=await tx.financialAccount.findFirst({where:{id:to,userId:user.id}});
  if(!a||!b)throw new Error("Account not found");
  if(international){const direction=String(form.get("direction")||"");if(!['CAD-USD','USD-CAD'].includes(direction)||`${a.currency}-${b.currency}`!==direction)throw new Error("Choose accounts matching the selected Canada/US direction");}if(a.currency===b.currency&&sent!==received)throw new Error("For a same-currency transfer, use equal amounts and record any fee separately");
  await tx.transaction.create({data:{userId:user.id,type:"TRANSFER",accountId:from,toAccountId:to,amount:sent,toAmount:received,description:`${international?provider+" transfer":"Transfer"}: ${a.name} → ${b.name}`,date:new Date(`${date}T12:00:00Z`),notes:`${international?"Provider: "+provider+". ":""}${sent} ${a.currency} deducted; ${received} ${b.currency} received. Any fee included in these amounts is already reflected in balances.`}});
  await tx.financialAccount.update({where:{id:from},data:{balance:{decrement:sent}}});await tx.financialAccount.update({where:{id:to},data:{balance:{increment:received}}});
- },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable});refresh();return {success:true};
- }catch(e){return {success:false,error:e instanceof Error&&!('code' in e)?e.message:"Unable to record transfer"};}
+ },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,maxWait:10000,timeout:20000});
+ break;
+ } catch(error) {
+  // P2034 means the transaction was aborted; only those rolled-back attempts can retry.
+  if((error as {code?:string})?.code!=="P2034" || attempt===2) throw error;
+ }
+ }
+ refresh();return {success:true};
+ }catch(e){
+ const code=typeof (e as {code?:unknown})?.code==="string"?String((e as {code:string}).code):null;
+ console.error("Wise transfer failed",{code:code||"ACTION_ERROR"});
+ const messages:Record<string,string>={
+  P2034:"The accounts were being updated at the same time. No transfer was saved. Please retry.",
+  P2028:"The transfer timed out and was rolled back. Please retry.",
+  P2021:"A required database table is missing. Please report error P2021.",
+  P2022:"A required database column is missing. Please report error P2022.",
+  P2003:"A related account could not be found. Refresh and select the accounts again."
+ };
+ return {success:false,error:code?(messages[code]||`Unable to record transfer (error ${code}).`):e instanceof Error?e.message:"Unable to record transfer"};
+ }
 }
