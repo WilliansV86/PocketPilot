@@ -26,8 +26,8 @@ const goalSchema = z.object({
 const contributionSchema = z.object({
   amount: z.coerce.number().positive("Contribution amount must be positive"),
   date: z.string().min(1, "Date is required"),
-  note: z.string().optional(),
-  accountId: z.string().optional(),
+  note: z.string().nullable().optional(),
+  accountId: z.string().nullable().optional(),
 });
 
 /**
@@ -404,71 +404,44 @@ export async function completeGoal(id: string) {
  */
 export async function addGoalContribution(goalId: string, formData: FormData) {
   try {
-    // Parse and validate the form data
     const parsed = contributionSchema.parse({
-      amount: formData.get("amount"),
-      date: formData.get("date"),
-      note: formData.get("note"),
-      accountId: formData.get("accountId"),
+      amount: formData.get("amount"), date: formData.get("date"),
+      note: formData.get("note"), accountId: formData.get("accountId"),
     });
-
+    const date = new Date(`${parsed.date}T12:00:00.000Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(parsed.date) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== parsed.date) {
+      return { success: false, error: "Choose a valid contribution date." };
+    }
+    if (!Number.isFinite(parsed.amount) || parsed.amount > 9999999999.99 || Math.abs(parsed.amount * 100 - Math.round(parsed.amount * 100)) > 0.0001) {
+      return { success: false, error: "Enter a positive amount with up to two decimal places." };
+    }
     const user = await getDefaultUser();
-
-    if (!prisma.goal || !prisma.goalContribution) {
-      return { success: false, error: "Goals module not available" };
-    }
-
-    // Check if goal exists and belongs to user
-    const existingGoal = await prisma.goal.findFirst({
-      where: { id: goalId, userId: user.id },
+    const contribution = await prisma.$transaction(async tx => {
+      const goal = await tx.goal.findFirst({ where: { id: goalId, userId: user.id } });
+      if (!goal) throw new Error("Goal not found");
+      if (goal.isCompleted || Number(goal.currentAmount) >= Number(goal.targetAmount)) throw new Error("This goal is already complete.");
+      if (goal.type === "DEBT_PAYOFF") throw new Error("Record debt payments from the Debts page.");
+      if (goal.autoTrack && goal.linkedAccountId && ["SAVINGS", "EMERGENCY_FUND", "INVESTMENT"].includes(goal.type)) {
+        throw new Error("This goal tracks its linked account balance automatically.");
+      }
+      if (parsed.accountId) {
+        const account = await tx.financialAccount.findFirst({ where: { id: parsed.accountId, userId: user.id } });
+        if (!account || account.currency !== goal.currency) throw new Error("Choose an account with the same currency as the goal.");
+      }
+      const recorded = await tx.goalContribution.create({ data: {
+        amount: parsed.amount, date, note: parsed.note || null,
+        accountId: parsed.accountId || null, goalId: goal.id, userId: user.id,
+      } });
+      await tx.goal.update({ where: { id: goal.id }, data: { currentAmount: { increment: parsed.amount } } });
+      return recorded;
     });
-
-    if (!existingGoal) {
-      return { success: false, error: "Goal not found" };
-    }
-
-    if (parsed.accountId) {
-      const account = await prisma.financialAccount.findFirst({ where: { id: parsed.accountId, userId: user.id } });
-      if (!account || account.currency !== existingGoal.currency) return { success: false, error: "Choose an account with the same currency as the goal." };
-    }
-    // Create the contribution
-    const contribution = await prisma.goalContribution.create({
-      data: {
-        ...parsed,
-        date: new Date(parsed.date),
-        goalId,
-        userId: user.id,
-      },
-    });
-
-    // Update goal's current amount
-    const updatedGoal = await prisma.goal.update({
-      where: { id: goalId },
-      data: {
-        currentAmount: {
-          increment: parsed.amount,
-        },
-      },
-    });
-
-    // Revalidate relevant paths
     revalidatePath("/goals");
-    revalidatePath("/dashboard");
-
-    return { 
-      success: true, 
-      data: {
-        ...contribution,
-        amount: Number(contribution.amount),
-      }, 
-      message: "Contribution added successfully" 
-    };
+    revalidatePath("/");
+    return { success: true, data: { ...contribution, amount: Number(contribution.amount) }, message: "Contribution added successfully" };
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Validation error:", error.format());
-      return { success: false, error: "Invalid contribution data" };
-    }
-    
+    if (error instanceof z.ZodError) return { success: false, error: "Invalid contribution data" };
+    const messages = ["Goal not found", "This goal is already complete.", "Record debt payments from the Debts page.", "This goal tracks its linked account balance automatically.", "Choose an account with the same currency as the goal."];
+    if (error instanceof Error && messages.includes(error.message)) return { success: false, error: error.message };
     console.error("Error adding contribution:", error);
     return { success: false, error: "Failed to add contribution" };
   }
