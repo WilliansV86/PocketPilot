@@ -110,19 +110,19 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
 
   const getGroupHeaderStyle = (group: string) => {
     switch (group) {
-      case "NEEDS": return "border-blue-300 border-l-blue-500 bg-blue-50 dark:border-blue-800 dark:border-l-blue-400 dark:bg-blue-950/40";
-      case "WANTS": return "border-purple-300 border-l-purple-500 bg-purple-50 dark:border-purple-800 dark:border-l-purple-400 dark:bg-purple-950/40";
-      case "SAVINGS": return "border-teal-300 border-l-teal-500 bg-teal-50 dark:border-teal-800 dark:border-l-teal-400 dark:bg-teal-950/40";
-      case "DEBT": return "border-red-300 border-l-red-500 bg-red-50 dark:border-red-800 dark:border-l-red-400 dark:bg-red-950/40";
-      default: return "border-slate-300 border-l-slate-500 bg-slate-50 dark:border-slate-700 dark:border-l-slate-400 dark:bg-slate-900/60";
+      case "NEEDS": return "border-l-blue-500 dark:border-l-blue-400";
+      case "WANTS": return "border-l-purple-500 dark:border-l-purple-400";
+      case "SAVINGS": return "border-l-teal-500 dark:border-l-teal-400";
+      case "DEBT": return "border-l-red-500 dark:border-l-red-400";
+      default: return "border-l-slate-400 dark:border-l-slate-500";
     }
   };
 
   const getGroupColor = (group: string) => {
     switch (group) {
       case 'NEEDS': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'WANTS': return 'bg-green-100 text-green-800 border-green-200';
-      case 'SAVINGS': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'WANTS': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'SAVINGS': return 'bg-teal-100 text-teal-800 border-teal-200';
       case 'DEBT': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -337,31 +337,26 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             onOpenChange={() => toggleGroup(group)}
           >
             <CollapsibleTrigger asChild>
-              <Card className={`gap-0 py-0 cursor-pointer border-l-4 shadow-sm transition-colors hover:brightness-95 dark:hover:brightness-110 ${getGroupHeaderStyle(group)}`}>
-                <CardContent className="p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <Badge variant="outline" className={`${getGroupColor(group)} px-3 py-1 text-sm font-bold tracking-wide`}>
-                        {group}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {categories.length}{" "}<I18nText text={"categories"}/>{" "}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-orange-600">
-                          {formatCurrency(groupTotal?.available || 0)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{""}<I18nText text={"Available"}/>{""}</div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                      </Button>
+              <button
+                type="button"
+                className={`w-full min-w-0 rounded-lg border border-border border-l-[3px] bg-card px-3 py-2.5 text-left text-card-foreground transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${getGroupHeaderStyle(group)}`}
+              >
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_16px] items-center gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold tracking-wide">{group}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {categories.length}{" "}<I18nText text={"categories"}/>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="text-right">
+                    <div className={`text-sm font-semibold tabular-nums ${(groupTotal?.available || 0) < 0 ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
+                      {formatCurrency(groupTotal?.available || 0)}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground"><I18nText text={"Available"}/></div>
+                  </div>
+                  {isCollapsed ? <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground" /> : <ChevronUp aria-hidden="true" className="h-4 w-4 text-muted-foreground" />}
+                </div>
+              </button>
             </CollapsibleTrigger>
             
             <CollapsibleContent className="mt-3 ml-2 space-y-2">
