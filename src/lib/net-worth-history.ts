@@ -21,12 +21,13 @@ export async function captureNetWorth(db:PrismaClient,userId:string,currency:str
   const month=albertaDate().slice(0,7);
   const old=await tx.netWorthSnapshot.findFirst({where:{userId,currency,month}});
   if(old?.source==='MANUAL')return old;
-  const [accounts,debts,moneyOwed]=await Promise.all([
+  const [accounts,debts,moneyOwed,properties]=await Promise.all([
    tx.financialAccount.findMany({where:{userId,currency}}),
    tx.debt.findMany({where:{userId,currency}}),
-   tx.moneyOwed.findMany({where:{userId,currency}})
+   tx.moneyOwed.findMany({where:{userId,currency}}),
+   tx.property.findMany({where:{userId,currency}})
   ]);
-  const result=getNetWorthBreakdown({accounts,debts,moneyOwed});
+  const result=getNetWorthBreakdown({accounts,debts,moneyOwed,properties});
   const data={assets:new Prisma.Decimal(result.assets.total.toFixed(2)),liabilities:new Prisma.Decimal(result.liabilities.total.toFixed(2)),capturedAt:new Date(),source:'AUTO'};
   return old?tx.netWorthSnapshot.update({where:{id:old.id,userId},data}):tx.netWorthSnapshot.create({data:{...data,userId,currency,month}});
  },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,maxWait:10000,timeout:20000});

@@ -159,6 +159,9 @@ export async function createDebt(formData: FormData) {
     });
     
     revalidatePath("/debts");
+    revalidatePath("/accounts");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
     return { 
       success: true, 
       data: formatDebt(debt),
@@ -205,12 +208,19 @@ export async function updateDebt(id: string, formData: FormData) {
       return { success: false, error: "Debt not found" };
     }
     
+    const linkedProperty = await prisma.property.findFirst({ where: { mortgageDebtId: id, userId: user.id } });
+    if (linkedProperty && (parsed.currency !== linkedProperty.currency || parsed.type !== "MORTGAGE")) {
+      return { success: false, error: "This mortgage is linked to a property. Keep its mortgage type and property currency." };
+    }
     const updatedDebt = await prisma.debt.update({
       where: { id },
       data: parsed,
     });
     
     revalidatePath("/debts");
+    revalidatePath("/accounts");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
     return { 
       success: true, 
       data: formatDebt(updatedDebt),
@@ -241,11 +251,17 @@ export async function deleteDebt(id: string) {
       return { success: false, error: "Debt not found" };
     }
     
+    if (await prisma.property.findFirst({ where: { mortgageDebtId: id, userId: user.id } })) {
+      return { success: false, error: "This mortgage is linked to a property. Mark it paid off, or remove the property before deleting the mortgage." };
+    }
     await prisma.debt.delete({
       where: { id },
     });
     
     revalidatePath("/debts");
+    revalidatePath("/accounts");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
     return { success: true, message: "Debt deleted successfully" };
   } catch (error) {
     console.error(`Failed to delete debt ${id}:`, error);
@@ -341,6 +357,9 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
 
     // Revalidate all relevant paths
     revalidatePath("/debts");
+    revalidatePath("/accounts");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
     revalidatePath("/transactions");
     revalidatePath("/accounts");
     revalidatePath("/dashboard");

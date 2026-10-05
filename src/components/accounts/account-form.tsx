@@ -33,11 +33,10 @@ import { AccountTypeBadge } from "@/components/accounts/account-type-badge";
 const accountTypes = [
   { value: "CHECKING", label: "Checking" },
   { value: "SAVINGS", label: "Savings" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
+  { value: "CREDIT", label: "Credit Card" },
   { value: "INVESTMENT", label: "Investment" },
   { value: "CASH", label: "Cash" },
   { value: "LOAN", label: "Loan" },
-  { value: "MORTGAGE", label: "Mortgage" },
   { value: "OTHER", label: "Other" },
 ];
 

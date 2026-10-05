@@ -68,6 +68,7 @@ type DashboardData = {
     totalLiabilities: number;
     accountAssets: number;
     receivables: number;
+    propertyAssets?: number;
     debts: number;
     accountLiabilities: number;
   };
@@ -315,7 +316,7 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
             <div>
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Wallet aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />Assets</h2>
               <dl className="space-y-2 text-sm">
-                {[['Accounts', data.netWorthData.accountAssets], ['Money owed to you', data.netWorthData.receivables], ['Total assets', data.netWorthData.totalAssets]].map(([label, amount]) => (
+                {[['Accounts', data.netWorthData.accountAssets], ['Property', data.netWorthData.propertyAssets ?? 0], ['Money owed to you', data.netWorthData.receivables], ['Total assets', data.netWorthData.totalAssets]].map(([label, amount]) => (
                   <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{formatCurrency(Number(amount))}</dd></div>
                 ))}
               </dl>
