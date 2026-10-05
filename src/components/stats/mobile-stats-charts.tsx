@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,13 +33,13 @@ interface MobileStatsChartsProps {
 }
 
 export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
+ const { t: ppT } = useLanguage();
+
   const renderMonthlyCashflow = () => {
     if (data.monthlyCashflow.length === 0) {
       return (
         <Card>
-          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">
-            No monthly cashflow data available
-          </CardContent>
+          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">{" "}<I18nText text={"No monthly cashflow data available"}/>{" "}</CardContent>
         </Card>
       );
     }
@@ -51,7 +54,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Monthly Cashflow</CardTitle>
+          <CardTitle className="text-lg">{""}<I18nText text={"Monthly Cashflow"}/>{""}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
@@ -70,8 +73,8 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
                 width={60}
               />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="income" fill="#10b981" name="Income" />
-              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+              <Bar dataKey="income" fill="#10b981" name={ppT("Income")} />
+              <Bar dataKey="expenses" fill="#ef4444" name={ppT("Expenses")} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -83,9 +86,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
     if (data.categorySpending.length === 0) {
       return (
         <Card>
-          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">
-            No category spending data available
-          </CardContent>
+          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">{" "}<I18nText text={"No category spending data available"}/>{" "}</CardContent>
         </Card>
       );
     }
@@ -102,7 +103,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Category Spending</CardTitle>
+          <CardTitle className="text-lg">{""}<I18nText text={"Category Spending"}/>{""}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <ResponsiveContainer width="100%" height={200}>
@@ -153,9 +154,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
     if (data.accountBalances.length === 0) {
       return (
         <Card>
-          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">
-            No account balance data available
-          </CardContent>
+          <CardContent className="flex items-center justify-center h-[200px] text-muted-foreground">{" "}<I18nText text={"No account balance data available"}/>{" "}</CardContent>
         </Card>
       );
     }
@@ -170,7 +169,7 @@ export function MobileStatsCharts({ data }: MobileStatsChartsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Account Balances</CardTitle>
+          <CardTitle className="text-lg">{""}<I18nText text={"Account Balances"}/>{""}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <ResponsiveContainer width="100%" height={200}>

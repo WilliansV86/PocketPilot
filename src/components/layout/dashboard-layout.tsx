@@ -1,4 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
+
 
 import { ReactNode } from "react";
 import Link from "next/link";
@@ -12,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { format } from "date-fns";
-import { Calendar, User, Wallet } from "lucide-react";
+import { Calendar, User, Wallet, Settings } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -21,7 +25,10 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, title, showMonthSelector = false }: DashboardLayoutProps) {
+ const { t: ppT } = useLanguage();
+
   const pathname = usePathname();
+  const { t } = useLanguage();
   
   // Get page title from pathname if not provided
   const getPageTitle = () => {
@@ -38,12 +45,13 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
       "/debts": "Debts",
       "/money-owed": "Money Owed",
       "/stats": "Statistics",
+      "/settings": "Settings",
     };
     
     return pathMap[pathname] || "PocketPilot";
   };
 
-  const pageTitle = getPageTitle();
+  const pageTitle = t(getPageTitle());
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -53,11 +61,11 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
         <div className="flex h-12 md:h-16 items-center px-3 md:px-6">
           {/* Logo and Title */}
           <div className="flex min-w-0 flex-1 items-center gap-4">
-            <Link href="/" aria-label="PocketPilot home" className="inline-flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Link href="/" aria-label={ppT("PocketPilot home")} className="inline-flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-400 md:h-8 md:w-8">
                 <Wallet className="h-4 w-4 md:h-5 md:w-5" />
               </span>
-              <span className="whitespace-nowrap text-base font-semibold tracking-tight md:text-xl">Pocket<span className="text-teal-700 dark:text-teal-400">Pilot</span></span>
+              <span className="whitespace-nowrap text-base font-semibold tracking-tight md:text-xl">{""}<I18nText text={"Pocket"}/>{""}<span className="text-teal-700 dark:text-teal-400">{""}<I18nText text={"Pilot"}/>{""}</span></span>
             </Link>
             
             {/* Page Title */}
@@ -74,21 +82,21 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
                 <Select defaultValue={format(new Date(), "yyyy-MM")}>
                   <SelectTrigger className="w-[140px]">
                     <Calendar className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Select month" />
+                    <SelectValue placeholder={ppT("Select month")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2025-01">January 2025</SelectItem>
-                    <SelectItem value="2025-02">February 2025</SelectItem>
-                    <SelectItem value="2025-03">March 2025</SelectItem>
-                    <SelectItem value="2025-04">April 2025</SelectItem>
-                    <SelectItem value="2025-05">May 2025</SelectItem>
-                    <SelectItem value="2025-06">June 2025</SelectItem>
-                    <SelectItem value="2025-07">July 2025</SelectItem>
-                    <SelectItem value="2025-08">August 2025</SelectItem>
-                    <SelectItem value="2025-09">September 2025</SelectItem>
-                    <SelectItem value="2025-10">October 2025</SelectItem>
-                    <SelectItem value="2025-11">November 2025</SelectItem>
-                    <SelectItem value="2025-12">December 2025</SelectItem>
+                    <SelectItem value="2025-01">{""}<I18nText text={"January 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-02">{""}<I18nText text={"February 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-03">{""}<I18nText text={"March 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-04">{""}<I18nText text={"April 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-05">{""}<I18nText text={"May 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-06">{""}<I18nText text={"June 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-07">{""}<I18nText text={"July 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-08">{""}<I18nText text={"August 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-09">{""}<I18nText text={"September 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-10">{""}<I18nText text={"October 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-11">{""}<I18nText text={"November 2025"}/>{""}</SelectItem>
+                    <SelectItem value="2025-12">{""}<I18nText text={"December 2025"}/>{""}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -97,6 +105,7 @@ export function DashboardLayout({ children, title, showMonthSelector = false }: 
             {/* Theme Toggle */}
             <ThemeToggle />
 
+            <Button asChild variant="ghost" size="icon" aria-label={t("Settings")} title={t("Settings")}><Link href="/settings"><Settings className="h-5 w-5"/></Link></Button>
             {/* User Avatar */}
             <Avatar className="h-8 w-8">
               <AvatarImage src="/placeholder-avatar.jpg" alt="User" />

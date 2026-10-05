@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Skeleton } from "@/components/ui/loading-skeleton";
 import { CARD } from "@/lib/ui-constants";
@@ -8,7 +10,7 @@ export default function TransactionsLoading() {
       <div className="p-4 md:p-6">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Transactions</h1>
+          <h1 className="text-2xl font-bold">{""}<I18nText text={"Transactions"}/>{""}</h1>
           <Skeleton className="h-11 w-32" />
         </div>
 

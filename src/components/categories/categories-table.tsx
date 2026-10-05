@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import React, { useState } from "react";
 import Link from "next/link";
 import { 
@@ -32,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { deleteCategory, toggleCategoryArchiveStatus } from "@/lib/actions/category-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { BUTTON } from "@/lib/ui-constants";
 
 // Type definitions
@@ -128,18 +130,16 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Group</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            <TableHead>{""}<I18nText text={"Name"}/>{""}</TableHead>
+            <TableHead>{""}<I18nText text={"Group"}/>{""}</TableHead>
+            <TableHead>{""}<I18nText text={"Status"}/>{""}</TableHead>
+            <TableHead className="w-[80px]">{""}<I18nText text={"Actions"}/>{""}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categories.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
-                No categories found. Create your first category to get started.
-              </TableCell>
+              <TableCell colSpan={4} className="h-24 text-center">{" "}<I18nText text={"No categories found. Create your first category to get started."}/>{" "}</TableCell>
             </TableRow>
           ) : (
             categoryGroups.map((group) => (
@@ -169,30 +169,25 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                     </TableCell>
                     <TableCell className="py-2">
                       {category.isArchived ? (
-                        <Badge variant="outline" className="bg-amber-100 text-amber-800">
-                          Archived
-                        </Badge>
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800">{" "}<I18nText text={"Archived"}/>{" "}</Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-green-100 text-green-800">
-                          Active
-                        </Badge>
+                        <Badge variant="outline" className="bg-green-100 text-green-800">{" "}<I18nText text={"Active"}/>{" "}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="py-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className={BUTTON.ICON_ONLY}>
-                            <span className="sr-only">Open menu</span>
+                            <span className="sr-only">{""}<I18nText text={"Open menu"}/>{""}</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{""}<I18nText text={"Actions"}/>{""}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
                             <Link href={`/categories/${category.id}/edit`}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit
-                            </Link>
+                              <Edit className="mr-2 h-4 w-4" />{" "}<I18nText text={"Edit"}/>{" "}</Link>
                           </DropdownMenuItem>
                           {/* Archive/Unarchive toggle */}
                           <DropdownMenuItem
@@ -201,12 +196,10 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                           >
                             {category.isArchived ? (
                               <>
-                                <RefreshCcw className="mr-2 h-4 w-4" /> Restore
-                              </>
+                                <RefreshCcw className="mr-2 h-4 w-4" />{" "}<I18nText text={"Restore"}/>{" "}</>
                             ) : (
                               <>
-                                <Archive className="mr-2 h-4 w-4" /> Archive
-                              </>
+                                <Archive className="mr-2 h-4 w-4" />{" "}<I18nText text={"Archive"}/>{" "}</>
                             )}
                           </DropdownMenuItem>
                           {/* Delete action */}
@@ -215,8 +208,7 @@ export function CategoriesTable({ categories, showArchived }: CategoriesTablePro
                             disabled={isDeleting === category.id}
                             className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                           >
-                            <Trash className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
+                            <Trash className="mr-2 h-4 w-4" />{" "}<I18nText text={"Delete"}/>{" "}</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

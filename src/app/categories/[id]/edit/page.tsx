@@ -1,3 +1,4 @@
+import { I18nText } from "@/components/language-provider";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoryForm } from "@/components/categories/category-form";
@@ -21,13 +22,13 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Edit Category</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Edit Category"}/>{""}</h1>
       </div>
       
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Category Details</CardTitle>
+            <CardTitle>{""}<I18nText text={"Category Details"}/>{""}</CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryForm 

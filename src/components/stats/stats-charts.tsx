@@ -1,4 +1,7 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, ReferenceLine } from "recharts";
 import { CashflowChart, SpendingBreakdown, CHART_COLORS, chartTooltipStyle, compactChartAmount } from "@/components/charts/financial-charts";
 import { formatMoney } from "@/lib/currency";
@@ -6,21 +9,23 @@ import { statsDateLabel, type DateRange } from "@/lib/stats-date-range";
 type Row = { month?: string; date?: string; name?: string; income?: number; expenses?: number; amount?: number; balance?: number; color?: string };
 interface Props { currency?: string; type: "monthly-cashflow" | "category-spending" | "account-breakdown" | "daily-spend"; data: Row[]; dateRange: DateRange }
 export function StatsCharts({ currency = "USD", type, data }: Props) {
+ const { t: ppT } = useLanguage();
+
   const money = (value: number) => formatMoney(value, currency);
   const compact = compactChartAmount;
-  if (!data.length) return <p className="py-6 text-center text-sm text-muted-foreground">No data for this period.</p>;
+  if (!data.length) return <p className="py-6 text-center text-sm text-muted-foreground">{""}<I18nText text={"No data for this period."}/>{""}</p>;
   if (type === "monthly-cashflow") return <CashflowChart currency={currency} data={data.map(row => ({ month: row.month!, income: row.income ?? 0, expenses: row.expenses ?? 0 }))} />;
   if (type === "category-spending") return <SpendingBreakdown currency={currency} data={data.map(row => ({ name: row.name!, amount: row.amount ?? 0, color: row.color }))} />;
   if (type === "account-breakdown") {
     const rows = [...data].sort((a,b) => Math.abs(b.balance ?? 0) - Math.abs(a.balance ?? 0));
-    return <div className="space-y-3"><div className="max-h-96 overflow-y-auto" role="img" aria-label="Current account balances, including negative balances"><ResponsiveContainer width="100%" height={Math.max(160, rows.length * 44)}><BarChart data={rows} layout="vertical" margin={{ right: 12, top: 8, bottom: 8 }}><CartesianGrid stroke="currentColor" opacity={0.1} horizontal={false} /><XAxis type="number" tickFormatter={compact} tick={{ fill: "currentColor", fontSize: 11 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fill: "currentColor", fontSize: 11 }} tickFormatter={name => String(name).length > 17 ? String(name).slice(0,16)+"…" : String(name)} /><ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} /><Tooltip formatter={value => money(Number(value))} contentStyle={chartTooltipStyle} /><Bar dataKey="balance" name="Balance" radius={4} isAnimationActive={false}>{rows.map((row,index) => <Cell key={index} fill={(row.balance ?? 0) < 0 ? "#ef4444" : row.color ?? "#14b8a6"} />)}</Bar></BarChart></ResponsiveContainer></div><div className="max-h-48 space-y-2 overflow-y-auto text-sm">{rows.map((row,index) => <div key={index} className="flex justify-between gap-3"><span>{row.name}</span><span className="shrink-0 font-medium tabular-nums">{money(row.balance ?? 0)}</span></div>)}</div><p className="text-xs text-muted-foreground">Current balances. Excludes debts tracked separately in Debts.</p></div>;
+    return <div className="space-y-3"><div className="max-h-96 overflow-y-auto" role="img" aria-label={ppT("Current account balances, including negative balances")}><ResponsiveContainer width="100%" height={Math.max(160, rows.length * 44)}><BarChart data={rows} layout="vertical" margin={{ right: 12, top: 8, bottom: 8 }}><CartesianGrid stroke="currentColor" opacity={0.1} horizontal={false} /><XAxis type="number" tickFormatter={compact} tick={{ fill: "currentColor", fontSize: 11 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fill: "currentColor", fontSize: 11 }} tickFormatter={name => String(name).length > 17 ? String(name).slice(0,16)+"…" : String(name)} /><ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} /><Tooltip formatter={value => money(Number(value))} contentStyle={chartTooltipStyle} /><Bar dataKey="balance" name={ppT("Balance")} radius={4} isAnimationActive={false}>{rows.map((row,index) => <Cell key={index} fill={(row.balance ?? 0) < 0 ? "#ef4444" : row.color ?? "#14b8a6"} />)}</Bar></BarChart></ResponsiveContainer></div><div className="max-h-48 space-y-2 overflow-y-auto text-sm">{rows.map((row,index) => <div key={index} className="flex justify-between gap-3"><span>{row.name}</span><span className="shrink-0 font-medium tabular-nums">{money(row.balance ?? 0)}</span></div>)}</div><p className="text-xs text-muted-foreground">{""}<I18nText text={"Current balances. Excludes debts tracked separately in Debts."}/>{""}</p></div>;
   }
   const rows = data.map(row => ({ ...row, label: row.date }));
   return <div className="min-w-0 space-y-2"><ResponsiveContainer width="100%" height={240}><AreaChart data={rows} margin={{ top: 12, right: 8 }}>
     <CartesianGrid stroke="currentColor" opacity={0.1} vertical={false} />
-    <XAxis dataKey="label" minTickGap={25} tick={{ fill: "currentColor", fontSize: 11 }} tickFormatter={value => statsDateLabel(value).replace(/,? \d{4}$/, "")} tickLine={false} axisLine={false} />
+    <XAxis dataKey="label" minTickGap={25} tick={{ fill: "currentColor", fontSize: 11 }} tickFormatter={value => ppT(statsDateLabel(value).replace(/,? \d{4}$/, ""))} tickLine={false} axisLine={false} />
     <YAxis width={46} tickFormatter={compact} tick={{ fill: "currentColor", fontSize: 11 }} tickLine={false} axisLine={false} />
-    <Tooltip formatter={value => money(Number(value))} labelFormatter={value => statsDateLabel(String(value))} contentStyle={chartTooltipStyle} />
-    <Area type="linear" dataKey="amount" name="Expenses" stroke={CHART_COLORS.expenses} fill={CHART_COLORS.expenses} fillOpacity={0.12} strokeWidth={2} isAnimationActive={false} />
-  </AreaChart></ResponsiveContainer><p className="text-xs text-muted-foreground">Amounts in {currency}. Days without expenses are shown as zero.</p></div>;
+    <Tooltip formatter={value => money(Number(value))} labelFormatter={value => ppT(statsDateLabel(String(value)))} contentStyle={chartTooltipStyle} />
+    <Area type="linear" dataKey="amount" name={ppT("Expenses")} stroke={CHART_COLORS.expenses} fill={CHART_COLORS.expenses} fillOpacity={0.12} strokeWidth={2} isAnimationActive={false} />
+  </AreaChart></ResponsiveContainer><p className="text-xs text-muted-foreground">{""}<I18nText text={"Amounts in"}/>{" "}{currency}{""}<I18nText text={". Days without expenses are shown as zero."}/>{""}</p></div>;
 }

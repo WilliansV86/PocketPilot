@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 const CURRENCY_KEY = "pocketpilot-default-currency";
 

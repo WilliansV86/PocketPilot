@@ -28,6 +28,7 @@ export async function getDefaultUser() {
       id: "user-1",
       name: "PocketPilot User",
       email: DEFAULT_USER_EMAIL,
+      language: "en",
     };
   }
 }

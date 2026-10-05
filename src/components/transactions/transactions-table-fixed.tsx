@@ -1,10 +1,13 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Edit, Trash, TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { deleteTransaction } from "@/lib/actions/transaction-actions";
 import { useRouter } from "next/navigation";
 
@@ -37,6 +40,8 @@ interface TransactionsTableProps {
 }
 
 export function TransactionsTable({ transactions }: TransactionsTableProps) {
+ const { t: ppT } = useLanguage();
+
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const router = useRouter();
 
@@ -129,10 +134,8 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   if (transactions.length === 0) {
     return (
       <div className="border rounded-lg p-8 text-center">
-        <div className="text-lg font-medium mb-2">No transactions found</div>
-        <p className="text-muted-foreground">
-          Try adjusting your filters or add your first transaction
-        </p>
+        <div className="text-lg font-medium mb-2">{""}<I18nText text={"No transactions found"}/>{""}</div>
+        <p className="text-muted-foreground">{" "}<I18nText text={"Try adjusting your filters or add your first transaction"}/>{" "}</p>
       </div>
     );
   }
@@ -142,13 +145,13 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr className="border-b">
-            <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Account</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Category</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
-            <th className="px-4 py-3 text-right text-sm font-medium">Amount</th>
-            <th className="px-4 py-3 text-center text-sm font-medium">Actions</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Date"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Description"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Account"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Category"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Type"}/>{""}</th>
+            <th className="px-4 py-3 text-right text-sm font-medium">{""}<I18nText text={"Amount"}/>{""}</th>
+            <th className="px-4 py-3 text-center text-sm font-medium">{""}<I18nText text={"Actions"}/>{""}</th>
           </tr>
         </thead>
         <tbody>
@@ -176,7 +179,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                     <span>{transaction.category.name}</span>
                   </div>
                 ) : (
-                  <span className="text-muted-foreground">No category</span>
+                  <span className="text-muted-foreground">{""}<I18nText text={"No category"}/>{""}</span>
                 )}
               </td>
               <td className="px-4 py-3 text-sm">
@@ -184,12 +187,12 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${getTransactionBgColor(transaction.type)}`}>
                     {getTransactionIcon(transaction.type)}
                   </span>
-                  <span>{transaction.type}</span>
+                  <span><I18nText text={transaction.type}/></span>
                 </div>
               </td>
               <td className="px-4 py-3 text-sm text-right font-semibold">
                 <span className={getTransactionColor(transaction.type)}>
-                  {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
+                  <I18nText text={transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}/>
                   {new Intl.NumberFormat("en-CA", { style: "currency", currency: transaction.account?.currency || "USD", currencyDisplay: "code" }).format(transaction.amount)}
                 </span>
               </td>
@@ -198,7 +201,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   <Link href={`/transactions/${transaction.id}/edit`}>
                     <button
                       className="p-1 hover:bg-muted rounded text-xs"
-                      title="Edit"
+                      title={ppT("Edit")}
                     >
                       <Edit className="h-3 w-3" />
                     </button>
@@ -207,7 +210,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                     onClick={() => handleDelete(transaction.id)}
                     disabled={isDeleting === transaction.id}
                     className="p-1 hover:bg-muted rounded text-xs text-red-600 disabled:opacity-50"
-                    title="Delete"
+                    title={ppT("Delete")}
                   >
                     {isDeleting === transaction.id ? (
                       <div className="h-3 w-3 animate-spin rounded-full border border-red-600 border-t-transparent" />

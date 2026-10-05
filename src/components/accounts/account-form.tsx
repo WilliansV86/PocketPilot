@@ -1,4 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
+
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -26,7 +30,7 @@ import {
 import { createAccount, updateAccount } from "@/lib/actions/account-actions";
 import { formatCurrency } from "@/lib/utils";
 import { safeServerAction } from "@/lib/client-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { AccountTypeBadge } from "@/components/accounts/account-type-badge";
 
 // Account types from our updated Prisma schema
@@ -72,6 +76,8 @@ type AccountFormProps = {
 };
 
 export function AccountForm({ account, mode }: AccountFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -187,9 +193,9 @@ export function AccountForm({ account, mode }: AccountFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Name</FormLabel>
+              <FormLabel>{""}<I18nText text={"Account Name"}/>{""}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Main Checking" {...field} />
+                <Input placeholder={ppT("e.g. Main Checking")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -201,14 +207,14 @@ export function AccountForm({ account, mode }: AccountFormProps) {
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Type</FormLabel>
+              <FormLabel>{""}<I18nText text={"Account Type"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
+                    <SelectValue placeholder={ppT("Select account type")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -220,7 +226,7 @@ export function AccountForm({ account, mode }: AccountFormProps) {
                           size="sm" 
                           variant="outline"
                         />
-                        <span>{type.label}</span>
+                        <span><I18nText text={type.label}/></span>
                       </div>
                     </SelectItem>
                   ))}
@@ -236,12 +242,12 @@ export function AccountForm({ account, mode }: AccountFormProps) {
           name="balance"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Current Balance</FormLabel>
+              <FormLabel>{""}<I18nText text={"Current Balance"}/>{""}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder={ppT("0.00")}
                   {...field}
                   onChange={(e) => field.onChange(e.target.value)}
                 />
@@ -256,20 +262,20 @@ export function AccountForm({ account, mode }: AccountFormProps) {
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Currency</FormLabel>
+              <FormLabel>{""}<I18nText text={"Currency"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
+                    <SelectValue placeholder={ppT("Select currency")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {currencies.map((currency) => (
                     <SelectItem key={currency.value} value={currency.value}>
-                      {currency.label}
+                      <I18nText text={currency.label}/>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -282,15 +288,13 @@ export function AccountForm({ account, mode }: AccountFormProps) {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create Account" : "Update Account"}
+            <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Account" : "Update Account"}/>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push("/accounts")}
-          >
-            Cancel
-          </Button>
+          >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
         </div>
       </form>
     </Form>

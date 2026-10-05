@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createCategory, updateCategory } from "@/lib/actions/category-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -76,6 +79,8 @@ const predefinedColors = [
 ];
 
 export function CategoryGroupForm({ categoryGroup, mode }: CategoryGroupFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -131,9 +136,9 @@ export function CategoryGroupForm({ categoryGroup, mode }: CategoryGroupFormProp
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Group Name</FormLabel>
+              <FormLabel>{""}<I18nText text={"Group Name"}/>{""}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Living Expenses" {...field} />
+                <Input placeholder={ppT("e.g. Living Expenses")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -145,20 +150,20 @@ export function CategoryGroupForm({ categoryGroup, mode }: CategoryGroupFormProp
           name="group"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Group</FormLabel>
+              <FormLabel>{""}<I18nText text={"Group"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={ppT("Select type")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {categoryTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      <I18nText text={type.label}/>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -173,7 +178,7 @@ export function CategoryGroupForm({ categoryGroup, mode }: CategoryGroupFormProp
           name="color"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Color</FormLabel>
+              <FormLabel>{""}<I18nText text={"Color"}/>{""}</FormLabel>
               <div className="grid grid-cols-8 gap-2">
                 {predefinedColors.map((color) => (
                   <div
@@ -201,15 +206,13 @@ export function CategoryGroupForm({ categoryGroup, mode }: CategoryGroupFormProp
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create Group" : "Update Group"}
+            <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Group" : "Update Group"}/>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push("/categories")}
-          >
-            Cancel
-          </Button>
+          >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
         </div>
       </form>
     </Form>

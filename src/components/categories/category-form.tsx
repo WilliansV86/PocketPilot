@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useTransition, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +31,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createCategoryEnhanced, updateCategoryEnhanced } from "@/lib/actions/category-actions-enhanced";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -117,6 +120,8 @@ const predefinedColors = [
 ];
 
 export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "/categories" }: CategoryFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedIcon, setSelectedIcon] = useState<string>("tag");
@@ -184,9 +189,9 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category Name</FormLabel>
+              <FormLabel>{""}<I18nText text={"Category Name"}/>{""}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Groceries" {...field} />
+                <Input placeholder={ppT("e.g. Groceries")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -198,20 +203,20 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
           name="group"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category Group</FormLabel>
+              <FormLabel>{""}<I18nText text={"Category Group"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select group" />
+                    <SelectValue placeholder={ppT("Select group")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {categoryGroupOptions.map((group) => (
                     <SelectItem key={group.value} value={group.value}>
-                      {group.label}
+                      <I18nText text={group.label}/>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,8 +231,7 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
           name="icon"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                Icon {field.value && <span className="ml-2">{renderIcon(field.value)}</span>}
+              <FormLabel>{" "}<I18nText text={"Icon"}/>{" "}{field.value && <span className="ml-2">{renderIcon(field.value)}</span>}
               </FormLabel>
               <FormControl>
                 <ScrollArea className="h-72 border rounded-md p-2">
@@ -257,7 +261,7 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
           name="color"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Color</FormLabel>
+              <FormLabel>{""}<I18nText text={"Color"}/>{""}</FormLabel>
               <div className="grid grid-cols-8 gap-2">
                 {predefinedColors.map((color) => (
                   <div
@@ -295,7 +299,7 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel className="mt-0">Archived</FormLabel>
+                <FormLabel className="mt-0">{""}<I18nText text={"Archived"}/>{""}</FormLabel>
                 <FormMessage />
               </FormItem>
             )}
@@ -304,15 +308,13 @@ export function CategoryForm({ category, mode, onSuccess, onCancel, returnTo = "
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create Category" : "Update Category"}
+            <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Category" : "Update Category"}/>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={onCancel || (() => router.push(returnTo))}
-          >
-            Cancel
-          </Button>
+          >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
         </div>
       </form>
     </Form>

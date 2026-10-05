@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import React from "react";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -52,18 +54,14 @@ export function PieChartTooltip({ active, payload, currency = "USD" }: any) {
               className="w-2 h-2 rounded-full" 
               style={{ backgroundColor: data.color }}
             />
-            <span className="text-xs text-gray-600 dark:text-gray-400">
-              Amount
-            </span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">{" "}<I18nText text={"Amount"}/>{" "}</span>
           </div>
           <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
             {formatMoney(Number(data.value || 0), currency)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-1">
-          <span className="text-xs text-gray-600 dark:text-gray-400">
-            Percentage
-          </span>
+          <span className="text-xs text-gray-600 dark:text-gray-400">{" "}<I18nText text={"Percentage"}/>{" "}</span>
           <span className="font-medium text-xs text-gray-900 dark:text-gray-100">
             {data.payload?.percent ? `${(data.payload.percent * 100).toFixed(1)}%` : '0%'}
           </span>

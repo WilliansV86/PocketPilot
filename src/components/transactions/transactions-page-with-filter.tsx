@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getTransactions } from "@/lib/actions/transaction-actions";
@@ -60,12 +62,10 @@ export default function TransactionsPageWithFilter() {
   return (
     <div className="pp-transactions-page space-y-4 md:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl md:text-2xl font-semibold">Transactions</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{""}<I18nText text={"Transactions"}/>{""}</h1>
         <Button asChild>
           <Link href="/transactions/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Transaction
-          </Link>
+            <PlusCircle className="mr-2 h-4 w-4" />{" "}<I18nText text={"Add Transaction"}/>{" "}</Link>
         </Button>
       </div>
       
@@ -75,12 +75,12 @@ export default function TransactionsPageWithFilter() {
       </div>
       
       {loading && transactions.length === 0 ? (
-        <div className="text-center py-8">Loading transactions...</div>
+        <div className="text-center py-8">{""}<I18nText text={"Loading transactions..."}/>{""}</div>
       ) : error ? (
-        <div className="text-center py-8 text-red-600">{error}</div>
+        <div className="text-center py-8 text-red-600"><I18nText text={error}/></div>
       ) : (
         <div className="relative space-y-4" aria-busy={loading}>
-          {loading && <div role="status" className="absolute inset-x-0 top-0 z-10 rounded-md border bg-background/95 px-3 py-2 text-center text-sm shadow-sm">Updating transactions...</div>}
+          {loading && <div role="status" className="absolute inset-x-0 top-0 z-10 rounded-md border bg-background/95 px-3 py-2 text-center text-sm shadow-sm">{""}<I18nText text={"Updating transactions..."}/>{""}</div>}
           <div className={loading ? "pointer-events-none opacity-50" : ""}>
           {/* Mobile Layout */}
           <div className="md:hidden">

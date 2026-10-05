@@ -1,4 +1,7 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 
 
@@ -23,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createMoneyOwed, updateMoneyOwed, MoneyOwedFormData } from "@/lib/actions/money-owed-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -45,6 +48,8 @@ interface MoneyOwedFormProps {
 }
 
 export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCurrency = "USD" }: MoneyOwedFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -99,29 +104,29 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
       <Card>
         <CardHeader>
           <CardTitle>
-            {mode === "create" ? "Create Money Owed Record" : "Edit Money Owed Record"}
+            <I18nText text={mode === "create" ? "Create Money Owed Record" : "Edit Money Owed Record"}/>
           </CardTitle>
           <CardDescription>
-            {mode === "create"
+            <I18nText text={mode === "create"
               ? "Add a new record for money owed to you"
               : hasPayments
               ? "Edit the details of this money owed record. You can correct the original amount; recorded payments will be preserved."
-              : "Edit the details of this money owed record."}
+              : "Edit the details of this money owed record."}/>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <CurrencyPicker disabled={!!hasPayments} value={form.watch("currency")} onChange={value => form.setValue("currency", value as "USD" | "CAD")} />
-              <p className="text-sm text-muted-foreground">All amounts use this currency. Changing currency does not convert amounts.</p>
+              <p className="text-sm text-muted-foreground">{""}<I18nText text={"All amounts use this currency. Changing currency does not convert amounts."}/>{""}</p>
               <FormField
                 control={form.control}
                 name="personName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Person Name *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Person Name *"}/>{""}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter person's name" {...field} />
+                      <Input placeholder={ppT("Enter person's name")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,17 +138,15 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Description"}/>{""}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="What is this money owed for?"
+                        placeholder={ppT("What is this money owed for?")}
                         className="resize-none"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Optional description of what the money is owed for
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Optional description of what the money is owed for"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,20 +157,20 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
                 name="amountOriginal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Original Amount *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Original Amount *"}/>{""}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
-                        placeholder="0.00"
+                        placeholder={ppT("0.00")}
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      {hasPayments
+                      <I18nText text={hasPayments
                         ? "Correcting this amount recalculates what is still owed. It cannot be less than the total already repaid."
-                        : "The original amount owed to you"}
+                        : "The original amount owed to you"}/>
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -179,13 +182,11 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Due Date"}/>{""}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Optional due date for when you expect to receive payment
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Optional due date for when you expect to receive payment"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -193,18 +194,16 @@ export function MoneyOwedForm({ mode, moneyOwed, onCancel, onSuccess, defaultCur
 
               <div className="flex justify-end space-x-2 pt-4">
                 {onCancel && (
-                  <Button type="button" variant="outline" onClick={onCancel}>
-                    Cancel
-                  </Button>
+                  <Button type="button" variant="outline" onClick={onCancel}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
                 )}
                 <Button type="submit" disabled={isPending}>
-                  {isPending
+                  <I18nText text={isPending
                     ? mode === "create"
                       ? "Creating..."
                       : "Updating..."
                     : mode === "create"
                     ? "Create Record"
-                    : "Update Record"}
+                    : "Update Record"}/>
                 </Button>
               </div>
             </form>

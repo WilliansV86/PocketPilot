@@ -1,4 +1,6 @@
 "use client";
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { RefreshCw } from "lucide-react";
@@ -57,22 +59,22 @@ export function StatsClient() {
   { title: "Daily spending", description: snapshot.range.label, type: "daily-spend" as const, data: snapshot.data.dailySpend },
  ] : [];
  return <div className="w-full space-y-4">
-  <div className="flex items-center justify-between gap-3"><h1 className="text-2xl font-bold">Statistics</h1><Button variant="outline" size="sm" disabled={loading} onClick={() => void loadData()}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</Button></div>
+  <div className="flex items-center justify-between gap-3"><h1 className="text-2xl font-bold">{""}<I18nText text={"Statistics"}/>{""}</h1><Button variant="outline" size="sm" disabled={loading} onClick={() => void loadData()}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />{""}<I18nText text={"Refresh"}/>{""}</Button></div>
   <CurrencyPicker remember compact preferenceKey="stats" value={currency} onChange={setCurrency} />
-  <Select value={selectedRange} onValueChange={setSelectedRange}><SelectTrigger className="w-full sm:w-64"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="this_month">This month to date</SelectItem><SelectItem value="last_month">Last month</SelectItem><SelectItem value="last_3_months">Last 3 months</SelectItem><SelectItem value="last_6_months">Last 6 months</SelectItem><SelectItem value="ytd">Year to date (YTD)</SelectItem></SelectContent></Select>
+  <Select value={selectedRange} onValueChange={setSelectedRange}><SelectTrigger className="w-full sm:w-64"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="this_month">{""}<I18nText text={"This month to date"}/>{""}</SelectItem><SelectItem value="last_month">{""}<I18nText text={"Last month"}/>{""}</SelectItem><SelectItem value="last_3_months">{""}<I18nText text={"Last 3 months"}/>{""}</SelectItem><SelectItem value="last_6_months">{""}<I18nText text={"Last 6 months"}/>{""}</SelectItem><SelectItem value="ytd">{""}<I18nText text={"Year to date (YTD)"}/>{""}</SelectItem></SelectContent></Select>
   <AnnualBudgetReport currency={currency} />
-  {error && <div role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm">{error} <Button variant="link" onClick={() => void loadData()}>Retry</Button></div>}
-  {loading && <p role="status" className="text-sm text-muted-foreground">Updating statistics…</p>}
+  {error && <div role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm"><I18nText text={error}/> <Button variant="link" onClick={() => void loadData()}>{""}<I18nText text={"Retry"}/>{""}</Button></div>}
+  {loading && <p role="status" className="text-sm text-muted-foreground">{""}<I18nText text={"Updating statistics…"}/>{""}</p>}
   {snapshot && current ? <div className="space-y-4" aria-busy={loading}>
-   <p className="text-xs text-muted-foreground">{statsDateLabel(snapshot.range.start)} – {statsDateLabel(snapshot.range.end)} · Alberta calendar dates · {currency}</p>
+   <p className="text-xs text-muted-foreground"><I18nText text={statsDateLabel(snapshot.range.start)}/> – <I18nText text={statsDateLabel(snapshot.range.end)}/>{" "}<I18nText text={"· Alberta calendar dates ·"}/>{" "}{currency}</p>
    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{[
     { label: "Income", value: totals!.income/100, color: "text-emerald-600 dark:text-emerald-400" },
     { label: "Expenses", value: totals!.expenses/100, color: "text-red-600 dark:text-red-400" },
     { label: "Net cashflow", value: (totals!.income-totals!.expenses)/100, color: "text-teal-600 dark:text-teal-400" },
-   ].map(item => <Card key={item.label} className={item.label === "Net cashflow" ? "col-span-2 sm:col-span-1" : ""}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{item.label}</p><p className={`mt-1 break-words text-xl font-bold tabular-nums ${item.color}`}>{formatMoney(item.value,currency)}</p></CardContent></Card>)}</div>
-   <p className="text-xs leading-relaxed text-muted-foreground">Totals use recorded income and expense transactions. Transfers and credit card repayments are excluded to avoid counting spending twice. Money Owed receipts recorded as income are included. Balance edits alone do not count as income or spending.</p>
-   <div className="grid gap-4 lg:grid-cols-2">{panels.map(panel => <Card key={panel.type}><CardHeader className="p-4 pb-2"><CardTitle className="text-base">{panel.title}</CardTitle><CardDescription className="text-xs">{panel.description}</CardDescription></CardHeader><CardContent className="min-w-0 p-4 pt-2"><StatsCharts currency={currency} type={panel.type} data={panel.data} dateRange={snapshot.range} /></CardContent></Card>)}</div>
-   <Card><CardHeader className="p-4 pb-2"><CardTitle className="text-base">Largest expenses</CardTitle><CardDescription>Up to 10 transactions for {snapshot.range.label.toLowerCase()}</CardDescription></CardHeader><CardContent className="p-4 pt-2"><StatsTable currency={currency} data={snapshot.data.topSpending} /></CardContent></Card>
-  </div> : !loading && !error ? <p className="text-sm text-muted-foreground">Select a period to view statistics.</p> : null}
+   ].map(item => <Card key={item.label} className={item.label === "Net cashflow" ? "col-span-2 sm:col-span-1" : ""}><CardContent className="p-4"><p className="text-xs text-muted-foreground"><I18nText text={item.label}/></p><p className={`mt-1 break-words text-xl font-bold tabular-nums ${item.color}`}>{formatMoney(item.value,currency)}</p></CardContent></Card>)}</div>
+   <p className="text-xs leading-relaxed text-muted-foreground">{""}<I18nText text={"Totals use recorded income and expense transactions. Transfers and credit card repayments are excluded to avoid counting spending twice. Money Owed receipts recorded as income are included. Balance edits alone do not count as income or spending."}/>{""}</p>
+   <div className="grid gap-4 lg:grid-cols-2">{panels.map(panel => <Card key={panel.type}><CardHeader className="p-4 pb-2"><CardTitle className="text-base"><I18nText text={panel.title}/></CardTitle><CardDescription className="text-xs"><I18nText text={panel.description}/></CardDescription></CardHeader><CardContent className="min-w-0 p-4 pt-2"><StatsCharts currency={currency} type={panel.type} data={panel.data} dateRange={snapshot.range} /></CardContent></Card>)}</div>
+   <Card><CardHeader className="p-4 pb-2"><CardTitle className="text-base">{""}<I18nText text={"Largest expenses"}/>{""}</CardTitle><CardDescription>{""}<I18nText text={"Up to 10 transactions for"}/>{" "}{snapshot.range.label.toLowerCase()}</CardDescription></CardHeader><CardContent className="p-4 pt-2"><StatsTable currency={currency} data={snapshot.data.topSpending} /></CardContent></Card>
+  </div> : !loading && !error ? <p className="text-sm text-muted-foreground">{""}<I18nText text={"Select a period to view statistics."}/>{""}</p> : null}
  </div>;
 }

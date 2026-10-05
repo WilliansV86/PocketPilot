@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +36,8 @@ interface MobileStatsChartsProps {
 }
 
 export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsProps) {
+ const { t: ppT } = useLanguage();
+
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const renderMonthlyCashflow = () => {
     if (data.monthlyCashflow.length === 0) {
@@ -40,7 +45,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
         <Card>
           <CardContent className="flex flex-col items-center justify-center h-[250px] text-muted-foreground">
             <TrendingUp className="h-12 w-12 mb-2 opacity-50" />
-            <span className="text-sm">No monthly cashflow data available</span>
+            <span className="text-sm">{""}<I18nText text={"No monthly cashflow data available"}/>{""}</span>
           </CardContent>
         </Card>
       );
@@ -57,9 +62,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Monthly Cashflow
-          </CardTitle>
+            <TrendingUp className="h-5 w-5 text-blue-600" />{" "}<I18nText text={"Monthly Cashflow"}/>{" "}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
@@ -87,27 +90,27 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
                 tick={{ fill: '#666' }}
               />
               <Tooltip content={<ChartTooltip currency={currency} />} />
-              <Bar dataKey="income" fill="#10b981" name="Income" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="income" fill="#10b981" name={ppT("Income")} radius={[2, 2, 0, 0]} />
+              <Bar dataKey="expenses" fill="#ef4444" name={ppT("Expenses")} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           
           {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t">
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Income</div>
+              <div className="text-xs text-muted-foreground">{""}<I18nText text={"Income"}/>{""}</div>
               <div className="text-sm font-semibold text-green-600">
                 {formatCurrency(chartData.reduce((sum, item) => sum + item.income, 0))}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Expenses</div>
+              <div className="text-xs text-muted-foreground">{""}<I18nText text={"Expenses"}/>{""}</div>
               <div className="text-sm font-semibold text-red-600">
                 {formatCurrency(chartData.reduce((sum, item) => sum + item.expenses, 0))}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Net</div>
+              <div className="text-xs text-muted-foreground">{""}<I18nText text={"Net"}/>{""}</div>
               <div className="text-sm font-semibold text-blue-600">
                 {formatCurrency(chartData.reduce((sum, item) => sum + item.net, 0))}
               </div>
@@ -124,7 +127,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
         <Card>
           <CardContent className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
             <PieChartIcon className="h-12 w-12 mb-2 opacity-50" />
-            <span className="text-sm">No category spending data available</span>
+            <span className="text-sm">{""}<I18nText text={"No category spending data available"}/>{""}</span>
           </CardContent>
         </Card>
       );
@@ -150,9 +153,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <PieChartIcon className="h-5 w-5 text-purple-600" />
-            Top Categories
-          </CardTitle>
+            <PieChartIcon className="h-5 w-5 text-purple-600" />{" "}<I18nText text={"Top Categories"}/>{" "}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <ResponsiveContainer width="100%" height={220}>
@@ -181,7 +182,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
           {/* Category List */}
           <div className="space-y-2 max-h-48 overflow-y-auto">
             <div className="text-xs text-muted-foreground font-medium px-1">
-              {chartData.length} categories • Total: {formatCurrency(total)}
+              {chartData.length}{" "}<I18nText text={"categories • Total:"}/>{" "}{formatCurrency(total)}
             </div>
             {chartData.map((item, index) => (
               <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
@@ -216,7 +217,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
         <Card>
           <CardContent className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
             <DollarSign className="h-12 w-12 mb-2 opacity-50" />
-            <span className="text-sm">No account balance data available</span>
+            <span className="text-sm">{""}<I18nText text={"No account balance data available"}/>{""}</span>
           </CardContent>
         </Card>
       );
@@ -235,9 +236,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            Account Balances
-          </CardTitle>
+            <DollarSign className="h-5 w-5 text-green-600" />{" "}<I18nText text={"Account Balances"}/>{" "}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <ResponsiveContainer width="100%" height={220}>
@@ -267,7 +266,7 @@ export function MobileStatsCharts({ currency = "USD", data }: MobileStatsChartsP
           {/* Account List */}
           <div className="space-y-2 max-h-48 overflow-y-auto">
             <div className="text-xs text-muted-foreground font-medium px-1">
-              {chartData.length} accounts • Total: {formatCurrency(total)}
+              {chartData.length}{" "}<I18nText text={"accounts • Total:"}/>{" "}{formatCurrency(total)}
             </div>
             {chartData.map((item, index) => (
               <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">

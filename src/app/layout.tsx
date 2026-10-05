@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
+import { LanguageProvider } from "@/components/language-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
+import { getDefaultUser } from "@/lib/get-default-user";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,16 +23,19 @@ export const metadata: Metadata = {
   description: "Track your finances, manage accounts, and monitor spending with PocketPilot",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getDefaultUser();
+  const language = user.language === "es" ? "es" : "en";
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={language} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
+        <LanguageProvider language={language}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -40,6 +45,7 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
         <Toaster position="bottom-right" />
+        </LanguageProvider>
       </body>
     </html>
   );

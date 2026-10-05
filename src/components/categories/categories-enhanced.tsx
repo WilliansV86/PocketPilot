@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
@@ -57,6 +60,8 @@ export function CategoriesEnhanced({
   initialGroupData,
   onCategoryUpdate
 }: CategoriesEnhancedProps) {
+ const { t: ppT } = useLanguage();
+
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [groupData, setGroupData] = useState<Record<string, CategoryGroupData>>(initialGroupData);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -149,7 +154,7 @@ export function CategoriesEnhanced({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search categories..."
+              placeholder={ppT("Search categories...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -162,9 +167,7 @@ export function CategoriesEnhanced({
               checked={showArchived}
               onCheckedChange={setShowArchived}
             />
-            <label htmlFor="show-archived" className="text-sm font-medium">
-              Show archived
-            </label>
+            <label htmlFor="show-archived" className="text-sm font-medium">{" "}<I18nText text={"Show archived"}/>{" "}</label>
           </div>
         </div>
 
@@ -174,20 +177,16 @@ export function CategoriesEnhanced({
             size="sm"
             onClick={handleResetDefaults}
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset to defaults
-          </Button>
+            <RotateCcw className="h-4 w-4 mr-2" />{" "}<I18nText text={"Reset to defaults"}/>{" "}</Button>
           
           <Dialog open={createFormOpen} onOpenChange={setCreateFormOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
+                <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Add Category"}/>{" "}</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Create Category</DialogTitle>
+                <DialogTitle>{""}<I18nText text={"Create Category"}/>{""}</DialogTitle>
               </DialogHeader>
               <CategoryForm
                 mode="create"
@@ -201,7 +200,7 @@ export function CategoriesEnhanced({
 
       {/* Month Selector */}
       <div className="flex items-center gap-4">
-        <label className="text-sm font-medium">Month:</label>
+        <label className="text-sm font-medium">{""}<I18nText text={"Month:"}/>{""}</label>
         <Input
           type="month"
           value={selectedMonth}
@@ -252,7 +251,7 @@ export function CategoriesEnhanced({
                         </div>
                         <div>
                           <CardTitle className="text-lg">{groupInfo.name}</CardTitle>
-                          <CardDescription>{groupInfo.description}</CardDescription>
+                          <CardDescription><I18nText text={groupInfo.description}/></CardDescription>
                         </div>
                       </div>
                       
@@ -262,8 +261,7 @@ export function CategoriesEnhanced({
                             {formatCurrency(groupData.totalAmount)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {groupData.count} categories
-                          </div>
+                            {groupData.count}{" "}<I18nText text={"categories"}/>{" "}</div>
                         </div>
                       </div>
                     </div>
@@ -291,14 +289,12 @@ export function CategoriesEnhanced({
                               <div className="font-medium flex items-center gap-2">
                                 {category.name}
                                 {category.isArchived && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Archived
-                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">{" "}<I18nText text={"Archived"}/>{" "}</Badge>
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {category.monthlyTotal !== undefined && (
-                                  <span>{formatCurrency(category.monthlyTotal)} this month</span>
+                                  <span>{formatCurrency(category.monthlyTotal)}{" "}<I18nText text={"this month"}/>{""}</span>
                                 )}
                               </div>
                             </div>
@@ -319,7 +315,7 @@ export function CategoriesEnhanced({
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
-                                  <DialogTitle>Edit Category</DialogTitle>
+                                  <DialogTitle>{""}<I18nText text={"Edit Category"}/>{""}</DialogTitle>
                                 </DialogHeader>
                                 <CategoryForm
                                   mode="edit"
@@ -344,15 +340,13 @@ export function CategoriesEnhanced({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">No categories found</h3>
+              <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"No categories found"}/>{""}</h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery ? "Try adjusting your search terms" : "Get started by creating your first category"}
+                <I18nText text={searchQuery ? "Try adjusting your search terms" : "Get started by creating your first category"}/>
               </p>
               {!searchQuery && (
                 <Button onClick={() => setCreateFormOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Category
-                </Button>
+                  <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Add Category"}/>{" "}</Button>
               )}
             </div>
           </CardContent>

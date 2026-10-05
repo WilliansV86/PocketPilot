@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatMoney } from "@/lib/currency";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -68,6 +71,8 @@ interface MobileBudgetsProps {
 }
 
 export function MobileBudgets({ currency = "USD", data, month, year, onMonthChange, onDataUpdate }: MobileBudgetsProps) {
+ const { t: ppT } = useLanguage();
+
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -200,19 +205,19 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
         <div className="grid grid-cols-2 gap-2">
           <Select value={month} onValueChange={(newMonth) => onMonthChange(newMonth, year)}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={ppT("Month")} />
             </SelectTrigger>
             <SelectContent>
               {months.map((m, index) => (
                 <SelectItem key={m} value={(index + 1).toString()}>
-                  {m}
+                  <I18nText text={m}/>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={year.toString()} onValueChange={(newYear) => onMonthChange(month, parseInt(newYear))}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Year" />
+              <SelectValue placeholder={ppT("Year")} />
             </SelectTrigger>
             <SelectContent>
               {years.map((y) => (
@@ -229,7 +234,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
           <div className="min-w-0 bg-green-50 border border-green-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-green-800">
               <TrendingUp className="h-4 w-4" />
-              <span className="text-xs font-medium">Income</span>
+              <span className="text-xs font-medium">{""}<I18nText text={"Income"}/>{""}</span>
             </div>
             <div className="text-lg font-bold text-green-900 mt-1">
               {formatCurrency(data.totals.income)}
@@ -239,7 +244,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
           <div className="min-w-0 bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-blue-800">
               <ReceiptText className="h-4 w-4" />
-              <span className="text-xs font-medium">Expenses</span>
+              <span className="text-xs font-medium">{""}<I18nText text={"Expenses"}/>{""}</span>
             </div>
             <div className="text-lg font-bold text-blue-900 mt-1">
               {formatCurrency(data.totals.expenses)}
@@ -249,7 +254,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
           <div className="min-w-0 bg-purple-50 border border-purple-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-purple-800">
               <Target className="h-4 w-4" />
-              <span className="text-xs font-medium">Budgeted</span>
+              <span className="text-xs font-medium">{""}<I18nText text={"Budgeted"}/>{""}</span>
             </div>
             <div className="text-lg font-bold text-purple-900 mt-1">
               {formatCurrency(data.totals.budgeted)}
@@ -259,7 +264,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
           <div className="min-w-0 bg-orange-50 border border-orange-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-orange-800">
               <Wallet className="h-4 w-4" />
-              <span className="text-xs font-medium">Left to Budget</span>
+              <span className="text-xs font-medium">{""}<I18nText text={"Left to Budget"}/>{""}</span>
             </div>
             <div className={`text-lg font-bold mt-1 ${data.totals.leftToBudget < 0 ? 'text-red-600' : 'text-orange-900'}`}>
               {formatCurrency(data.totals.leftToBudget)}
@@ -276,9 +281,9 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-orange-900">Uncategorized Expenses</h3>
+                  <h3 className="font-semibold text-orange-900">{""}<I18nText text={"Uncategorized Expenses"}/>{""}</h3>
                   <p className="text-sm text-orange-700 mt-1">
-                    {data.uncategorized.count} transactions • {formatCurrency(data.uncategorized.total)}
+                    {data.uncategorized.count}{" "}<I18nText text={"transactions •"}/>{" "}{formatCurrency(data.uncategorized.total)}
                   </p>
                 </div>
               </div>
@@ -286,9 +291,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                 size="sm" 
                 onClick={handleFixUncategorized}
                 className="bg-orange-600 hover:bg-orange-700 text-white"
-              >
-                Fix
-              </Button>
+              >{" "}<I18nText text={"Fix"}/>{" "}</Button>
             </div>
           </CardContent>
         </Card>
@@ -314,8 +317,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                         {group}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
-                        {categories.length} categories
-                      </span>
+                        {categories.length}{" "}<I18nText text={"categories"}/>{" "}</span>
                     </div>
                     
                     <div className="flex items-center gap-4">
@@ -323,7 +325,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                         <div className="text-lg font-bold text-orange-600">
                           {formatCurrency(groupTotal?.available || 0)}
                         </div>
-                        <div className="text-xs text-muted-foreground">Available</div>
+                        <div className="text-xs text-muted-foreground">{""}<I18nText text={"Available"}/>{""}</div>
                       </div>
                       <Button variant="ghost" size="sm">
                         {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
@@ -356,7 +358,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
 
                       {/* Budgeted • Activity */}
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>Budgeted</span>
+                        <span>{""}<I18nText text={"Budgeted"}/>{""}</span>
                         <div className="flex items-center gap-2">
                           {editingCategory === category.id ? (
                             <Input
@@ -383,7 +385,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                       </div>
 
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>Activity</span>
+                        <span>{""}<I18nText text={"Activity"}/>{""}</span>
                         <span>{formatCurrency(category.activity)}</span>
                       </div>
 
@@ -396,11 +398,10 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                           animated={false}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{category.budgeted > 0 ? Math.round((category.activity / category.budgeted) * 100) : 0}% used</span>
+                          <span>{category.budgeted > 0 ? Math.round((category.activity / category.budgeted) * 100) : 0}{""}<I18nText text={"% used"}/>{""}</span>
                           {category.available < 0 && (
                             <span className="text-red-600 font-medium">
-                              {formatCurrency(Math.abs(category.available))} over
-                            </span>
+                              {formatCurrency(Math.abs(category.available))}{" "}<I18nText text={"over"}/>{" "}</span>
                           )}
                         </div>
                       </div>
@@ -418,22 +419,16 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
         <div className="grid grid-cols-1 gap-2">
           <Button asChild variant="outline" className="w-full justify-start">
             <a href="/categories/new" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </a>
+              <Plus className="h-4 w-4" />{" "}<I18nText text={"Add Category"}/>{" "}</a>
           </Button>
           
           <Button asChild variant="outline" className="w-full justify-start">
             <a href="/categories" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Manage Categories
-            </a>
+              <Settings className="h-4 w-4" />{" "}<I18nText text={"Manage Categories"}/>{" "}</a>
           </Button>
           
           <Button className="w-full justify-start">
-            <ArrowRightLeft className="h-4 w-4 mr-2" />
-            Move Money
-          </Button>
+            <ArrowRightLeft className="h-4 w-4 mr-2" />{" "}<I18nText text={"Move Money"}/>{" "}</Button>
         </div>
       </div>
     </div>

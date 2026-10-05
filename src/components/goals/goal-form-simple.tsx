@@ -1,4 +1,7 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 
 
@@ -35,6 +38,8 @@ const priorities = [
 ];
 
 export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimpleProps) {
+ const { t: ppT } = useLanguage();
+
   const [formData, setFormData] = useState({
     name: goal?.name || "",
     currency: goal?.currency || "USD",
@@ -129,26 +134,25 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          {mode === "create" ? "Create Goal" : "Edit Goal"}
+          <I18nText text={mode === "create" ? "Create Goal" : "Edit Goal"}/>
         </CardTitle>
         <CardDescription>
-          {mode === "create" 
+          <I18nText text={mode === "create" 
             ? "Set up a new financial goal to track your progress"
-            : "Update your goal details and tracking preferences"
-          }
+            : "Update your goal details and tracking preferences"}/>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <CurrencyPicker value={formData.currency} onChange={value => setFormData(prev => ({ ...prev, currency: value, linkedAccountId: "", linkedDebtId: "" }))} />
-          <p className="text-sm text-muted-foreground">Amounts use this currency; changing it does not convert amounts.</p>
+          <p className="text-sm text-muted-foreground">{""}<I18nText text={"Amounts use this currency; changing it does not convert amounts."}/>{""}</p>
           {/* Basic Information */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Goal Name</Label>
+              <Label htmlFor="name">{""}<I18nText text={"Goal Name"}/>{""}</Label>
               <Input
                 id="name"
-                placeholder="e.g., Emergency Fund, New Car, Vacation"
+                placeholder={ppT("e.g., Emergency Fund, New Car, Vacation")}
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 required
@@ -156,17 +160,17 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
             </div>
 
             <div>
-              <Label htmlFor="type">Goal Type</Label>
+              <Label htmlFor="type">{""}<I18nText text={"Goal Type"}/>{""}</Label>
               <Select value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select goal type" />
+                  <SelectValue placeholder={ppT("Select goal type")} />
                 </SelectTrigger>
                 <SelectContent>
                   {goalTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         <span>{type.icon}</span>
-                        <span>{type.label}</span>
+                        <span><I18nText text={type.label}/></span>
                       </div>
                     </SelectItem>
                   ))}
@@ -175,12 +179,12 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
             </div>
 
             <div>
-              <Label htmlFor="targetAmount">Target Amount</Label>
+              <Label htmlFor="targetAmount">{""}<I18nText text={"Target Amount"}/>{""}</Label>
               <Input
                 id="targetAmount"
                 type="number"
                 step="0.01"
-                placeholder="0.00"
+                placeholder={ppT("0.00")}
                 value={formData.targetAmount}
                 onChange={(e) => handleInputChange("targetAmount", e.target.value)}
                 required
@@ -189,7 +193,7 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate">{""}<I18nText text={"Start Date"}/>{""}</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -200,7 +204,7 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
               </div>
 
               <div>
-                <Label htmlFor="targetDate">Target Date (Optional)</Label>
+                <Label htmlFor="targetDate">{""}<I18nText text={"Target Date (Optional)"}/>{""}</Label>
                 <Input
                   id="targetDate"
                   type="date"
@@ -213,15 +217,15 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
 
           {/* Priority */}
           <div>
-            <Label htmlFor="priority">Priority</Label>
+            <Label htmlFor="priority">{""}<I18nText text={"Priority"}/>{""}</Label>
             <Select value={formData.priority} onValueChange={(value) => handleInputChange("priority", value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder={ppT("Select priority")} />
               </SelectTrigger>
               <SelectContent>
                 {priorities.map((priority) => (
                   <SelectItem key={priority.value} value={priority.value}>
-                    {priority.label}
+                    <I18nText text={priority.label}/>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -230,10 +234,10 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
 
           {/* Notes */}
           <div>
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes">{""}<I18nText text={"Notes (Optional)"}/>{""}</Label>
             <Textarea
               id="notes"
-              placeholder="Add any additional notes about your goal..."
+              placeholder={ppT("Add any additional notes about your goal...")}
               value={formData.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
               rows={3}
@@ -242,11 +246,9 @@ export function GoalFormSimple({ mode, goal, onCancel, onSuccess }: GoalFormSimp
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving..." : mode === "create" ? "Create Goal" : "Update Goal"}
+              <I18nText text={submitting ? "Saving..." : mode === "create" ? "Create Goal" : "Update Goal"}/>
             </Button>
           </div>
         </form>

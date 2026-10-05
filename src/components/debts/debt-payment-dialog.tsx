@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect, useTransition } from "react";
 import { format } from "date-fns";
 import { DollarSign, Calendar, CreditCard, AlertTriangle } from "lucide-react";
@@ -35,7 +38,7 @@ import { makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 import { formatMoney as formatCurrency } from "@/lib/currency";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,6 +71,8 @@ interface DebtPaymentDialogProps {
 }
 
 export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtPaymentDialogProps) {
+ const { t: ppT } = useLanguage();
+
   const [isPending, startTransition] = useTransition();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -161,33 +166,31 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Make Payment to {debt.name}</DialogTitle>
-          <DialogDescription>
-            Record a payment and create a corresponding expense transaction
-          </DialogDescription>
+          <DialogTitle>{""}<I18nText text={"Make Payment to"}/>{" "}{debt.name}</DialogTitle>
+          <DialogDescription>{" "}<I18nText text={"Record a payment and create a corresponding expense transaction"}/>{" "}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Debt Summary */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Debt Summary</CardTitle>
+              <CardTitle className="text-base">{""}<I18nText text={"Debt Summary"}/>{""}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Current Balance:</span>
+                <span className="text-sm text-muted-foreground">{""}<I18nText text={"Current Balance:"}/>{""}</span>
                 <span className="font-medium">{formatCurrency(debt.currentBalance, debt.currency)}</span>
               </div>
               {debt.minimumPayment && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Minimum Payment:</span>
+                  <span className="text-sm text-muted-foreground">{""}<I18nText text={"Minimum Payment:"}/>{""}</span>
                   <span className="font-medium">{formatCurrency(debt.minimumPayment, debt.currency)}</span>
                 </div>
               )}
               {debt.dueDayOfMonth && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Due Day:</span>
-                  <span className="font-medium">Day {debt.dueDayOfMonth}</span>
+                  <span className="text-sm text-muted-foreground">{""}<I18nText text={"Due Day:"}/>{""}</span>
+                  <span className="font-medium">{""}<I18nText text={"Day"}/>{" "}{debt.dueDayOfMonth}</span>
                 </div>
               )}
             </CardContent>
@@ -201,17 +204,16 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                 name="paymentAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Amount *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Amount *"}/>{""}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="0.00"
+                        placeholder={ppT("0.00")}
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Maximum: {formatCurrency(debt.currentBalance, debt.currency)}
+                    <FormDescription>{" "}<I18nText text={"Maximum:"}/>{" "}{formatCurrency(debt.currentBalance, debt.currency)}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -230,12 +232,9 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                       )}
                       <div className="text-sm">
                         {isPayoff ? (
-                          <span className="text-green-700 font-medium">
-                            🎉 This will pay off the debt completely!
-                          </span>
+                          <span className="text-green-700 font-medium">{" "}<I18nText text={"🎉 This will pay off the debt completely!"}/>{" "}</span>
                         ) : (
-                          <span className="text-blue-700">
-                            Remaining balance after payment: {formatCurrency(remainingBalance, debt.currency)}
+                          <span className="text-blue-700">{" "}<I18nText text={"Remaining balance after payment:"}/>{" "}{formatCurrency(remainingBalance, debt.currency)}
                           </span>
                         )}
                       </div>
@@ -249,7 +248,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                 name="paymentDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Date *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Date *"}/>{""}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -263,12 +262,12 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                 name="accountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pay From Account *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Pay From Account *"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select account to pay from">
-                            {loading ? "Loading..." : "Select account"}
+                          <SelectValue placeholder={ppT("Select account to pay from")}>
+                            <I18nText text={loading ? "Loading..." : "Select account"}/>
                           </SelectValue>
                         </SelectTrigger>
                       </FormControl>
@@ -285,9 +284,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      The account balance will be reduced by this payment amount
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"The account balance will be reduced by this payment amount"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -298,15 +295,15 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category (Optional)</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Category (Optional)"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder={ppT("Select category")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No category</SelectItem>
+                        <SelectItem value="">{""}<I18nText text={"No category"}/>{""}</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -314,9 +311,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Categorize this expense for better tracking
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Categorize this expense for better tracking"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -328,11 +323,9 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
-                >
-                  Cancel
-                </Button>
+                >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
                 <Button type="submit" disabled={isPending || loading}>
-                  {isPending ? "Processing..." : `Pay ${formatCurrency(paymentAmount || 0, debt.currency)}`}
+                  <I18nText text={isPending ? "Processing..." : `Pay ${formatCurrency(paymentAmount || 0, debt.currency)}`}/>
                 </Button>
               </DialogFooter>
             </form>

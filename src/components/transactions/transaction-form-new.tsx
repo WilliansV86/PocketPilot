@@ -1,4 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
+
 
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -28,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTransaction, updateTransaction } from "@/lib/actions/transaction-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -81,6 +85,8 @@ type TransactionFormProps = {
 };
 
 export function TransactionForm({ transaction, accounts, creditCards = [], categories, mode }: TransactionFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -236,9 +242,9 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
   const selectedCard = creditCards.find(card => `card:${card.id}` === source);
   const unavailableCard = transaction?.creditCardId && !creditCards.some(card => card.id === transaction.creditCardId);
   if (accounts.length === 0 && creditCards.length === 0 && !transaction) return <div className="py-8 text-center">
-    <p className="mb-4 text-muted-foreground">Add a bank account or an open credit card before recording a transaction.</p>
-    <Button type="button" onClick={() => router.push("/accounts/new")}>Add account</Button>
-    <Button type="button" variant="outline" className="ml-2" onClick={() => router.push("/debts/new")}>Add credit card</Button>
+    <p className="mb-4 text-muted-foreground">{""}<I18nText text={"Add a bank account or an open credit card before recording a transaction."}/>{""}</p>
+    <Button type="button" onClick={() => router.push("/accounts/new")}>{""}<I18nText text={"Add account"}/>{""}</Button>
+    <Button type="button" variant="outline" className="ml-2" onClick={() => router.push("/debts/new")}>{""}<I18nText text={"Add credit card"}/>{""}</Button>
   </div>;
   return (
     <Form {...form}>
@@ -249,20 +255,20 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Transaction Type</FormLabel>
+              <FormLabel>{""}<I18nText text={"Transaction Type"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={ppT("Select type")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={TransactionType.INCOME}>Income</SelectItem>
-                  <SelectItem value={TransactionType.EXPENSE}>Expense</SelectItem>
-                  <SelectItem value={TransactionType.TRANSFER}>Transfer</SelectItem>
+                  <SelectItem value={TransactionType.INCOME}>{""}<I18nText text={"Income"}/>{""}</SelectItem>
+                  <SelectItem value={TransactionType.EXPENSE}>{""}<I18nText text={"Expense"}/>{""}</SelectItem>
+                  <SelectItem value={TransactionType.TRANSFER}>{""}<I18nText text={"Transfer"}/>{""}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -275,9 +281,9 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{""}<I18nText text={"Description"}/>{""}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Grocery Shopping" {...field} />
+                <Input placeholder={ppT("e.g. Grocery Shopping")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -290,12 +296,12 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>{""}<I18nText text={"Amount"}/>{""}</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
                     step="0.01" 
-                    placeholder="0.00" 
+                    placeholder={ppT("0.00")} 
                     {...field}
                     onChange={(e) => field.onChange(e.target.value)}
                   />
@@ -310,7 +316,7 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
+                <FormLabel>{""}<I18nText text={"Date"}/>{""}</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -326,26 +332,26 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
             name="accountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{selectedType === TransactionType.TRANSFER ? "From Account" : selectedType === TransactionType.EXPENSE ? "Paid with" : "Account"}</FormLabel>
+                <FormLabel><I18nText text={selectedType === TransactionType.TRANSFER ? "From Account" : selectedType === TransactionType.EXPENSE ? "Paid with" : "Account"}/></FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
+                      <SelectValue placeholder={ppT("Select account")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Accounts</div>
+                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">{""}<I18nText text={"Accounts"}/>{""}</div>
                     {mergedAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.name} ({account.currency})
                       </SelectItem>
                     ))}
-                    {sources.length > 0 && <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Credit cards</div>}
-                    {sources.map(card => <SelectItem key={card.id} value={`card:${card.id}`}>{card.name} ({card.currency}) · Credit card</SelectItem>)}
-                    {unavailableCard && selectedType === TransactionType.EXPENSE && <SelectItem value={`card:${transaction!.creditCardId}`} disabled>Previous card (closed) — choose an open payment source</SelectItem>}
+                    {sources.length > 0 && <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">{""}<I18nText text={"Credit cards"}/>{""}</div>}
+                    {sources.map(card => <SelectItem key={card.id} value={`card:${card.id}`}>{card.name} ({card.currency}{""}<I18nText text={") · Credit card"}/>{""}</SelectItem>)}
+                    {unavailableCard && selectedType === TransactionType.EXPENSE && <SelectItem value={`card:${transaction!.creditCardId}`} disabled>{""}<I18nText text={"Previous card (closed) — choose an open payment source"}/>{""}</SelectItem>}
                   </SelectContent>
                 </Select>
-                {selectedCard && <FormDescription>This purchase adds to {selectedCard.name}'s debt balance in {selectedCard.currency} and counts toward your category budget.</FormDescription>}
+                {selectedCard && <FormDescription>{""}<I18nText text={"This purchase adds to"}/>{" "}{selectedCard.name}{""}<I18nText text={"'s debt balance in"}/>{" "}{selectedCard.currency}{" "}<I18nText text={"and counts toward your category budget."}/>{""}</FormDescription>}
                 <FormMessage />
               </FormItem>
             )}
@@ -358,14 +364,14 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
               name="toAccountId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>To Account</FormLabel>
+                  <FormLabel>{""}<I18nText text={"To Account"}/>{""}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value || undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select destination account" />
+                        <SelectValue placeholder={ppT("Select destination account")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -391,18 +397,18 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{""}<I18nText text={"Category"}/>{""}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value || undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={ppT("Select category")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="__none__">Uncategorized</SelectItem>
+                      <SelectItem value="__none__">{""}<I18nText text={"Uncategorized"}/>{""}</SelectItem>
                       {relevantCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
@@ -422,10 +428,10 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>{""}<I18nText text={"Notes"}/>{""}</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Add any additional details here" 
+                  placeholder={ppT("Add any additional details here")} 
                   {...field} 
                   value={field.value || ""}
                 />
@@ -437,15 +443,13 @@ export function TransactionForm({ transaction, accounts, creditCards = [], categ
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create Transaction" : "Update Transaction"}
+            <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Transaction" : "Update Transaction"}/>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push("/transactions")}
-          >
-            Cancel
-          </Button>
+          >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
         </div>
       </form>
     </Form>

@@ -1,3 +1,4 @@
+import { I18nText } from "@/components/language-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PropertySection } from "@/components/accounts/property-section";
 import { AccountsTable } from "@/components/accounts/accounts-table";
@@ -14,12 +15,10 @@ export default async function AccountsPage() {
       <AccountsPageClient>
         <div className={LAYOUT.PAGE.CONTENT}>
           <div className={LAYOUT.PAGE.HEADER}>
-            <h1 className={TYPOGRAPHY.PAGE_TITLE}>Accounts</h1>
+            <h1 className={TYPOGRAPHY.PAGE_TITLE}>{""}<I18nText text={"Accounts"}/>{""}</h1>
             <Button asChild className={COMPONENTS.BUTTON.PRIMARY}>
               <Link href="/accounts/new">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Account
-              </Link>
+                <PlusCircle className="h-4 w-4 mr-2" />{" "}<I18nText text={"New Account"}/>{" "}</Link>
             </Button>
           </div>
           

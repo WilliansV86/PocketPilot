@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoneyOwedList } from "@/components/money-owed/money-owed-list";
@@ -8,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { getMoneyOwed } from "@/lib/actions/money-owed-actions";
 import { archiveMoneyOwed } from "@/lib/actions/money-owed-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 type MoneyOwed = {
   id: string;
@@ -101,11 +103,9 @@ export function MoneyOwedClient({ moneyOwed: initialMoneyOwed }: MoneyOwedClient
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleCancel}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Money Owed
-            </Button>
+              <ArrowLeft className="h-4 w-4 mr-2" />{" "}<I18nText text={"Back to Money Owed"}/>{" "}</Button>
             <h1 className="text-3xl font-bold tracking-tight">
-              {editingMoneyOwed ? "Edit Money Owed" : "Create Money Owed"}
+              <I18nText text={editingMoneyOwed ? "Edit Money Owed" : "Create Money Owed"}/>
             </h1>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { I18nText } from "@/components/language-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { DebtList } from "@/components/debts/debt-list";
 import { DebtForm } from "@/components/debts/debt-form";
@@ -35,8 +36,8 @@ export default async function DebtsPage() {
         <div className="container mx-auto py-6">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <h3 className="text-lg font-semibold mb-2">Error Loading Debts</h3>
-              <p className="text-muted-foreground">Unable to load your debts. Please try again later.</p>
+              <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"Error Loading Debts"}/>{""}</h3>
+              <p className="text-muted-foreground">{""}<I18nText text={"Unable to load your debts. Please try again later."}/>{""}</p>
             </CardContent>
           </Card>
         </div>

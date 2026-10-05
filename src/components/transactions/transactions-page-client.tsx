@@ -1,9 +1,11 @@
 "use client";
+import { I18nText } from "@/components/language-provider";
+
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye } from "lucide-react";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 interface TransactionsPageClientProps {
   children: React.ReactNode;
@@ -62,8 +64,7 @@ export function TransactionsPageClient({ children }: TransactionsPageClientProps
         <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 text-yellow-600" />
-            <span className="text-sm text-yellow-800">
-              You have {deletedCount} preview deletion{deletedCount > 1 ? 's' : ''}
+            <span className="text-sm text-yellow-800">{" "}<I18nText text={"You have"}/>{" "}{deletedCount}{" "}<I18nText text={"preview deletion"}/>{""}{deletedCount > 1 ? 's' : ''}
             </span>
           </div>
           <Button
@@ -74,14 +75,10 @@ export function TransactionsPageClient({ children }: TransactionsPageClientProps
           >
             {isClearing ? (
               <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Clearing...
-              </>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />{" "}<I18nText text={"Clearing..."}/>{" "}</>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Clear Preview
-              </>
+                <RefreshCw className="h-4 w-4 mr-2" />{" "}<I18nText text={"Clear Preview"}/>{" "}</>
             )}
           </Button>
         </div>

@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { DollarSign } from "lucide-react";
@@ -33,7 +36,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { formatMoney as formatCurrency } from "@/lib/currency";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -65,6 +68,8 @@ interface DebtPaymentDialogProps {
 }
 
 export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }: DebtPaymentDialogProps) {
+ const { t: ppT } = useLanguage();
+
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,24 +148,21 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Make Payment - {debt.name}</DialogTitle>
-          <DialogDescription>
-            Record a payment toward this debt. This will create a transaction and update your account balance.
-          </DialogDescription>
+          <DialogTitle>{""}<I18nText text={"Make Payment -"}/>{" "}{debt.name}</DialogTitle>
+          <DialogDescription>{" "}<I18nText text={"Record a payment toward this debt. This will create a transaction and update your account balance."}/>{" "}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Current Balance</CardTitle>
+              <CardTitle className="text-sm">{""}<I18nText text={"Current Balance"}/>{""}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
                 {formatCurrency(debt.currentBalance, debt.currency)}
               </div>
               {debt.minimumPayment && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Minimum payment: {formatCurrency(debt.minimumPayment, debt.currency)}
+                <p className="text-xs text-muted-foreground mt-1">{" "}<I18nText text={"Minimum payment:"}/>{" "}{formatCurrency(debt.minimumPayment, debt.currency)}
                 </p>
               )}
             </CardContent>
@@ -173,14 +175,14 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
                 name="paymentAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Amount</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Amount"}/>{""}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
                         max={debt.currentBalance}
-                        placeholder="0.00"
+                        placeholder={ppT("0.00")}
                         {...field}
                       />
                     </FormControl>
@@ -194,7 +196,7 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
                 name="paymentDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Date</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Date"}/>{""}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -208,11 +210,11 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
                 name="accountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pay From Account</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Pay From Account"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select account" />
+                          <SelectValue placeholder={ppT("Select account")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -234,11 +236,9 @@ export function DebtPaymentDialogSimple({ debt, open, onOpenChange, onSuccess }:
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
+                >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
                 <Button type="submit" disabled={isSubmitting || loading}>
-                  {isSubmitting ? "Processing..." : "Record Payment"}
+                  <I18nText text={isSubmitting ? "Processing..." : "Record Payment"}/>
                 </Button>
               </DialogFooter>
             </form>

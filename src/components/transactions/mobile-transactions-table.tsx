@@ -1,4 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
+
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -32,7 +36,7 @@ import { TransactionAmount } from "@/components/transactions/transaction-amount"
 import { deleteTransactionOptimized } from "@/lib/actions/transaction-actions-optimized";
 import { formatCurrency, getAmountColorClass, getTransactionIcon } from "@/lib/format";
 import { getFinancialTypeColor, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { safeServerAction } from "@/lib/client-actions";
 
 // Transaction type definition matching our schema
@@ -104,6 +108,8 @@ const getTransactionIconComponent = (type: string) => {
 };
 
 export function MobileTransactionsTable({ transactions }: TransactionsTableProps) {
+ const { t: ppT } = useLanguage();
+
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [transactionsList, setTransactionsList] = useState(transactions);
 
@@ -178,7 +184,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
     return (
       <EmptyState
         icon="🧾"
-        title="No transactions found"
+        title={ppT("No transactions found")}
         description="No transactions yet"
       />
     );
@@ -230,12 +236,10 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{""}<I18nText text={"Actions"}/>{""}</DropdownMenuLabel>
                       <DropdownMenuItem asChild>
                         <Link href={`/transactions/${transaction.id}/edit`} className="flex items-center gap-2">
-                          <Edit className="h-4 w-4" />
-                          Edit
-                        </Link>
+                          <Edit className="h-4 w-4" />{" "}<I18nText text={"Edit"}/>{" "}</Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -244,7 +248,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
                         disabled={isDeleting === transaction.id}
                       >
                         <Trash className="h-4 w-4" />
-                        {isDeleting === transaction.id ? "Deleting..." : "Delete"}
+                        <I18nText text={isDeleting === transaction.id ? "Deleting..." : "Delete"}/>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -270,7 +274,7 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
                   <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full ${getTransactionColorClass(transaction.type)}`}>
                     {getTransactionIconComponent(transaction.type)}
                   </span>
-                  <span className="text-xs font-medium">{transaction.type}</span>
+                  <span className="text-xs font-medium"><I18nText text={transaction.type}/></span>
                 </div>
 
                 {/* Account */}
@@ -296,8 +300,8 @@ export function MobileTransactionsTable({ transactions }: TransactionsTableProps
               {transaction.category && transaction.type === 'EXPENSE' && (
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Category spending</span>
-                    <span>This month</span>
+                    <span>{""}<I18nText text={"Category spending"}/>{""}</span>
+                    <span>{""}<I18nText text={"This month"}/>{""}</span>
                   </div>
                 </div>
               )}
