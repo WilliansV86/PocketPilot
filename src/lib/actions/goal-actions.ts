@@ -447,6 +447,65 @@ export async function addGoalContribution(goalId: string, formData: FormData) {
   }
 }
 
+// Corrections preserve any starting progress and adjust only the recorded amount.
+async function correctContribution(id: string, formData?: FormData) {
+  try {
+    const user = await getDefaultUser();
+    let parsed: z.infer<typeof contributionSchema> | undefined;
+    let date: Date | undefined;
+    if (formData) {
+      parsed = contributionSchema.parse({ amount: formData.get("amount"), date: formData.get("date"), note: formData.get("note") });
+      date = new Date(`${parsed.date}T12:00:00.000Z`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(parsed.date) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== parsed.date) return { success: false, error: "Choose a valid contribution date." };
+      if (!Number.isFinite(parsed.amount) || parsed.amount > 9999999999.99 || Math.abs(parsed.amount * 100 - Math.round(parsed.amount * 100)) > 0.0001) return { success: false, error: "Enter a positive amount with up to two decimal places." };
+    }
+    // Serializable transactions avoid applying the same correction twice if two devices edit at once.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await prisma.$transaction(async tx => {
+          const entry = await tx.goalContribution.findFirst({ where: { id, userId: user.id } });
+          if (!entry) throw new Error("Contribution not found");
+          const goal = await tx.goal.findFirst({ where: { id: entry.goalId, userId: user.id } });
+          if (!goal) throw new Error("Goal not found");
+          const delta = Math.round(((parsed?.amount ?? 0) - Number(entry.amount)) * 100) / 100;
+          const nextAmount = Math.round((Number(goal.currentAmount) + delta) * 100) / 100;
+          if (nextAmount < 0) throw new Error("Contribution exceeds recorded goal progress. Review the goal before correcting it.");
+          if (parsed) {
+            await tx.goalContribution.update({ where: { id: entry.id }, data: { amount: parsed.amount, date, note: parsed.note || null } });
+          } else {
+            await tx.goalContribution.delete({ where: { id: entry.id } });
+          }
+          await tx.goal.update({ where: { id: goal.id }, data: {
+            currentAmount: { increment: delta },
+            ...(delta !== 0 && nextAmount < Number(goal.targetAmount) ? { isCompleted: false } : {}),
+          } });
+        }, { isolationLevel: "Serializable" });
+        revalidatePath("/goals");
+        revalidatePath("/");
+        return { success: true };
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "P2034" && attempt < 2) continue;
+        throw error;
+      }
+    }
+    return { success: false, error: "Could not save the contribution change. Please try again." };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { success: false, error: "Invalid contribution data" };
+    const messages = ["Contribution not found", "Goal not found", "Contribution exceeds recorded goal progress. Review the goal before correcting it."];
+    if (error instanceof Error && messages.includes(error.message)) return { success: false, error: error.message };
+    console.error("Error correcting contribution:", error);
+    return { success: false, error: "Could not save the contribution change. Please try again." };
+  }
+}
+
+export async function updateGoalContribution(id: string, formData: FormData) {
+  return correctContribution(id, formData);
+}
+
+export async function deleteGoalContribution(id: string) {
+  return correctContribution(id);
+}
+
 /**
  * Get goal contributions
  */
@@ -462,9 +521,6 @@ export async function getGoalContributions(goalId: string) {
       where: { 
         goalId,
         userId: user.id 
-      },
-      include: {
-        account: true,
       },
       orderBy: { date: 'desc' },
     });

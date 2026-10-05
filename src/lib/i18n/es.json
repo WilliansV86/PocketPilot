@@ -996,7 +996,7 @@
   "Failed to load budget data": "No se pudo cargar los datos del presupuesto",
   "Failed to load categories": "No se pudo cargar las categorías",
   "Failed to load category details": "No se pudo cargar los detalles de la categoría",
-  "Failed to load contributions": "No se pudo cargar los aportes",
+  "Failed to load contributions": "No se pudieron cargar los aportes",
   "Failed to load debt details": "No se pudo cargar los detalles de la deuda",
   "Failed to load debt summary": "No se pudo cargar el resumen de deudas",
   "Failed to load debts": "No se pudo cargar las deudas",
@@ -1094,5 +1094,16 @@
   "Enter a positive amount with up to two decimal places.": "Introduce un monto positivo con hasta dos decimales.",
   "This goal is already complete.": "Esta meta ya está completada.",
   "Record debt payments from the Debts page.": "Registra los pagos de deudas desde la página Deudas.",
-  "This goal tracks its linked account balance automatically.": "Esta meta sigue automáticamente el saldo de su cuenta vinculada."
+  "This goal tracks its linked account balance automatically.": "Esta meta sigue automáticamente el saldo de su cuenta vinculada.",
+  "Contribution history": "Historial de aportes",
+  "Edit contribution": "Editar aporte",
+  "Contribution updated successfully": "Aporte actualizado correctamente",
+  "Contribution deleted successfully": "Aporte eliminado correctamente",
+  "Delete this contribution? Goal progress will be reduced by this amount.": "¿Eliminar este aporte? El avance de la meta se reducirá en este monto.",
+  "No contributions recorded.": "No hay aportes registrados.",
+  "Loading contributions...": "Cargando aportes...",
+  "Contribution not found": "Aporte no encontrado",
+  "Could not save the contribution change. Please try again.": "No se pudo guardar el cambio del aporte. Inténtalo de nuevo.",
+  "Contribution exceeds recorded goal progress. Review the goal before correcting it.": "El aporte supera el avance registrado. Revisa la meta antes de corregirlo.",
+  "Edit or delete a recorded contribution. Account balances stay unchanged.": "Edita o elimina un aporte registrado. Los saldos de las cuentas no cambian."
 }

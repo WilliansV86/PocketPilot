@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
-import { addGoalContribution } from "@/lib/actions/goal-actions";
+import { addGoalContribution, updateGoalContribution } from "@/lib/actions/goal-actions";
 import { formatMoney } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,15 +17,16 @@ function todayInAlberta() {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-export function GoalContributionDialog({ goal, onClose, onSuccess }: {
+export function GoalContributionDialog({ goal, contribution, onClose, onSuccess }: {
   goal: { id: string; name: string; currency?: string };
+  contribution?: { id: string; amount: number; date: string; note?: string | null };
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const { t } = useLanguage();
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayInAlberta);
-  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState(contribution ? String(contribution.amount) : "");
+  const [date, setDate] = useState(() => contribution ? contribution.date.slice(0, 10) : todayInAlberta());
+  const [note, setNote] = useState(contribution?.note || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const savingRef = useRef(false);
@@ -46,9 +47,11 @@ export function GoalContributionDialog({ goal, onClose, onSuccess }: {
       data.set("amount", amount);
       data.set("date", date);
       data.set("note", note);
-      const result = await addGoalContribution(goal.id, data);
+      const result = contribution
+        ? await updateGoalContribution(contribution.id, data)
+        : await addGoalContribution(goal.id, data);
       if (!result.success) { setError(result.error || "Failed to add contribution"); return; }
-      toast.success("Contribution added successfully");
+      toast.success(contribution ? "Contribution updated successfully" : "Contribution added successfully");
       onSuccess();
     } catch {
       setError("Failed to add contribution");
@@ -61,7 +64,7 @@ export function GoalContributionDialog({ goal, onClose, onSuccess }: {
   return <Dialog open onOpenChange={open => { if (!open && !savingRef.current) onClose(); }}>
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md" onEscapeKeyDown={event => { if (saving) event.preventDefault(); }}>
       <DialogHeader>
-        <DialogTitle>{t("Add contribution")} · {goal.name}</DialogTitle>
+        <DialogTitle>{t(contribution ? "Edit contribution" : "Add contribution")} · {goal.name}</DialogTitle>
         <DialogDescription>{t("This records progress toward your goal. It does not move money or change account balances.")}</DialogDescription>
       </DialogHeader>
       <form className="space-y-4" onSubmit={submit}>
@@ -77,7 +80,7 @@ export function GoalContributionDialog({ goal, onClose, onSuccess }: {
         </div>
         {error && <p role="alert" className="text-sm text-destructive">{t(error)}</p>}
         <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={saving} onClick={onClose}>{t("Cancel")}</Button>
-          <Button type="submit" disabled={saving}>{t(saving ? "Recording..." : "Record contribution")}</Button>
+          <Button type="submit" disabled={saving}>{t(saving ? "Saving..." : contribution ? "Save changes" : "Record contribution")}</Button>
         </div>
       </form>
     </DialogContent>
