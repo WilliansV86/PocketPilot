@@ -49,8 +49,11 @@ export async function getNetWorth(currency = "USD") {
       });
     }
 
+    const properties = await prisma.property.findMany({ where: { userId: user.id, currency } });
+
     // Calculate net worth breakdown using the shared engine
     const netWorthData = getNetWorthBreakdown({
+      properties,
       accounts: accounts.map(account => ({
         ...account,
         balance: Number(account.balance),
@@ -107,6 +110,7 @@ export async function getNetWorthSummary(currency = "USD") {
         totalLiabilities: data.liabilities.total,
         accountAssets: data.assets.accountAssets,
         receivables: data.assets.receivables,
+        propertyAssets: data.assets.propertyAssets,
         debts: data.liabilities.debts,
         accountLiabilities: data.liabilities.accountLiabilities,
       },

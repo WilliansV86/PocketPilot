@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PropertySection } from "@/components/accounts/property-section";
 import { AccountsTable } from "@/components/accounts/accounts-table";
 import { AccountsPageClient } from "@/components/accounts/accounts-page-client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default async function AccountsPage() {
           </div>
           
           <div className={LAYOUT.SPACING.SECTION}>
+            <PropertySection />
             <AccountsTable />
           </div>
         </div>

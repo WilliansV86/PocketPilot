@@ -9,7 +9,7 @@
 const ASSET_ACCOUNT_TYPES = ['CHECKING', 'SAVINGS', 'CASH', 'INVESTMENT', 'OTHER'] as const;
 
 // Account types that are considered liabilities  
-const LIABILITY_ACCOUNT_TYPES = ['CREDIT', 'LOAN'] as const;
+const LIABILITY_ACCOUNT_TYPES = ['CREDIT', 'CREDIT_CARD', 'LOAN', 'MORTGAGE'] as const;
 
 /**
  * Normalizes money values to a consistent number format
@@ -100,10 +100,12 @@ export function getNetWorthBreakdown(data: {
   accounts: any[];
   debts: any[];
   moneyOwed: any[];
+  properties?: any[];
 }): {
   assets: {
     accountAssets: number;
     receivables: number;
+    propertyAssets: number;
     total: number;
   };
   liabilities: {
@@ -118,7 +120,8 @@ export function getNetWorthBreakdown(data: {
   // Calculate assets
   const accountAssets = getAccountAssetTotal(accounts);
   const receivables = getReceivablesTotal(moneyOwed);
-  const totalAssets = accountAssets + receivables;
+  const propertyAssets = (data.properties ?? []).reduce((sum, property) => sum + Math.max(0, normalizeMoney(property.estimatedValue)), 0);
+  const totalAssets = accountAssets + receivables + propertyAssets;
   
   // Calculate liabilities
   const debtLiabilities = getDebtsTotal(debts);
@@ -132,6 +135,7 @@ export function getNetWorthBreakdown(data: {
     assets: {
       accountAssets,
       receivables,
+      propertyAssets,
       total: totalAssets,
     },
     liabilities: {

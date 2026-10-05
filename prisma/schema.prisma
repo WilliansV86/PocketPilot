@@ -18,6 +18,7 @@ model User {
   netWorthSnapshots NetWorthSnapshot[]
   recurringPayments RecurringPayment[]
   recurringOccurrences RecurringOccurrence[]
+  properties   Property[]
   accounts     FinancialAccount[]
   transactions Transaction[]
   categories   Category[]
@@ -209,6 +210,7 @@ enum GoalPriority {
 }
 
 model Debt {
+  property Property?
   currency         String     @default("USD")
   id               String     @id @default(cuid())
   name             String
@@ -390,4 +392,17 @@ model MonthlyIncomePlan {
  amount Decimal @db.Decimal(12,2)
  updatedAt DateTime @updatedAt
  @@unique([userId, currency, month])
+}
+
+model Property {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  currency String @default("USD")
+  estimatedValue Decimal @db.Decimal(12,2)
+  mortgageDebtId String? @unique
+  mortgageDebt Debt? @relation(fields: [mortgageDebtId], references: [id], onDelete: SetNull)
+  updatedAt DateTime @updatedAt
+  @@index([userId, currency])
 }
