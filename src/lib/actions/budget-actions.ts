@@ -155,7 +155,7 @@ export async function getBudgetsForMonth(month: string, year: number, currency =
 }
 
 // Update or create budget for a category
-export async function updateBudget(categoryId: string, month: string, year: number, amount: number, currency = "USD") {
+export async function updateBudget(categoryId: string, month: string, year: number, amount: number, currency = "USD", refreshPage = true) {
   try {
     const user = await getDefaultUser();
     const monthString = `${year}-${month.padStart(2, '0')}`;
@@ -184,7 +184,8 @@ export async function updateBudget(categoryId: string, month: string, year: numb
       },
     });
 
-    revalidatePath("/budgets");
+    // Inline editors fetch fresh data without replacing the current route.
+    if (refreshPage) revalidatePath("/budgets");
     return { 
       success: true, 
       data: {
