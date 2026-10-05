@@ -1,5 +1,6 @@
 import "server-only";
 import { PrismaClient } from "@prisma/client";
+import { scopedTransaction } from "@/lib/scoped-transaction";
 import { servicePrisma } from "@/lib/db-service";
 import { getCurrentUser } from "@/lib/current-user";
 import { authorizeOperation, assertResultOwnership } from "@/lib/ownership-policy";
@@ -24,5 +25,19 @@ function createScopedClient() {
   return client;
 }
 // Middleware runs for every model operation, including interactive transactions.
-export const prisma = shared.pocketpilotScopedPrisma ?? createScopedClient();
-if (process.env.NODE_ENV !== "production") shared.pocketpilotScopedPrisma = prisma;
+const client = shared.pocketpilotScopedPrisma ?? createScopedClient();
+if (process.env.NODE_ENV !== "production") shared.pocketpilotScopedPrisma = client;
+export const prisma = new Proxy(client, {
+  get(target, property, receiver) {
+    if (property === "$transaction") {
+      return async (input: any, options?: any) => {
+        // Batch transactions keep the existing middleware. Interactive writes
+        // need relation lookups on their own connection, including uncommitted rows.
+        if (typeof input !== "function") return target.$transaction(input, options);
+        const user = await getCurrentUser();
+        return servicePrisma.$transaction(tx => input(scopedTransaction(tx, user.id)), options);
+      };
+    }
+    return Reflect.get(target, property, receiver);
+  },
+});
