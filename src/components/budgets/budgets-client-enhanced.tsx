@@ -92,6 +92,8 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [moveFromCategory, setMoveFromCategory] = useState<string>("");
   const [moveToCategory, setMoveToCategory] = useState<string>("");
@@ -190,23 +192,36 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   };
 
   const handleBudgetUpdate = async (categoryId: string, newAmount: number) => {
+    if (savingRef.current) return;
+    const category = data.categories.find(cat => cat.id === categoryId);
+    if (category?.budgeted === newAmount) { setEditingCategory(null); return; }
+    savingRef.current = true;
+    setSaving(true);
     try {
-      const result = await updateBudget(categoryId, month, year, newAmount, currency);
-      if (result.success) {
-        // Refresh data
-        const refreshed = await getBudgetsForMonth(month, year, currency);
-        if (refreshed.success && refreshed.data) {
-          setData(refreshed.data);
-        }
-        toast.success("Budget updated successfully");
+      const result = await updateBudget(categoryId, month, year, newAmount, currency, false);
+      if (!result.success) { toast.error(result.error || "Failed to update budget"); return; }
+      const refreshed = await getBudgetsForMonth(month, year, currency);
+      if (refreshed.success && refreshed.data) {
+        setData(refreshed.data);
       } else {
-        toast.error(result.error || "Failed to update budget");
+        const delta = newAmount - (category?.budgeted ?? 0);
+        setData(previous => ({ ...previous,
+          categories: previous.categories.map(cat => cat.id === categoryId
+            ? { ...cat, budgeted: newAmount, budgetId: result.data?.id ?? category?.budgetId ?? null,
+                available: newAmount - cat.activity + cat.movesIn - cat.movesOut } : cat),
+          totals: { ...previous.totals, budgeted: previous.totals.budgeted + delta,
+            available: previous.totals.available + delta, leftToBudget: previous.totals.leftToBudget - delta }
+        }));
       }
+      setEditingCategory(null);
+      toast.success("Budget updated successfully");
     } catch (error) {
       console.error("Failed to update budget:", error);
       toast.error("Failed to update budget");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
-    setEditingCategory(null);
   };
 
   const handleMoveMoney = async () => {
@@ -263,18 +278,19 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   };
 
   const startEditing = (categoryId: string, currentValue: number) => {
+    if (savingRef.current) return;
     setEditingCategory(categoryId);
     setEditValue(currentValue.toString());
     // Focus the input after state update
     setTimeout(() => {
-      editInputRef.current?.focus();
+      editInputRef.current?.focus({ preventScroll: true });
       editInputRef.current?.select();
     }, 0);
   };
 
   const saveEdit = (categoryId: string) => {
     const newAmount = parseFloat(editValue);
-    if (!isNaN(newAmount) && newAmount >= 0) {
+    if (Number.isFinite(newAmount) && newAmount >= 0) {
       handleBudgetUpdate(categoryId, newAmount);
     } else {
       toast.error("Please enter a valid amount");
@@ -676,6 +692,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                                         type="number"
                                         step="0.01"
                                         min="0"
+                                        disabled={saving}
                                         value={editValue}
                                         onChange={(e) => setEditValue(e.target.value)}
                                         onBlur={() => handleBlur(category.id)}
@@ -694,9 +711,13 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                                       <Button
                                         size="sm"
                                         variant="ghost"
+                                        type="button"
+                                        disabled={saving}
+                                        aria-label={`${ppT("Edit")} ${category.name}`}
+                                        className="h-10 w-10 border bg-muted/40"
                                         onClick={() => startEditing(category.id, category.budgeted)}
                                       >
-                                        <Edit className="h-3 w-3" />
+                                        <Edit aria-hidden="true" className="h-4 w-4 text-teal-700 dark:text-teal-400" />
                                       </Button>
                                       {category.budgeted > 0 && (
                                         <Button

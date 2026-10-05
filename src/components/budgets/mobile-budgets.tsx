@@ -28,7 +28,7 @@ import {
   Settings,
   ArrowRightLeft
 } from "lucide-react";
-import { updateBudget } from "@/lib/actions/budget-actions";
+import { updateBudget, getBudgetsForMonth } from "@/lib/actions/budget-actions";
 import { useRouter } from "next/navigation";
 import "@/styles/mobile-budgets.css";
 
@@ -77,6 +77,8 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const editInputRef = useRef<HTMLInputElement>(null);
 
@@ -141,9 +143,10 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
   };
 
   const startEditing = (categoryId: string, currentValue: number) => {
+    if (savingRef.current) return;
     setEditingCategory(categoryId);
     setEditValue(currentValue.toString());
-    setTimeout(() => editInputRef.current?.focus(), 0);
+    setTimeout(() => { editInputRef.current?.focus({ preventScroll: true }); editInputRef.current?.select(); }, 0);
   };
 
   const handleBlur = async (categoryId: string) => {
@@ -154,6 +157,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
 
   const handleKeyDown = (e: React.KeyboardEvent, categoryId: string) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       saveBudget(categoryId);
     } else if (e.key === 'Escape') {
       setEditingCategory(null);
@@ -162,33 +166,47 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
   };
 
   const saveBudget = async (categoryId: string) => {
+    if (savingRef.current) return;
+    const newValue = parseFloat(editValue);
+    if (!Number.isFinite(newValue) || newValue < 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+    const category = data.categories.find(cat => cat.id === categoryId);
+    if (category?.budgeted === newValue) {
+      setEditingCategory(null);
+      return;
+    }
+    savingRef.current = true;
+    setSaving(true);
     try {
-      const newValue = parseFloat(editValue);
-      if (isNaN(newValue) || newValue < 0) {
-        toast.error("Please enter a valid positive number");
+      const result = await updateBudget(categoryId, month, year, newValue, currency, false);
+      if (!result.success) {
+        toast.error(result.error || "Failed to update budget");
         return;
       }
-
-      await updateBudget(categoryId, month, year, newValue, currency);
-      
-      // Update local state immediately for better UX
-      if (onDataUpdate) {
-        onDataUpdate({
-          ...data,
-          categories: data.categories.map((cat: BudgetCategory) =>
-            cat.id === categoryId
-              ? { ...cat, budgeted: newValue, available: newValue - cat.activity }
-              : cat
-          )
+      const refreshed = await getBudgetsForMonth(month, year, currency);
+      if (refreshed.success && refreshed.data) {
+        onDataUpdate?.(refreshed.data);
+      } else {
+        // Keep the successful save visible even if the subsequent read fails.
+        const delta = newValue - (category?.budgeted ?? 0);
+        onDataUpdate?.({ ...data,
+          categories: data.categories.map(cat => cat.id === categoryId
+            ? { ...cat, budgeted: newValue, budgetId: result.data?.id ?? category?.budgetId ?? null,
+                available: newValue - cat.activity + cat.movesIn - cat.movesOut } : cat),
+          totals: { ...data.totals, budgeted: data.totals.budgeted + delta,
+            available: data.totals.available + delta, leftToBudget: data.totals.leftToBudget - delta }
         });
       }
-
-      toast.success("Budget updated successfully");
-    } catch (error) {
-      toast.error("Failed to update budget");
-    } finally {
       setEditingCategory(null);
       setEditValue("");
+      toast.success("Budget updated successfully");
+    } catch {
+      toast.error("Failed to update budget");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -366,6 +384,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                               type="number"
                               step="0.01"
                               min="0"
+                              disabled={saving}
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
                               onBlur={() => handleBlur(category.id)}
@@ -374,11 +393,14 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                             />
                           ) : (
                             <button
+                              type="button"
+                              disabled={saving}
+                              aria-label={`${ppT("Edit")} ${category.name}`}
                               onClick={() => startEditing(category.id, category.budgeted)}
-                              className="flex min-h-11 items-center gap-1 hover:text-foreground transition-colors"
+                              className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                             >
                               <span>{formatCurrency(category.budgeted)}</span>
-                              <Edit className="h-3 w-3 opacity-60" />
+                              <Edit aria-hidden="true" className="h-4 w-4 shrink-0 text-teal-700 dark:text-teal-400" />
                             </button>
                           )}
                         </div>
