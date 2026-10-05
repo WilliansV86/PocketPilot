@@ -362,10 +362,10 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             <CollapsibleContent className="mt-3 ml-2 space-y-2">
               {categories.map((category) => (
                 <Card key={category.id} className="min-w-0 gap-0 py-0 border-l-4" style={{ borderLeftColor: category.color }}>
-                  <CardContent className="p-3">
+                  <CardContent className="px-3 py-2.5">
                     <div className="space-y-2">
                       {/* Category Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                         <div className="flex min-w-0 items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full flex-shrink-0"
@@ -374,15 +374,19 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                           <span className="min-w-0 break-words font-medium">{category.name}</span>
                         </div>
                         
-                        <div className={`text-lg font-bold ${getAvailableColor(category.available)}`}>
-                          {formatCurrency(category.available)}
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground"><I18nText text={"Available"}/></div>
+                          <div className={`text-base font-semibold tabular-nums ${getAvailableColor(category.available)}`}>
+                            {formatCurrency(category.available)}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Budgeted • Activity */}
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{""}<I18nText text={"Budgeted"}/>{""}</span>
-                        <div className="flex items-center gap-2">
+                      {/* Budgeted and Activity share one row to keep cards compact. */}
+                      <div className="grid grid-cols-2 items-start gap-3 text-sm">
+                        <div className="min-w-0">
+                          <div className="mb-1 text-xs text-muted-foreground"><I18nText text={"Budgeted"}/></div>
+                          <div className="flex min-w-0 items-center gap-2">
                           {editingCategory === category.id ? (
                             <Input
                               ref={editInputRef}
@@ -394,7 +398,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                               onChange={(e) => setEditValue(e.target.value)}
                               onBlur={() => handleBlur(category.id)}
                               onKeyDown={(e) => handleKeyDown(e, category.id)}
-                              className="w-24 h-11"
+                              className="w-28 max-w-full h-11"
                             />
                           ) : (
                             <button
@@ -402,25 +406,27 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
                               disabled={saving}
                               aria-label={`${ppT("Edit")} ${category.name}`}
                               onClick={() => startEditing(category.id, category.budgeted)}
-                              className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                              className="inline-flex max-w-full min-h-11 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                             >
-                              <span>{formatCurrency(category.budgeted)}</span>
+                              <span className="min-w-0 break-all tabular-nums">{formatCurrency(category.budgeted)}</span>
                               <Edit aria-hidden="true" className="h-4 w-4 shrink-0 text-teal-700 dark:text-teal-400" />
                             </button>
                           )}
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{""}<I18nText text={"Activity"}/>{""}</span>
-                        <span>{formatCurrency(category.activity)}</span>
+                        <div className="min-w-0 text-right">
+                          <div className="mb-1 text-xs text-muted-foreground"><I18nText text={"Activity"}/></div>
+                          <div className="flex min-h-11 items-center justify-end break-all font-medium tabular-nums text-muted-foreground">
+                            {formatCurrency(category.activity)}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Progress Bar */}
                       <div className="space-y-1">
                         <ProgressBar
                           value={category.budgeted > 0 ? (category.activity / category.budgeted) * 100 : 0}
-                          className="h-2"
+                          className="h-1.5"
                           variant={category.activity > category.budgeted ? "danger" : category.budgeted > 0 && category.activity / category.budgeted >= 0.8 ? "warning" : "success"}
                           animated={false}
                         />
