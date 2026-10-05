@@ -338,6 +338,16 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
     return "text-gray-600";
   };
 
+  const getGroupHeaderStyle = (group: string) => {
+    switch (group) {
+      case "NEEDS": return "border-blue-300 border-l-blue-500 bg-blue-50 dark:border-blue-800 dark:border-l-blue-400 dark:bg-blue-950/40";
+      case "WANTS": return "border-purple-300 border-l-purple-500 bg-purple-50 dark:border-purple-800 dark:border-l-purple-400 dark:bg-purple-950/40";
+      case "SAVINGS": return "border-teal-300 border-l-teal-500 bg-teal-50 dark:border-teal-800 dark:border-l-teal-400 dark:bg-teal-950/40";
+      case "DEBT": return "border-red-300 border-l-red-500 bg-red-50 dark:border-red-800 dark:border-l-red-400 dark:bg-red-950/40";
+      default: return "border-slate-300 border-l-slate-500 bg-slate-50 dark:border-slate-700 dark:border-l-slate-400 dark:bg-slate-900/60";
+    }
+  };
+
   const getGroupColor = (group: string) => {
     switch(group) {
       case "NEEDS": return "bg-blue-100 text-blue-800";
@@ -635,9 +645,9 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                       onOpenChange={() => toggleGroup(group)}
                     >
                       <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                        <div className={`flex items-center justify-between p-4 border border-l-4 rounded-lg cursor-pointer shadow-sm transition-colors hover:brightness-95 dark:hover:brightness-110 ${getGroupHeaderStyle(group)}`}>
                           <div className="flex items-center space-x-4">
-                            <Badge variant="outline" className={getGroupColor(group)}>
+                            <Badge variant="outline" className={`${getGroupColor(group)} px-3 py-1 text-base font-bold tracking-wide`}>
                               {group}
                             </Badge>
                             <span className="font-medium">{categories.length}{" "}<I18nText text={"categories"}/>{""}</span>
@@ -666,7 +676,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                       </CollapsibleTrigger>
                       
                       <CollapsibleContent>
-                        <div className="ml-4 space-y-2">
+                        <div className="mt-3 ml-4 space-y-2">
                           {categories.map((category) => (
                             <div key={category.id} className="flex items-center justify-between gap-3 p-2.5 border rounded-lg bg-background">
                               <div className="flex items-center space-x-4">

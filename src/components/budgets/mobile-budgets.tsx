@@ -108,6 +108,16 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
     available: categories.reduce((sum, cat) => sum + cat.available, 0),
   }));
 
+  const getGroupHeaderStyle = (group: string) => {
+    switch (group) {
+      case "NEEDS": return "border-blue-300 border-l-blue-500 bg-blue-50 dark:border-blue-800 dark:border-l-blue-400 dark:bg-blue-950/40";
+      case "WANTS": return "border-purple-300 border-l-purple-500 bg-purple-50 dark:border-purple-800 dark:border-l-purple-400 dark:bg-purple-950/40";
+      case "SAVINGS": return "border-teal-300 border-l-teal-500 bg-teal-50 dark:border-teal-800 dark:border-l-teal-400 dark:bg-teal-950/40";
+      case "DEBT": return "border-red-300 border-l-red-500 bg-red-50 dark:border-red-800 dark:border-l-red-400 dark:bg-red-950/40";
+      default: return "border-slate-300 border-l-slate-500 bg-slate-50 dark:border-slate-700 dark:border-l-slate-400 dark:bg-slate-900/60";
+    }
+  };
+
   const getGroupColor = (group: string) => {
     switch (group) {
       case 'NEEDS': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -327,11 +337,11 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
             onOpenChange={() => toggleGroup(group)}
           >
             <CollapsibleTrigger asChild>
-              <Card className="gap-0 py-0 cursor-pointer hover:bg-muted/50 transition-colors">
+              <Card className={`gap-0 py-0 cursor-pointer border-l-4 shadow-sm transition-colors hover:brightness-95 dark:hover:brightness-110 ${getGroupHeaderStyle(group)}`}>
                 <CardContent className="p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
-                      <Badge variant="outline" className={getGroupColor(group)}>
+                      <Badge variant="outline" className={`${getGroupColor(group)} px-3 py-1 text-sm font-bold tracking-wide`}>
                         {group}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
@@ -354,7 +364,7 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
               </Card>
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="space-y-2">
+            <CollapsibleContent className="mt-3 ml-2 space-y-2">
               {categories.map((category) => (
                 <Card key={category.id} className="min-w-0 gap-0 py-0 border-l-4" style={{ borderLeftColor: category.color }}>
                   <CardContent className="p-3">
