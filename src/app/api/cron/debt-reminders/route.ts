@@ -1,3 +1,4 @@
+import { translate } from "@/lib/i18n/translate";
 import { captureNetWorth } from "@/lib/net-worth-history";
 import { runRecurring } from "@/lib/recurring-runner";
 import { formatMoney } from "@/lib/currency";
@@ -97,6 +98,8 @@ export async function GET(request: NextRequest) {
     const today = new Date(part("year"), part("month") - 1, part("day"), 12);
     const user = await prisma.user.findUnique({ where: { id: "user-1" } });
     if (!user) throw new Error("REMINDER_OWNER_NOT_FOUND");
+    const language = user.language === "es" ? "es" : "en";
+    const t = (text: string) => translate(text, language);
     const debts = await prisma.debt.findMany({ where: { userId: user.id, isClosed: false } });
     const sources = debts.map(debt => {
       const cycle = debt.dueDayOfMonth ? paymentCycleKey(debt.dueDayOfMonth, today) : null;
@@ -126,13 +129,13 @@ export async function GET(request: NextRequest) {
         ON CONFLICT ("userId", "debtId", "dueDate") DO NOTHING RETURNING "id"`;
       if (!claim.length) { skipped++; continue; }
       const amount = reminder.amount && reminder.amount > 0
-        ? formatMoney(reminder.amount, reminder.currency) : "Check your statement for the minimum due";
-      const text = `${reminder.name}: payment due in 2 days, on ${reminder.date}. ${amount}. ${reminder.detail}`;
+        ? formatMoney(reminder.amount, reminder.currency) : t("Check your statement for the minimum due");
+      const text = `${reminder.name}: ${t("Payment due in 2 days")}. ${t("Due date:")} ${reminder.date}. ${amount}. ${t(reminder.detail)}`;
       try {
         const result = await settings.transporter.sendMail({
           from: settings.from, to: settings.to,
-          subject: `PocketPilot: ${reminder.name} payment due in 2 days`, text,
-          html: `<div style="font-family:Arial,sans-serif;max-width:600px"><h2>Payment due in 2 days</h2><p><strong>${escapeHtml(reminder.name)}</strong></p><p>Due date: ${escapeHtml(reminder.date)}</p><p>${escapeHtml(amount)}</p><p>${escapeHtml(reminder.detail)}</p><p>Open PocketPilot to review or record your payment.</p></div>`,
+          subject: `PocketPilot: ${reminder.name} · ${t("Payment due in 2 days")}`, text,
+          html: `<div style="font-family:Arial,sans-serif;max-width:600px"><h2>${escapeHtml(t("Payment due in 2 days"))}</h2><p><strong>${escapeHtml(reminder.name)}</strong></p><p>${escapeHtml(t("Due date:"))} ${escapeHtml(reminder.date)}</p><p>${escapeHtml(amount)}</p><p>${escapeHtml(t(reminder.detail))}</p><p>${escapeHtml(t("Open PocketPilot to review or record your payment."))}</p></div>`,
         });
         if (!result.accepted?.length) throw new Error("EMAIL_NOT_ACCEPTED");
         await prisma.$executeRaw`

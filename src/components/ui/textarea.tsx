@@ -1,8 +1,11 @@
+"use client";
+import { useLanguage } from "@/components/language-provider";
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+  const { t } = useLanguage();
   return (
     <textarea
       data-slot="textarea"
@@ -11,6 +14,8 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
         className
       )}
       {...props}
+      placeholder={typeof props.placeholder === "string" ? t(props.placeholder) : props.placeholder}
+      aria-label={props["aria-label"] ? t(props["aria-label"]) : undefined}
     />
   )
 }

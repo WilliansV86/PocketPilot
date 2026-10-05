@@ -1,4 +1,7 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
 import { IncomePlan } from "./income-plan";
 import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 
@@ -34,7 +37,7 @@ import {
   Filter
 } from "lucide-react";
 import { getBudgetsForMonth, updateBudget, moveBudgetMoney, deleteBudget, copyMonthlyBudget } from "@/lib/actions/budget-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { MobileBudgets } from "./mobile-budgets";
 
 type BudgetCategory = {
@@ -73,6 +76,8 @@ interface BudgetsClientProps {
 }
 
 export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }: BudgetsClientProps) {
+ const { t: ppT } = useLanguage();
+
   const [currency, setCurrency] = usePreferredCurrency("budgets");
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
   const router = useRouter();
@@ -356,21 +361,19 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
     <div className="w-full space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
       <CurrencyPicker remember preferenceKey="budgets" value={currency} disabled={loading || editingCategory !== null} onChange={value => { setLoading(true); setCurrency(value); }} />
-      <Button className="w-full md:w-auto" variant="outline" onClick={openCopy} disabled={loading || editingCategory !== null}>Copy budget to another month</Button>
+      <Button className="w-full md:w-auto" variant="outline" onClick={openCopy} disabled={loading || editingCategory !== null}>{""}<I18nText text={"Copy budget to another month"}/>{""}</Button>
       </div>
       <Dialog open={copyOpen} onOpenChange={open => { if (!copying) setCopyOpen(open); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Copy monthly budget</DialogTitle>
-            <DialogDescription>Copy {year}-{month.padStart(2, "0")} planned amounts in {currency} to another month. You can edit the copied amounts afterward. Spending and money moves stay in their original month.</DialogDescription>
+            <DialogTitle>{""}<I18nText text={"Copy monthly budget"}/>{""}</DialogTitle>
+            <DialogDescription>{""}<I18nText text={"Copy"}/>{" "}{year}-{month.padStart(2, "0")}{" "}<I18nText text={"planned amounts in"}/>{" "}{currency}{" "}<I18nText text={"to another month. You can edit the copied amounts afterward. Spending and money moves stay in their original month."}/>{""}</DialogDescription>
           </DialogHeader>
-          <Label htmlFor="copy-budget-month">Destination month</Label>
+          <Label htmlFor="copy-budget-month">{""}<I18nText text={"Destination month"}/>{""}</Label>
           <Input id="copy-budget-month" type="month" value={copyTarget} onChange={event => setCopyTarget(event.target.value)} disabled={copying} />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={replaceExisting} onChange={event => setReplaceExisting(event.target.checked)} disabled={copying} />
-            Replace existing amounts for matching categories
-          </label>
-          <Button onClick={handleCopy} disabled={copying || !copyTarget}>{copying ? "Copying..." : "Copy budget"}</Button>
+            <input type="checkbox" checked={replaceExisting} onChange={event => setReplaceExisting(event.target.checked)} disabled={copying} />{" "}<I18nText text={"Replace existing amounts for matching categories"}/>{" "}</label>
+          <Button onClick={handleCopy} disabled={copying || !copyTarget}><I18nText text={copying ? "Copying..." : "Copy budget"}/></Button>
         </DialogContent>
       </Dialog>
       <IncomePlan month={`${year}-${month.padStart(2,"0")}`} currency={currency} received={data.totals.income} budgeted={data.totals.budgeted} loadingBudget={loading} />
@@ -392,29 +395,27 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       <div className="hidden md:block">
       {/* Month Selector */}
       <div className="flex items-center justify-between">
-        <h1 className={TYPOGRAPHY.PAGE_TITLE}>Budgets</h1>
+        <h1 className={TYPOGRAPHY.PAGE_TITLE}>{""}<I18nText text={"Budgets"}/>{""}</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')} className={BUTTON.ICON_SPACING}>
-            <ChevronUp className="h-4 w-4 rotate-270" />
-            Previous
-          </Button>
+            <ChevronUp className="h-4 w-4 rotate-270" />{" "}<I18nText text={"Previous"}/>{" "}</Button>
           
           <div className="flex items-center gap-2">
             <Select value={month} onValueChange={setMonth}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Month" />
+                <SelectValue placeholder={ppT("Month")} />
               </SelectTrigger>
               <SelectContent>
                 {months.map((monthName, index) => (
                   <SelectItem key={monthName} value={(index + 1).toString()}>
-                    {monthName}
+                    <I18nText text={monthName}/>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={year.toString()} onValueChange={(value) => setYear(parseInt(value))}>
               <SelectTrigger className="w-[80px]">
-                <SelectValue placeholder="Year" />
+                <SelectValue placeholder={ppT("Year")} />
               </SelectTrigger>
               <SelectContent>
                 {years.map((yearValue) => (
@@ -426,9 +427,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
             </Select>
           </div>
           
-          <Button variant="outline" size="sm" onClick={() => navigateMonth('next')} className={BUTTON.ICON_SPACING}>
-            Next
-            <ChevronDown className="h-4 w-4 rotate-90" />
+          <Button variant="outline" size="sm" onClick={() => navigateMonth('next')} className={BUTTON.ICON_SPACING}>{" "}<I18nText text={"Next"}/>{" "}<ChevronDown className="h-4 w-4 rotate-90" />
           </Button>
         </div>
       </div>
@@ -438,7 +437,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       <div className={LAYOUT.GRID.SUMMARY}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Income"}/>{""}</CardTitle>
             <ArrowDownUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -448,7 +447,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Expenses"}/>{""}</CardTitle>
             <ReceiptText className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -458,7 +457,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Total Budgeted</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Total Budgeted"}/>{""}</CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -468,7 +467,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Available</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Available"}/>{""}</CardTitle>
             <Wallet className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -480,7 +479,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-            <CardTitle className="text-sm font-medium">Left to Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Left to Budget"}/>{""}</CardTitle>
             <ArrowRightLeft className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -497,18 +496,13 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-orange-800">
-              <AlertCircle className="h-5 w-5" />
-              Uncategorized Expenses
-            </CardTitle>
-            <CardDescription className="text-orange-700">
-              You have {data.uncategorized.count} uncategorized transactions totaling {formatCurrency(data.uncategorized.total)}
+              <AlertCircle className="h-5 w-5" />{" "}<I18nText text={"Uncategorized Expenses"}/>{" "}</CardTitle>
+            <CardDescription className="text-orange-700">{" "}<I18nText text={"You have"}/>{" "}{data.uncategorized.count}{" "}<I18nText text={"uncategorized transactions totaling"}/>{" "}{formatCurrency(data.uncategorized.total)}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0">
             <Button onClick={handleFixUncategorized} className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Fix Now
-            </Button>
+              <Filter className="h-4 w-4" />{" "}<I18nText text={"Fix Now"}/>{" "}</Button>
           </CardContent>
         </Card>
       )}
@@ -518,38 +512,30 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
         <div className="flex items-center space-x-2">
           <Button asChild variant="outline">
             <a href={`/categories/new?returnTo=${encodeURIComponent(`/budgets?month=${month}&year=${year}`)}`} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </a>
+              <Plus className="h-4 w-4" />{" "}<I18nText text={"Add Category"}/>{" "}</a>
           </Button>
           <Button asChild variant="outline">
             <a href="/categories" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Manage Categories
-            </a>
+              <Settings className="h-4 w-4" />{" "}<I18nText text={"Manage Categories"}/>{" "}</a>
           </Button>
         </div>
         
         <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
-              <ArrowRightLeft className="h-4 w-4" />
-              Move Money
-            </Button>
+              <ArrowRightLeft className="h-4 w-4" />{" "}<I18nText text={"Move Money"}/>{" "}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Move Money Between Categories</DialogTitle>
-              <DialogDescription>
-                Transfer budget amount from one category to another (same month only)
-              </DialogDescription>
+              <DialogTitle>{""}<I18nText text={"Move Money Between Categories"}/>{""}</DialogTitle>
+              <DialogDescription>{" "}<I18nText text={"Transfer budget amount from one category to another (same month only)"}/>{" "}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="from-category">From Category</Label>
+                <Label htmlFor="from-category">{""}<I18nText text={"From Category"}/>{""}</Label>
                 <Select value={moveFromCategory} onValueChange={setMoveFromCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select source category" />
+                    <SelectValue placeholder={ppT("Select source category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {data.categories
@@ -563,10 +549,10 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                 </Select>
               </div>
               <div>
-                <Label htmlFor="to-category">To Category</Label>
+                <Label htmlFor="to-category">{""}<I18nText text={"To Category"}/>{""}</Label>
                 <Select value={moveToCategory} onValueChange={setMoveToCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select destination category" />
+                    <SelectValue placeholder={ppT("Select destination category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {data.categories
@@ -580,24 +566,20 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                 </Select>
               </div>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">{""}<I18nText text={"Amount"}/>{""}</Label>
                 <Input
                   id="amount"
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0.00"
+                  placeholder={ppT("0.00")}
                   value={moveAmount}
                   onChange={(e) => setMoveAmount(e.target.value)}
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleMoveMoney}>
-                  Move Money
-                </Button>
+                <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
+                <Button onClick={handleMoveMoney}>{" "}<I18nText text={"Move Money"}/>{" "}</Button>
               </div>
             </div>
           </DialogContent>
@@ -608,24 +590,20 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Category Budgets</CardTitle>
-            <CardDescription>
-              Set and track your monthly budget by category (excluding income categories)
-            </CardDescription>
+            <CardTitle>{""}<I18nText text={"Category Budgets"}/>{""}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Set and track your monthly budget by category (excluding income categories)"}/>{" "}</CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0">
             {loading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="text-center py-8">{""}<I18nText text={"Loading..."}/>{""}</div>
             ) : data.categories.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">No Categories Found</h3>
-                <p className="text-muted-foreground mb-4">Create categories first to start budgeting.</p>
+                <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"No Categories Found"}/>{""}</h3>
+                <p className="text-muted-foreground mb-4">{""}<I18nText text={"Create categories first to start budgeting."}/>{""}</p>
                 <Button asChild>
                   <a href={`/categories/new?returnTo=${encodeURIComponent(`/budgets?month=${month}&year=${year}`)}`} className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Categories
-                  </a>
+                    <Plus className="h-4 w-4" />{" "}<I18nText text={"Create Categories"}/>{" "}</a>
                 </Button>
               </div>
             ) : (
@@ -646,20 +624,20 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                             <Badge variant="outline" className={getGroupColor(group)}>
                               {group}
                             </Badge>
-                            <span className="font-medium">{categories.length} categories</span>
+                            <span className="font-medium">{categories.length}{" "}<I18nText text={"categories"}/>{""}</span>
                           </div>
                           
                           <div className="flex items-center space-x-6">
                             <div className="text-right">
-                              <div className="text-sm text-muted-foreground">Budgeted</div>
+                              <div className="text-sm text-muted-foreground">{""}<I18nText text={"Budgeted"}/>{""}</div>
                               <span className="font-medium">{formatCurrency(groupTotal?.budgeted || 0)}</span>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm text-muted-foreground">Activity</div>
+                              <div className="text-sm text-muted-foreground">{""}<I18nText text={"Activity"}/>{""}</div>
                               <span className="font-medium">{formatCurrency(groupTotal?.activity || 0)}</span>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm text-muted-foreground">Available</div>
+                              <div className="text-sm text-muted-foreground">{""}<I18nText text={"Available"}/>{""}</div>
                               <span className={`font-medium ${getAvailableColor(groupTotal?.available || 0)}`}>
                                 {formatCurrency(groupTotal?.available || 0)}
                               </span>
@@ -690,7 +668,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                               
                               <div className="flex items-center space-x-6">
                                 <div className="text-center">
-                                  <div className="text-sm text-muted-foreground">Budgeted</div>
+                                  <div className="text-sm text-muted-foreground">{""}<I18nText text={"Budgeted"}/>{""}</div>
                                   {editingCategory === category.id ? (
                                     <div className="flex items-center space-x-2">
                                       <Input
@@ -734,12 +712,12 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
                                 </div>
                                 
                                 <div className="text-center">
-                                  <div className="text-sm text-muted-foreground">Activity</div>
+                                  <div className="text-sm text-muted-foreground">{""}<I18nText text={"Activity"}/>{""}</div>
                                   <span className="font-medium">{formatCurrency(category.activity)}</span>
                                 </div>
                                 
                                 <div className="text-center">
-                                  <div className="text-sm text-muted-foreground">Available</div>
+                                  <div className="text-sm text-muted-foreground">{""}<I18nText text={"Available"}/>{""}</div>
                                   <span className={`font-medium ${getAvailableColor(category.available)}`}>
                                     {formatCurrency(category.available)}
                                   </span>
@@ -747,7 +725,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
 
                                 {(category.movesIn > 0 || category.movesOut > 0) && (
                                   <div className="text-center">
-                                    <div className="text-sm text-muted-foreground">Moves</div>
+                                    <div className="text-sm text-muted-foreground">{""}<I18nText text={"Moves"}/>{""}</div>
                                     <div className="flex items-center space-x-1">
                                       {category.movesIn > 0 && (
                                         <span className="text-green-600 text-xs">+{formatCurrency(category.movesIn)}</span>

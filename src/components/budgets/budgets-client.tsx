@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowDownUp, Wallet, ReceiptText, Target, ArrowRightLeft, Edit, Trash2, Plus, Settings } from "lucide-react";
 import { getBudgetsForMonth, updateBudget, moveBudgetMoney, deleteBudget } from "@/lib/actions/budget-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 type BudgetCategory = {
   id: string;
@@ -44,6 +47,8 @@ interface BudgetsClientProps {
 }
 
 export function BudgetsClient({ initialData, initialMonth, initialYear }: BudgetsClientProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [data, setData] = useState<BudgetData>(initialData);
@@ -206,23 +211,23 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Budgets</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Budgets"}/>{""}</h1>
         <div className="flex items-center space-x-2">
           <Select value={month} onValueChange={setMonth}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={ppT("Month")} />
             </SelectTrigger>
             <SelectContent>
               {months.map((monthName, index) => (
                 <SelectItem key={monthName} value={(index + 1).toString()}>
-                  {monthName}
+                  <I18nText text={monthName}/>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={year.toString()} onValueChange={(value) => setYear(parseInt(value))}>
             <SelectTrigger className="w-[80px]">
-              <SelectValue placeholder="Year" />
+              <SelectValue placeholder={ppT("Year")} />
             </SelectTrigger>
             <SelectContent>
               {years.map((yearValue) => (
@@ -239,7 +244,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Income"}/>{""}</CardTitle>
             <ArrowDownUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -249,7 +254,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Expenses"}/>{""}</CardTitle>
             <ReceiptText className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -259,7 +264,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Budgeted</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Total Budgeted"}/>{""}</CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -269,7 +274,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Available</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Available"}/>{""}</CardTitle>
             <Wallet className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -281,7 +286,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Left to Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Left to Budget"}/>{""}</CardTitle>
             <ArrowRightLeft className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -297,38 +302,30 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
         <div className="flex items-center space-x-2">
           <Button asChild variant="outline">
             <a href="/categories/new" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </a>
+              <Plus className="h-4 w-4" />{" "}<I18nText text={"Add Category"}/>{" "}</a>
           </Button>
           <Button asChild variant="outline">
             <a href="/categories" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Manage Categories
-            </a>
+              <Settings className="h-4 w-4" />{" "}<I18nText text={"Manage Categories"}/>{" "}</a>
           </Button>
         </div>
         
         <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
-              <ArrowRightLeft className="h-4 w-4" />
-              Move Money
-            </Button>
+              <ArrowRightLeft className="h-4 w-4" />{" "}<I18nText text={"Move Money"}/>{" "}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Move Money Between Categories</DialogTitle>
-              <DialogDescription>
-                Transfer budget amount from one category to another
-              </DialogDescription>
+              <DialogTitle>{""}<I18nText text={"Move Money Between Categories"}/>{""}</DialogTitle>
+              <DialogDescription>{" "}<I18nText text={"Transfer budget amount from one category to another"}/>{" "}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="from-category">From Category</Label>
+                <Label htmlFor="from-category">{""}<I18nText text={"From Category"}/>{""}</Label>
                 <Select value={moveFromCategory} onValueChange={setMoveFromCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select source category" />
+                    <SelectValue placeholder={ppT("Select source category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {data.categories
@@ -342,10 +339,10 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
                 </Select>
               </div>
               <div>
-                <Label htmlFor="to-category">To Category</Label>
+                <Label htmlFor="to-category">{""}<I18nText text={"To Category"}/>{""}</Label>
                 <Select value={moveToCategory} onValueChange={setMoveToCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select destination category" />
+                    <SelectValue placeholder={ppT("Select destination category")} />
                   </SelectTrigger>
                   <SelectContent>
                     {data.categories
@@ -359,24 +356,20 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
                 </Select>
               </div>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">{""}<I18nText text={"Amount"}/>{""}</Label>
                 <Input
                   id="amount"
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0.00"
+                  placeholder={ppT("0.00")}
                   value={moveAmount}
                   onChange={(e) => setMoveAmount(e.target.value)}
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleMoveMoney}>
-                  Move Money
-                </Button>
+                <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
+                <Button onClick={handleMoveMoney}>{" "}<I18nText text={"Move Money"}/>{" "}</Button>
               </div>
             </div>
           </DialogContent>
@@ -387,18 +380,14 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Category Budgets</CardTitle>
-            <CardDescription>
-              Set and track your monthly budget by category (excluding income categories)
-            </CardDescription>
+            <CardTitle>{""}<I18nText text={"Category Budgets"}/>{""}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Set and track your monthly budget by category (excluding income categories)"}/>{" "}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="text-center py-8">{""}<I18nText text={"Loading..."}/>{""}</div>
             ) : data.categories.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No categories found. Create some categories first.
-              </div>
+              <div className="text-center py-8 text-muted-foreground">{" "}<I18nText text={"No categories found. Create some categories first."}/>{" "}</div>
             ) : (
               <div className="space-y-4">
                 {data.categories.map((category) => (
@@ -418,7 +407,7 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
                     
                     <div className="flex items-center space-x-6">
                       <div className="text-center">
-                        <div className="text-sm text-muted-foreground">Budgeted</div>
+                        <div className="text-sm text-muted-foreground">{""}<I18nText text={"Budgeted"}/>{""}</div>
                         {editingCategory === category.id ? (
                           <div className="flex items-center space-x-2">
                             <Input
@@ -430,12 +419,8 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
                               className="w-24"
                               autoFocus
                             />
-                            <Button size="sm" onClick={() => saveEdit(category.id)}>
-                              Save
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={cancelEdit}>
-                              Cancel
-                            </Button>
+                            <Button size="sm" onClick={() => saveEdit(category.id)}>{" "}<I18nText text={"Save"}/>{" "}</Button>
+                            <Button size="sm" variant="outline" onClick={cancelEdit}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
                           </div>
                         ) : (
                           <div className="flex items-center space-x-2">
@@ -461,12 +446,12 @@ export function BudgetsClient({ initialData, initialMonth, initialYear }: Budget
                       </div>
                       
                       <div className="text-center">
-                        <div className="text-sm text-muted-foreground">Activity</div>
+                        <div className="text-sm text-muted-foreground">{""}<I18nText text={"Activity"}/>{""}</div>
                         <span className="font-medium">{formatCurrency(category.activity)}</span>
                       </div>
                       
                       <div className="text-center">
-                        <div className="text-sm text-muted-foreground">Available</div>
+                        <div className="text-sm text-muted-foreground">{""}<I18nText text={"Available"}/>{""}</div>
                         <span className={`font-medium ${getAvailableColor(category.available)}`}>
                           {formatCurrency(category.available)}
                         </span>

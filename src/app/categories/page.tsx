@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CategoriesTable } from "@/components/categories/categories-table";
@@ -19,12 +21,10 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
     <DashboardLayout>
       <div className="w-full space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className={TYPOGRAPHY.PAGE_TITLE}>Categories</h1>
+          <h1 className={TYPOGRAPHY.PAGE_TITLE}>{""}<I18nText text={"Categories"}/>{""}</h1>
           <Button asChild className={BUTTON.PRIMARY_ACTION}>
             <Link href="/categories/new">
-              <PlusCircle className="h-4 w-4" />
-              New Category
-            </Link>
+              <PlusCircle className="h-4 w-4" />{" "}<I18nText text={"New Category"}/>{" "}</Link>
           </Button>
         </div>
         

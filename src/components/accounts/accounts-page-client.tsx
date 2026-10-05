@@ -1,12 +1,14 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Eye, Edit, PlusCircle } from "lucide-react";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 interface AccountsPageClientProps {
   children: React.ReactNode;
@@ -73,20 +75,17 @@ export function AccountsPageClient({ children }: AccountsPageClientProps) {
               {deletedCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   <Eye className="h-3 w-3 mr-1" />
-                  {deletedCount} account{deletedCount > 1 ? 's' : ''} hidden (preview mode)
-                </Badge>
+                  {deletedCount}{" "}<I18nText text={"account"}/>{""}{deletedCount > 1 ? 's' : ''}{" "}<I18nText text={"hidden (preview mode)"}/>{" "}</Badge>
               )}
               {updatedCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   <Edit className="h-3 w-3 mr-1" />
-                  {updatedCount} account{updatedCount > 1 ? 's' : ''} updated (preview mode)
-                </Badge>
+                  {updatedCount}{" "}<I18nText text={"account"}/>{""}{updatedCount > 1 ? 's' : ''}{" "}<I18nText text={"updated (preview mode)"}/>{" "}</Badge>
               )}
               {newCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   <PlusCircle className="h-3 w-3 mr-1" />
-                  {newCount} account{newCount > 1 ? 's' : ''} created (preview mode)
-                </Badge>
+                  {newCount}{" "}<I18nText text={"account"}/>{""}{newCount > 1 ? 's' : ''}{" "}<I18nText text={"created (preview mode)"}/>{" "}</Badge>
               )}
             </div>
           )}
@@ -98,9 +97,7 @@ export function AccountsPageClient({ children }: AccountsPageClientProps) {
           disabled={isClearing || (deletedCount === 0 && updatedCount === 0 && newCount === 0)}
           className="text-xs"
         >
-          <RefreshCw className={`h-3 w-3 mr-1 ${isClearing ? 'animate-spin' : ''}`} />
-          Clear Preview Changes
-        </Button>
+          <RefreshCw className={`h-3 w-3 mr-1 ${isClearing ? 'animate-spin' : ''}`} />{" "}<I18nText text={"Clear Preview Changes"}/>{" "}</Button>
       </div>
     </div>
   );

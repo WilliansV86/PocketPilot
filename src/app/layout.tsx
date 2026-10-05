@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
+import { LanguageProvider } from "@/components/language-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -33,11 +34,12 @@ export default async function RootLayout({
   const { userId } = await auth();
   const user = userId ? await getCurrentUser() : null;
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={user?.language === "es" ? "es" : "en"} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
         <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/">
+        <LanguageProvider language={user?.language === "es" ? "es" : "en"}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -47,6 +49,7 @@ export default async function RootLayout({
           <AuthSessionBoundary legacyOwner={user?.id === "user-1"}>{children}</AuthSessionBoundary>
         </ThemeProvider>
         <Toaster position="bottom-right" />
+        </LanguageProvider>
         </ClerkProvider>
       </body>
     </html>

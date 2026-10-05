@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { MoneyOwedClient } from "./money-owed-client";
@@ -30,7 +32,7 @@ export default async function MoneyOwedPage() {
         <div className="container mx-auto py-6">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <h3 className="text-lg font-semibold mb-2">Error Loading Money Owed</h3>
+              <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"Error Loading Money Owed"}/>{""}</h3>
               <p className="text-muted-foreground text-center">
                 {error || "Unable to load your money owed records. Please try again later."}
               </p>

@@ -1,4 +1,5 @@
 "use client";
+import { I18nText } from "@/components/language-provider";
 
 import { 
   CreditCard, 
@@ -85,12 +86,12 @@ export function AccountTypeBadge({
           <IconComponent className={iconSizes[size]} />
         )}
         <span className="capitalize">
-          {type.replace('_', ' ').toLowerCase()}
+          <I18nText text={type.replace('_', ' ').toLowerCase()}/>
         </span>
       </div>
       {showDescription && (
         <span className="text-xs text-muted-foreground">
-          {config.description}
+          <I18nText text={config.description}/>
         </span>
       )}
     </div>

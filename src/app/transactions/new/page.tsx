@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { getCreditCardPaymentSources } from "@/lib/actions/transaction-actions";
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -18,13 +20,13 @@ export default async function NewTransactionPage() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Create New Transaction</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Create New Transaction"}/>{""}</h1>
       </div>
       
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Transaction Details</CardTitle>
+            <CardTitle>{""}<I18nText text={"Transaction Details"}/>{""}</CardTitle>
           </CardHeader>
           <CardContent>
             <TransactionForm 

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
 
 import { useState, useEffect } from "react";
@@ -40,7 +42,7 @@ import { deleteTransactionOptimized } from "@/lib/actions/transaction-actions-op
 import { formatCurrency, getAmountColorClass, getTransactionIcon } from "@/lib/format";
 import { getFinancialTypeColor, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
 import { TYPOGRAPHY, COMPONENTS, COLORS, ANIMATIONS } from "@/lib/theme/tokens";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { safeServerAction } from "@/lib/client-actions";
 
 // Transaction type definition matching our schema
@@ -200,10 +202,8 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   if (transactionsList.length === 0) {
     return (
       <div className="border rounded-lg p-8 text-center">
-        <h3 className="text-lg font-medium mb-2">No transactions found</h3>
-        <p className="text-muted-foreground">
-          No transactions yet
-        </p>
+        <h3 className="text-lg font-medium mb-2">{""}<I18nText text={"No transactions found"}/>{""}</h3>
+        <p className="text-muted-foreground">{" "}<I18nText text={"No transactions yet"}/>{" "}</p>
       </div>
     );
   }
@@ -213,11 +213,11 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr className="border-b">
-            <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Account</th>
-            <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
-            <th className="px-4 py-3 text-right text-sm font-medium">Amount</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Date"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Description"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Account"}/>{""}</th>
+            <th className="px-4 py-3 text-left text-sm font-medium">{""}<I18nText text={"Type"}/>{""}</th>
+            <th className="px-4 py-3 text-right text-sm font-medium">{""}<I18nText text={"Amount"}/>{""}</th>
           </tr>
         </thead>
         <tbody>
@@ -244,7 +244,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${getTransactionColorClass(transaction.type)}`}>
                     {getTransactionIconComponent(transaction.type)}
                   </span>
-                  {transaction.type}
+                  <I18nText text={transaction.type}/>
                 </div>
               </td>
               <td className="px-4 py-3 text-sm text-right font-semibold">

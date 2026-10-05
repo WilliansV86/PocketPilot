@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -24,13 +26,13 @@ export default async function EditCategoryGroupPage({ params }: EditCategoryGrou
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Edit Category Group</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Edit Category Group"}/>{""}</h1>
       </div>
       
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Group Details</CardTitle>
+            <CardTitle>{""}<I18nText text={"Group Details"}/>{""}</CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryGroupForm 

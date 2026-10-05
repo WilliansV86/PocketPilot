@@ -1,5 +1,6 @@
 "use client"
 
+import { useLanguage } from "@/components/language-provider";
 import * as React from "react"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
@@ -21,7 +22,8 @@ function SelectGroup({
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
-  return <SelectPrimitive.Value data-slot="select-value" {...props} />
+  const { t } = useLanguage();
+  return <SelectPrimitive.Value data-slot="select-value" {...props} placeholder={typeof props.placeholder === "string" ? t(props.placeholder) : props.placeholder} />
 }
 
 function SelectTrigger({

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState } from "react";
 import Link from "next/link";
 import { 
@@ -84,18 +86,16 @@ export function CategoryGroupsTable({ categoryGroups }: CategoryGroupsTableProps
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Categories</TableHead>
+            <TableHead>{""}<I18nText text={"Name"}/>{""}</TableHead>
+            <TableHead>{""}<I18nText text={"Type"}/>{""}</TableHead>
+            <TableHead>{""}<I18nText text={"Categories"}/>{""}</TableHead>
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categoryGroups.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
-                No category groups found. Create your first category group to get started.
-              </TableCell>
+              <TableCell colSpan={4} className="h-24 text-center">{" "}<I18nText text={"No category groups found. Create your first category group to get started."}/>{" "}</TableCell>
             </TableRow>
           ) : (
             categoryGroups.map((group) => (
@@ -121,25 +121,23 @@ export function CategoryGroupsTable({ categoryGroups }: CategoryGroupsTableProps
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">{""}<I18nText text={"Open menu"}/>{""}</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>{""}<I18nText text={"Actions"}/>{""}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href={`/categories/groups/${group.id}/edit`}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </Link>
+                          <Edit className="mr-2 h-4 w-4" />{" "}<I18nText text={"Edit"}/>{" "}</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDelete(group.id)}
                         disabled={isDeleting === group.id || (group.categories && group.categories.length > 0)}
                         className={`${!(group.categories && group.categories.length > 0) ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "text-gray-400"}`}
                       >
-                        <Trash className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
+                        <Trash className="mr-2 h-4 w-4" />{" "}<I18nText text={"Delete"}/>{" "}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

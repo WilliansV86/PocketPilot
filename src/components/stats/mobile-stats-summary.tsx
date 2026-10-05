@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatMoney } from "@/lib/currency";
@@ -60,7 +62,7 @@ export function MobileStatsSummary({ currency = "USD", monthlyCashflow, category
                 <ArrowDownRight className="h-3 w-3 text-green-600" />
               )}
             </div>
-            <div className="text-xs text-green-700 font-medium">Income</div>
+            <div className="text-xs text-green-700 font-medium">{""}<I18nText text={"Income"}/>{""}</div>
             <div className="text-lg font-bold text-green-800">
               {formatCurrency(totalIncome)}
             </div>
@@ -83,7 +85,7 @@ export function MobileStatsSummary({ currency = "USD", monthlyCashflow, category
                 <ArrowUpRight className="h-3 w-3 text-red-600" />
               )}
             </div>
-            <div className="text-xs text-red-700 font-medium">Expenses</div>
+            <div className="text-xs text-red-700 font-medium">{""}<I18nText text={"Expenses"}/>{""}</div>
             <div className="text-lg font-bold text-red-800">
               {formatCurrency(totalExpenses)}
             </div>
@@ -102,7 +104,7 @@ export function MobileStatsSummary({ currency = "USD", monthlyCashflow, category
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">Net Cashflow</span>
+              <span className="text-sm font-medium text-blue-700">{""}<I18nText text={"Net Cashflow"}/>{""}</span>
             </div>
             <div className={`text-lg font-bold ${netCashflow >= 0 ? 'text-blue-800' : 'text-orange-800'}`}>
               {formatCurrency(netCashflow)}
@@ -121,7 +123,7 @@ export function MobileStatsSummary({ currency = "USD", monthlyCashflow, category
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: topCategory.color }}
                 />
-                <span className="text-sm font-medium text-purple-700">Top Category</span>
+                <span className="text-sm font-medium text-purple-700">{""}<I18nText text={"Top Category"}/>{""}</span>
               </div>
               <div className="text-sm font-bold text-purple-800">
                 {formatCurrency(topCategory.amount)}
@@ -140,7 +142,7 @@ export function MobileStatsSummary({ currency = "USD", monthlyCashflow, category
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Total Balance</span>
+              <span className="text-sm font-medium text-gray-700">{""}<I18nText text={"Total Balance"}/>{""}</span>
             </div>
             <div className="text-lg font-bold text-gray-800">
               {formatCurrency(totalBalance)}

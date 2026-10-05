@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
 
 import { useState, useEffect, useRef } from "react";
@@ -36,7 +39,7 @@ import { formatMoney } from "@/lib/currency";
 import { getAmountColorClass, FINANCIAL_ANIMATIONS } from "@/lib/financial-colors";
 import { safeServerAction } from "@/lib/client-actions";
 import { PATTERNS, TYPOGRAPHY, BUTTON } from "@/lib/ui-constants";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Account type definition from our updated schema
 type FinancialAccount = {
@@ -52,6 +55,8 @@ type AccountsTableProps = {
 };
 
 export function AccountsTable({ accounts = [] }: AccountsTableProps) {
+ const { t: ppT } = useLanguage();
+
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [accountsList, setAccountsList] = useState(accounts || []);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,8 +173,8 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-red-500 text-center">
-          <p className="font-medium">Error loading accounts</p>
-          <p className="text-sm">{error}</p>
+          <p className="font-medium">{""}<I18nText text={"Error loading accounts"}/>{""}</p>
+          <p className="text-sm"><I18nText text={error}/></p>
         </div>
       </div>
     );
@@ -179,7 +184,7 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
     return (
       <EmptyState
         icon="🏦"
-        title="No accounts yet"
+        title={ppT("No accounts yet")}
         description="Create your first account to start tracking your finances"
         action={{
           label: "Create Account",
@@ -219,24 +224,24 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
               <div className="flex items-center gap-3">
                 <span className={`flex size-9 items-center justify-center rounded-xl ${style.tint} ${style.color}`}><Icon className="size-5" /></span>
                 <div><h2 className="text-lg font-semibold tracking-tight">{labels[type] || formatAccountType(type)}</h2>
-                <div className="text-xs text-muted-foreground">{groupAccounts.length} {groupAccounts.length === 1 ? "account" : "accounts"}</div></div>
+                <div className="text-xs text-muted-foreground">{groupAccounts.length} <I18nText text={groupAccounts.length === 1 ? "account" : "accounts"}/></div></div>
               </div>
               <div className="space-y-0.5 text-right">
-                <div className="text-xs font-normal text-muted-foreground">Total balance</div>
+                <div className="text-xs font-normal text-muted-foreground">{""}<I18nText text={"Total balance"}/>{""}</div>
                 <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">{currencies.map(currency => <div key={currency} className="text-base font-semibold">{formatMoney(groupAccounts.filter(account => (account.currency || "USD") === currency).reduce((sum, account) => sum + Number(account.balance), 0), currency)}</div>)}</div>
               </div>
             </div>
             <div className="divide-y md:hidden">
               {groupAccounts.map(account => <article key={account.id} aria-label={account.name} className="min-w-0 space-y-2 p-4">
                 <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words text-base font-medium">{account.name}</h3><p className="mt-1 text-xs text-muted-foreground">{account.currency || "USD"}</p></div>
-                  <DropdownMenu><DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${account.name}`} disabled={isDeleting===account.id} /></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link href={`/accounts/${account.id}/edit`}><Edit className="mr-2 h-4 w-4" />Edit account</Link></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem disabled={isDeleting===account.id} className="text-destructive" onClick={()=>handleDelete(account.id)}><Trash className="mr-2 h-4 w-4" />Delete account</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                  <DropdownMenu><DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${account.name}`} disabled={isDeleting===account.id} /></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link href={`/accounts/${account.id}/edit`}><Edit className="mr-2 h-4 w-4" />{""}<I18nText text={"Edit account"}/>{""}</Link></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem disabled={isDeleting===account.id} className="text-destructive" onClick={()=>handleDelete(account.id)}><Trash className="mr-2 h-4 w-4" />{""}<I18nText text={"Delete account"}/>{""}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                 </div>
-                <div className="flex flex-wrap items-end justify-between gap-2"><span className="text-xs text-muted-foreground">Balance</span><span className="break-words text-lg font-semibold tabular-nums">{formatMoney(account.balance,account.currency)}</span></div>
+                <div className="flex flex-wrap items-end justify-between gap-2"><span className="text-xs text-muted-foreground">{""}<I18nText text={"Balance"}/>{""}</span><span className="break-words text-lg font-semibold tabular-nums">{formatMoney(account.balance,account.currency)}</span></div>
               </article>)}
             </div>
             <div className="hidden overflow-x-auto md:block">
               <Table>
-                <TableHeader><TableRow><TableHead>Account</TableHead><TableHead className="text-right">Balance</TableHead><TableHead className="w-10"><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{""}<I18nText text={"Account"}/>{""}</TableHead><TableHead className="text-right">{""}<I18nText text={"Balance"}/>{""}</TableHead><TableHead className="w-10"><span className="sr-only">{""}<I18nText text={"Actions"}/>{""}</span></TableHead></TableRow></TableHeader>
                 <TableBody>
                   {groupAccounts.map(account => (
             <TableRow key={account.id} className={`${PATTERNS.TABLE_ROW} ${FINANCIAL_ANIMATIONS.CARD_ELEVATION}`}>
@@ -255,22 +260,18 @@ export function AccountsTable({ accounts = [] }: AccountsTableProps) {
                     <ActionMenuButton label={`Actions for ${account.name}`} disabled={isDeleting===account.id} />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel className={TYPOGRAPHY.STATUS}>Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel className={TYPOGRAPHY.STATUS}>{""}<I18nText text={"Actions"}/>{""}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href={`/accounts/${account.id}/edit`} className={BUTTON.ICON_SPACING}>
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </Link>
+                        <Edit className="h-4 w-4" />{" "}<I18nText text={"Edit"}/>{" "}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleDelete(account.id)}
                       disabled={isDeleting === account.id}
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                     >
-                      <Trash className={`mr-2 h-4 w-4`} />
-                      Delete
-                    </DropdownMenuItem>
+                      <Trash className={`mr-2 h-4 w-4`} />{" "}<I18nText text={"Delete"}/>{" "}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

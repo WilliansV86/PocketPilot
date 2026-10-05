@@ -1,3 +1,5 @@
+
+import { I18nText } from "@/components/language-provider";
 import { auth } from "@clerk/nextjs/server";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { MoneyOwedForm } from "@/components/money-owed/money-owed-form";
@@ -15,11 +17,9 @@ export default async function NewMoneyOwedPage() {
           <div className="flex items-center space-x-2">
             <Link href="/money-owed">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Money Owed
-              </Button>
+                <ArrowLeft className="h-4 w-4 mr-2" />{" "}<I18nText text={"Back to Money Owed"}/>{" "}</Button>
             </Link>
-            <h1 className="text-3xl font-bold tracking-tight">Create Money Owed</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Create Money Owed"}/>{""}</h1>
           </div>
           
           <MoneyOwedForm

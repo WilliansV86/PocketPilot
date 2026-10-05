@@ -1,8 +1,11 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, ReceiptText, PieChart, Target, TrendingDown, TrendingUp, Flag, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Wallet, ReceiptText, PieChart, Target, TrendingDown, TrendingUp, Flag, BarChart3, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -36,11 +39,14 @@ const sections = [
     color: "text-indigo-700 dark:text-indigo-400",
     items: [
       { name: "Stats", href: "/stats", icon: BarChart3, color: "text-indigo-700 dark:text-indigo-400" },
+      { name: "Settings", href: "/settings", icon: Settings, color: "text-slate-700 dark:text-slate-400" },
     ],
   },
 ];
 
 export function MobileNavigation({ className }: { className?: string }) {
+ const { t: ppT } = useLanguage();
+
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
@@ -48,12 +54,12 @@ export function MobileNavigation({ className }: { className?: string }) {
 
   return (
     <div className={cn("md:hidden", className)}>
-      <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav aria-label={ppT("Mobile navigation")} className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="grid grid-cols-4">
           <Button asChild variant={isActive("/") ? "secondary" : "ghost"} className={tabClass}>
             <PrefetchLink href="/" scroll aria-current={isActive("/") ? "page" : undefined}>
               <LayoutDashboard className="h-5 w-5 text-sky-700 dark:text-sky-400" />
-              <span>Dashboard</span>
+              <span>{""}<I18nText text={"Dashboard"}/>{""}</span>
             </PrefetchLink>
           </Button>
           {sections.map(section => {
@@ -62,25 +68,25 @@ export function MobileNavigation({ className }: { className?: string }) {
             return (
               <Sheet key={section.name} open={openSection === section.name} onOpenChange={open => setOpenSection(open ? section.name : null)}>
                 <SheetTrigger asChild>
-                  <Button variant={active ? "secondary" : "ghost"} className={tabClass} aria-label={`Open ${section.name} menu`}>
+                  <Button variant={active ? "secondary" : "ghost"} className={tabClass} aria-label={`Open $<I18nText text={section.name}/> menu`}>
                     <Icon className={cn("h-5 w-5", section.color)} />
-                    <span>{section.name}</span>
-                    {active && <span className="sr-only">Current section</span>}
+                    <span><I18nText text={section.name}/></span>
+                    {active && <span className="sr-only">{""}<I18nText text={"Current section"}/>{""}</span>}
                   </Button>
                 </SheetTrigger>
                 <SwipeBottomSheet open={openSection === section.name} onDismiss={() => setOpenSection(null)}>
                   <SheetHeader>
-                    <SheetTitle>{section.name}</SheetTitle>
-                    <SheetDescription>Choose a page in {section.name.toLowerCase()}.</SheetDescription>
+                    <SheetTitle><I18nText text={section.name}/></SheetTitle>
+                    <SheetDescription>{""}<I18nText text={"Choose a page"}/>{" "}.</SheetDescription>
                   </SheetHeader>
-                  <nav aria-label={`${section.name} pages`} className="grid gap-2 px-4">
+                  <nav aria-label={`$<I18nText text={section.name}/> pages`} className="grid gap-2 px-4">
                     {section.items.map(item => {
                       const ItemIcon = item.icon;
                       return (
                         <Button key={item.href} asChild variant={isActive(item.href) ? "secondary" : "ghost"} className="h-12 w-full justify-start gap-3 text-base">
                           <PrefetchLink href={item.href} scroll aria-current={isActive(item.href) ? "page" : undefined} onClick={() => setOpenSection(null)}>
                             <ItemIcon className={cn("h-5 w-5 shrink-0", item.color)} />
-                            <span>{item.name}</span>
+                            <span><I18nText text={item.name}/></span>
                           </PrefetchLink>
                         </Button>
                       );

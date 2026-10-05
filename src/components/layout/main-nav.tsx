@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -12,6 +15,7 @@ import {
   TrendingUp, 
   Flag, 
   BarChart3,
+  Settings,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -97,6 +101,7 @@ const navSections = [
         href: "/stats",
         icon: BarChart3,
       },
+      { name: "Settings", href: "/settings", icon: Settings, iconColor: "bg-slate-500/10 text-slate-700 dark:text-slate-400" },
     ],
   },
 ];
@@ -107,6 +112,8 @@ interface MainNavProps {
 }
 
 export function MainNav({ mobile = false, onClose }: MainNavProps) {
+ const { t: ppT } = useLanguage();
+
   const pathname = usePathname();
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
@@ -127,7 +134,7 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
   };
 
   const NavContent = () => (
-    <nav aria-label="Main navigation" className="flex flex-col gap-4">
+    <nav aria-label={ppT("Main navigation")} className="flex flex-col gap-4">
       {navSections.map((section) => {
         const isCollapsed = collapsedSections.has(section.title);
         const hasActiveItem = section.items.some(item => pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")));
@@ -150,7 +157,7 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
                 )}
               >
                 <span className="flex items-center gap-2">
-                  {section.title}
+                  <I18nText text={section.title}/>
                   {hasActiveItem && (
                     <div className="h-2 w-2 rounded-full bg-primary" />
                   )}
@@ -185,7 +192,7 @@ export function MainNav({ mobile = false, onClose }: MainNavProps) {
                     aria-current={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")) ? "page" : undefined}
                   >
                     <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", item.iconColor)}><item.icon className="size-5" /></span>
-                    <span>{item.name}</span>
+                    <span><I18nText text={item.name}/></span>
                   </PrefetchLink>
                 </Button>
               ))}
@@ -215,13 +222,13 @@ export function MobileNav() {
           className="md:hidden"
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
+          <span className="sr-only">{""}<I18nText text={"Toggle navigation menu"}/>{""}</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between p-4 border-b">
-            <span className="text-lg font-semibold">PocketPilot</span>
+            <span className="text-lg font-semibold">{""}<I18nText text={"PocketPilot"}/>{""}</span>
             <Button
               variant="ghost"
               size="icon"

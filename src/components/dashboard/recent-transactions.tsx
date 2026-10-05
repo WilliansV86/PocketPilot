@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { format } from "date-fns";
 import Link from "next/link";
 import {
@@ -41,12 +43,12 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
-        <CardDescription>Your most recent financial activity</CardDescription>
+        <CardTitle>{""}<I18nText text={"Recent Transactions"}/>{""}</CardTitle>
+        <CardDescription>{""}<I18nText text={"Your most recent financial activity"}/>{""}</CardDescription>
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent transactions found.</p>
+          <p className="text-sm text-muted-foreground">{""}<I18nText text={"No recent transactions found."}/>{""}</p>
         ) : (
           <div className="space-y-4">
             {transactions.map((transaction) => (
@@ -54,7 +56,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">{transaction.description}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(transaction.date), "MMM d, yyyy")} • {transaction.account.name}
+                    <I18nText text={format(new Date(transaction.date), "MMM d, yyyy")}/> • {transaction.account.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {transaction.category?.name || "Uncategorized"}
@@ -73,9 +75,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <Link 
                 href="/transactions" 
                 className="text-sm text-primary hover:underline"
-              >
-                View All Transactions
-              </Link>
+              >{" "}<I18nText text={"View All Transactions"}/>{" "}</Link>
             </div>
           </div>
         )}

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { formatMoney } from "@/lib/currency";
 import { statsDateLabel } from "@/lib/stats-date-range";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +15,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No spending data available for this period
-      </div>
+      <div className="text-center py-8 text-muted-foreground">{" "}<I18nText text={"No spending data available for this period"}/>{" "}</div>
     );
   }
 
@@ -26,10 +26,10 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2 px-4 font-medium">Description</th>
-              <th className="text-left py-2 px-4 font-medium">Category</th>
-              <th className="text-left py-2 px-4 font-medium">Date</th>
-              <th className="text-right py-2 px-4 font-medium">Amount</th>
+              <th className="text-left py-2 px-4 font-medium">{""}<I18nText text={"Description"}/>{""}</th>
+              <th className="text-left py-2 px-4 font-medium">{""}<I18nText text={"Category"}/>{""}</th>
+              <th className="text-left py-2 px-4 font-medium">{""}<I18nText text={"Date"}/>{""}</th>
+              <th className="text-right py-2 px-4 font-medium">{""}<I18nText text={"Amount"}/>{""}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,10 +46,10 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
                     >
                       {item.category.name}
                     </Badge>
-                  ) : <span className="text-muted-foreground">Uncategorized</span>}
+                  ) : <span className="text-muted-foreground">{""}<I18nText text={"Uncategorized"}/>{""}</span>}
                 </td>
                 <td className="py-3 px-4 text-muted-foreground">
-                  {statsDateLabel(item.date)}
+                  <I18nText text={statsDateLabel(item.date)}/>
                 </td>
                 <td className="py-3 px-4 text-right font-medium text-red-600">
                   {formatCurrency(item.amount)}
@@ -75,7 +75,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
                   >
                     {item.category.name}
                   </Badge>
-                ) : <span className="text-muted-foreground">Uncategorized</span>}
+                ) : <span className="text-muted-foreground">{""}<I18nText text={"Uncategorized"}/>{""}</span>}
               </div>
               <div className="text-right">
                 <div className="font-medium text-red-600">
@@ -84,7 +84,7 @@ export function StatsTable({ currency = "USD", data }: StatsTableProps) {
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              {statsDateLabel(item.date)}
+              <I18nText text={statsDateLabel(item.date)}/>
             </div>
           </div>
         ))}

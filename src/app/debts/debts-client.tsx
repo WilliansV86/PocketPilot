@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DebtList } from "@/components/debts/debt-list";
@@ -7,7 +9,7 @@ import { DebtForm } from "@/components/debts/debt-form";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
 import { deleteDebt, getDebts } from "@/lib/actions/debt-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 type Debt = {
   id: string;
@@ -102,11 +104,9 @@ export function DebtsClient({ debts: initialDebts }: DebtsClientProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleCancel}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Debts
-            </Button>
+              <ArrowLeft className="h-4 w-4 mr-2" />{" "}<I18nText text={"Back to Debts"}/>{" "}</Button>
             <h1 className="text-3xl font-bold tracking-tight">
-              {editingDebt ? "Edit Debt" : "Create New Debt"}
+              <I18nText text={editingDebt ? "Edit Debt" : "Create New Debt"}/>
             </h1>
           </div>
         </div>
@@ -125,15 +125,11 @@ export function DebtsClient({ debts: initialDebts }: DebtsClientProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Debts</h1>
-          <p className="text-muted-foreground">
-            Track and manage your debts, payments, and progress
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Debts"}/>{""}</h1>
+          <p className="text-muted-foreground">{" "}<I18nText text={"Track and manage your debts, payments, and progress"}/>{" "}</p>
         </div>
         <Button onClick={handleCreateDebt}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Debt
-        </Button>
+          <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Add Debt"}/>{" "}</Button>
       </div>
 
       <DebtList

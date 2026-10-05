@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { Target, TrendingUp, Calendar, Plus } from "lucide-react";
 
@@ -63,9 +65,7 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
       <Card className="pp-chart-card min-w-0 gap-3 py-4 lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="h-5 w-5" />
-            Goals Progress
-          </CardTitle>
+            <Target className="h-5 w-5" />{" "}<I18nText text={"Goals Progress"}/>{" "}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -89,25 +89,17 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
       <Card className="pp-chart-card min-w-0 gap-3 py-4 lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="h-5 w-5" />
-            Goals Progress
-          </CardTitle>
-          <CardDescription>
-            Track your financial goals
-          </CardDescription>
+            <Target className="h-5 w-5" />{" "}<I18nText text={"Goals Progress"}/>{" "}</CardTitle>
+          <CardDescription>{" "}<I18nText text={"Track your financial goals"}/>{" "}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-3">
             <Target className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Goals Yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Create your first financial goal to start tracking progress
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"No Goals Yet"}/>{""}</h3>
+            <p className="text-muted-foreground mb-4">{" "}<I18nText text={"Create your first financial goal to start tracking progress"}/>{" "}</p>
             <Button asChild>
               <a href="/goals">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Goal
-              </a>
+                <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Create Goal"}/>{" "}</a>
             </Button>
           </div>
         </CardContent>
@@ -121,17 +113,13 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-5 w-5" />
-              Goals Progress
-            </CardTitle>
+              <Target className="h-5 w-5" />{" "}<I18nText text={"Goals Progress"}/>{" "}</CardTitle>
             <CardDescription>
-              {activeGoals.length} active goal{activeGoals.length !== 1 ? 's' : ''}
+              {activeGoals.length}{" "}<I18nText text={"active goal"}/>{""}{activeGoals.length !== 1 ? 's' : ''}
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <a href="/goals">
-              View All
-            </a>
+            <a href="/goals">{" "}<I18nText text={"View All"}/>{" "}</a>
           </Button>
         </div>
       </CardHeader>
@@ -156,8 +144,7 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
                         {goalProgress.percentage.toFixed(0)}%
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {formatCurrency(goalProgress.remainingAmount)} left
-                      </div>
+                        {formatCurrency(goalProgress.remainingAmount)}{" "}<I18nText text={"left"}/>{" "}</div>
                     </div>
                   </div>
                   
@@ -172,16 +159,13 @@ export function GoalsWidget({ goals = [], currency = "USD" }: GoalsWidgetProps) 
             })
           ) : (
             <div className="text-center py-4">
-              <p className="text-muted-foreground text-sm">
-                All goals completed! 🎉
-              </p>
+              <p className="text-muted-foreground text-sm">{" "}<I18nText text={"All goals completed! 🎉"}/>{" "}</p>
             </div>
           )}
 
           {activeGoals.length > 3 && (
             <div className="border-t pt-2 sm:col-span-3">
-              <p className="text-xs text-muted-foreground text-center">
-                And {activeGoals.length - 3} more goal{activeGoals.length - 3 !== 1 ? 's' : ''}
+              <p className="text-xs text-muted-foreground text-center">{" "}<I18nText text={"And"}/>{" "}{activeGoals.length - 3}{" "}<I18nText text={"more goal"}/>{""}{activeGoals.length - 3 !== 1 ? 's' : ''}
               </p>
             </div>
           )}

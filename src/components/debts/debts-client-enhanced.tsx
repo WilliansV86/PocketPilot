@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DebtList } from "@/components/debts/debt-list";
@@ -24,7 +27,7 @@ import {
 } from "lucide-react";
 import { deleteDebt, getDebts, getDebtSummary, makeDebtPayment } from "@/lib/actions/debt-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 type Debt = {
   id: string;
@@ -54,6 +57,8 @@ interface DebtsClientProps {
 }
 
 export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [debts, setDebts] = useState<Debt[]>(initialDebts || []);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -225,11 +230,9 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleCancel}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Debts
-            </Button>
+              <ArrowLeft className="h-4 w-4 mr-2" />{" "}<I18nText text={"Back to Debts"}/>{" "}</Button>
             <h1 className="text-3xl font-bold tracking-tight">
-              {editingDebt ? "Edit Debt" : "Create New Debt"}
+              <I18nText text={editingDebt ? "Edit Debt" : "Create New Debt"}/>
             </h1>
           </div>
         </div>
@@ -248,16 +251,12 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Debts</h1>
-          <p className="text-muted-foreground">
-            Track and manage your debts, payments, and progress
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{""}<I18nText text={"Debts"}/>{""}</h1>
+          <p className="text-muted-foreground">{" "}<I18nText text={"Track and manage your debts, payments, and progress"}/>{" "}</p>
         </div>
         {debts.length > 0 && (
           <Button onClick={handleCreateDebt}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Debt
-          </Button>
+            <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Add Debt"}/>{" "}</Button>
         )}
       </div>
 
@@ -266,7 +265,7 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <CardTitle className="text-sm font-medium">Total Debt</CardTitle>
+              <CardTitle className="text-sm font-medium">{""}<I18nText text={"Total Debt"}/>{""}</CardTitle>
               <CreditCard className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent className="p-3 pt-0">
@@ -274,29 +273,26 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
                 {(summary.totalsByCurrency || []).map((total: any) => <div key={total.currency}>{formatCurrency(total.totalBalance, total.currency)}</div>)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {summary.openDebtCount} active debts
-              </p>
+                {summary.openDebtCount}{" "}<I18nText text={"active debts"}/>{" "}</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <CardTitle className="text-sm font-medium">Monthly Minimums</CardTitle>
+              <CardTitle className="text-sm font-medium">{""}<I18nText text={"Monthly Minimums"}/>{""}</CardTitle>
               <DollarSign className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="text-lg font-bold text-orange-600">
                 {(summary.totalsByCurrency || []).map((total: any) => <div key={total.currency}>{formatCurrency(total.totalMinimumPayments, total.currency)}</div>)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Total minimum payments
-              </p>
+              <p className="text-xs text-muted-foreground">{" "}<I18nText text={"Total minimum payments"}/>{" "}</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <CardTitle className="text-sm font-medium">Payment Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">{""}<I18nText text={"Payment Progress"}/>{""}</CardTitle>
               <TrendingDown className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent className="p-3 pt-0">
@@ -314,15 +310,15 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">Average APR</CardTitle></CardHeader>
+            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">{""}<I18nText text={"Average APR"}/>{""}</CardTitle></CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="text-lg font-bold">{(() => { const open = debts.filter(debt => !debt.isClosed); return open.length ? (open.reduce((sum, debt) => sum + (debt.interestRateAPR || 0), 0) / open.length).toFixed(2) : "0.00"; })()}%</div>
-              <p className="text-xs text-muted-foreground">Across open debts</p>
+              <p className="text-xs text-muted-foreground">{""}<I18nText text={"Across open debts"}/>{""}</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">Closed Debts</CardTitle></CardHeader>
-            <CardContent className="p-3 pt-0"><div className="text-lg font-bold text-green-600">{debts.filter(debt => debt.isClosed).length}</div><p className="text-xs text-muted-foreground">Paid off</p></CardContent>
+            <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">{""}<I18nText text={"Closed Debts"}/>{""}</CardTitle></CardHeader>
+            <CardContent className="p-3 pt-0"><div className="text-lg font-bold text-green-600">{debts.filter(debt => debt.isClosed).length}</div><p className="text-xs text-muted-foreground">{""}<I18nText text={"Paid off"}/>{""}</p></CardContent>
           </Card>
         </div>
       )}
@@ -332,14 +328,10 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Debts Yet</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Start tracking your debts to see payment progress and due dates.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"No Debts Yet"}/>{""}</h3>
+            <p className="text-muted-foreground text-center mb-4">{" "}<I18nText text={"Start tracking your debts to see payment progress and due dates."}/>{" "}</p>
             <Button onClick={handleCreateDebt}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Debt
-            </Button>
+              <Plus className="h-4 w-4 mr-2" />{" "}<I18nText text={"Add Your First Debt"}/>{" "}</Button>
           </CardContent>
         </Card>
       )}
@@ -360,12 +352,8 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         <Card>
           <CardHeader className="p-4 pb-2">
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Reminder Center
-            </CardTitle>
-            <CardDescription>
-              Red: payment within 3 days · Amber: within 7 days · Blue: statement closing soon
-            </CardDescription>
+              <Bell className="h-5 w-5" />{" "}<I18nText text={"Reminder Center"}/>{" "}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Red: payment within 3 days · Amber: within 7 days · Blue: statement closing soon"}/>{" "}</CardDescription>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="grid gap-2 lg:grid-cols-2">
@@ -386,11 +374,11 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`rounded px-2 py-0.5 text-xs font-semibold ${alertStyle}`}>{timing}</span>
-                        <span className="text-xs text-muted-foreground">{payment ? "Payment" : "Statement"} · {formatDate(reminder.date)}</span>
+                        <span className="text-xs text-muted-foreground"><I18nText text={payment ? "Payment" : "Statement"}/> · {formatDate(reminder.date)}</span>
                       </div>
                     </div>
                     <div className="max-w-[180px] shrink-0 text-right">
-                      {payment ? reminder.amount > 0 ? <><div className={`text-sm font-semibold ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-foreground"}`}>{formatCurrency(reminder.amount, reminder.currency)}</div><div className="text-xs text-muted-foreground">Minimum remaining</div></> : <div className="text-xs font-medium">Check minimum amount</div> : <div className="text-xs text-muted-foreground">{reminder.detail}</div>}
+                      {payment ? reminder.amount > 0 ? <><div className={`text-sm font-semibold ${urgent ? "text-red-500" : soon ? "text-amber-500" : "text-foreground"}`}>{formatCurrency(reminder.amount, reminder.currency)}</div><div className="text-xs text-muted-foreground">{""}<I18nText text={"Minimum remaining"}/>{""}</div></> : <div className="text-xs font-medium">{""}<I18nText text={"Check minimum amount"}/>{""}</div> : <div className="text-xs text-muted-foreground">{reminder.detail}</div>}
                     </div>
                   </div>
                 );
@@ -404,31 +392,29 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Make Debt Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for {selectedDebt?.name}
+            <DialogTitle>{""}<I18nText text={"Make Debt Payment"}/>{""}</DialogTitle>
+            <DialogDescription>{" "}<I18nText text={"Record a payment for"}/>{" "}{selectedDebt?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="payment-amount">Payment Amount</Label>
+              <Label htmlFor="payment-amount">{""}<I18nText text={"Payment Amount"}/>{""}</Label>
               <Input
                 id="payment-amount"
                 type="number"
                 step="0.01"
                 min="0"
                 max={selectedDebt?.currentBalance}
-                placeholder="0.00"
+                placeholder={ppT("0.00")}
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Current balance: {selectedDebt ? formatCurrency(selectedDebt.currentBalance, selectedDebt.currency) : "N/A"}
+              <p className="text-xs text-muted-foreground mt-1">{" "}<I18nText text={"Current balance:"}/>{" "}{selectedDebt ? formatCurrency(selectedDebt.currentBalance, selectedDebt.currency) : "N/A"}
               </p>
             </div>
             
             <div>
-              <Label htmlFor="payment-date">Payment Date</Label>
+              <Label htmlFor="payment-date">{""}<I18nText text={"Payment Date"}/>{""}</Label>
               <Input
                 id="payment-date"
                 type="date"
@@ -438,10 +424,10 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
             </div>
             
             <div>
-              <Label htmlFor="payment-account">Payment Account</Label>
+              <Label htmlFor="payment-account">{""}<I18nText text={"Payment Account"}/>{""}</Label>
               <Select value={selectedAccount} onValueChange={setSelectedAccount}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder={ppT("Select account")} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.filter(account => account.currency === (selectedDebt?.currency || "USD")).map((account) => (
@@ -454,12 +440,8 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
             </div>
             
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handlePaymentSubmit}>
-                Make Payment
-              </Button>
+              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
+              <Button onClick={handlePaymentSubmit}>{" "}<I18nText text={"Make Payment"}/>{" "}</Button>
             </div>
           </div>
         </DialogContent>

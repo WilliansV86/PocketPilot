@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { DollarSign, Calendar, CreditCard, AlertTriangle } from "lucide-react";
@@ -33,7 +36,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { recordMoneyOwedPayment, updateMoneyOwedPayment } from "@/lib/actions/money-owed-actions";
 import { getAccounts } from "@/lib/actions/account-actions";
 import { formatMoney as formatCurrency } from "@/lib/currency";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -67,6 +70,8 @@ interface MoneyOwedPaymentDialogProps {
 }
 
 export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange, onSuccess }: MoneyOwedPaymentDialogProps) {
+ const { t: ppT } = useLanguage();
+
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,27 +150,25 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{payment ? "Edit Payment" : "Record Payment"} - {moneyOwed.personName}</DialogTitle>
+          <DialogTitle><I18nText text={payment ? "Edit Payment" : "Record Payment"}/> - {moneyOwed.personName}</DialogTitle>
           <DialogDescription>
-            {payment ? "Correct this payment. The remaining balance, receiving account, and income transaction will update together." : "Record a payment received from this person. This will create an income transaction and update your account balance."}
+            <I18nText text={payment ? "Correct this payment. The remaining balance, receiving account, and income transaction will update together." : "Record a payment received from this person. This will create an income transaction and update your account balance."}/>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Outstanding Amount</CardTitle>
+              <CardTitle className="text-sm">{""}<I18nText text={"Outstanding Amount"}/>{""}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
                 {formatCurrency(moneyOwed.amountOutstanding, moneyOwed.currency)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Original: {formatCurrency(moneyOwed.amountOriginal, moneyOwed.currency)}
+              <p className="text-xs text-muted-foreground mt-1">{" "}<I18nText text={"Original:"}/>{" "}{formatCurrency(moneyOwed.amountOriginal, moneyOwed.currency)}
               </p>
               {moneyOwed.dueDate && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Due: {format(new Date(moneyOwed.dueDate), "MMM dd, yyyy")}
+                <p className="text-xs text-muted-foreground mt-1">{" "}<I18nText text={"Due:"}/>{" "}<I18nText text={format(new Date(moneyOwed.dueDate), "MMM dd, yyyy")}/>
                 </p>
               )}
             </CardContent>
@@ -178,14 +181,14 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Amount</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Amount"}/>{""}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
                         max={maximumPayment}
-                        placeholder="0.00"
+                        placeholder={ppT("0.00")}
                         {...field}
                       />
                     </FormControl>
@@ -199,7 +202,7 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Date</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Payment Date"}/>{""}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -213,11 +216,11 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
                 name="accountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Received Into Account</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Received Into Account"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select account" />
+                          <SelectValue placeholder={ppT("Select account")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -238,9 +241,9 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
                 name="note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Note (Optional)</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Note (Optional)"}/>{""}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Add a note about this payment" {...field} />
+                      <Input placeholder={ppT("Add a note about this payment")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -253,11 +256,9 @@ export function MoneyOwedPaymentDialog({ moneyOwed, payment, open, onOpenChange,
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
+                >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
                 <Button type="submit" disabled={isSubmitting || loading}>
-                  {isSubmitting ? "Saving..." : payment ? "Save Payment" : "Record Payment"}
+                  <I18nText text={isSubmitting ? "Saving..." : payment ? "Save Payment" : "Record Payment"}/>
                 </Button>
               </DialogFooter>
             </form>

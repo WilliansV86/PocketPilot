@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { NetWorthHistory } from "@/components/dashboard/net-worth-history";
 
 import { retiredPreviewStorage } from "@/lib/retired-preview-storage";
@@ -11,7 +14,7 @@ import { LayoutDashboard, Wallet, ReceiptText, ArrowDownUp, PiggyBank, AlertTria
 import { CurrencyPicker, usePreferredCurrency } from "@/components/ui/currency-picker";
 import { getDashboardMonthData } from "@/lib/actions/dashboard-actions";
 import { dashboardMonth } from "@/lib/dashboard-month";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { formatMoney } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -84,6 +87,8 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ data: initialData, currency = "USD", selectedPeriod }: DashboardClientProps) {
+ const { t: ppT } = useLanguage();
+
   const [monthlyData, setMonthlyData] = useState({ financialsData: initialData.financialsData, expenseData: initialData.expenseData });
   const data = { ...initialData, ...monthlyData };
   const initialPeriod = dashboardMonth(selectedPeriod);
@@ -181,24 +186,24 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
   return (
     <>
       <div className="pp-dashboard-toolbar flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{""}<I18nText text={"Dashboard"}/>{""}</h1>
         <div className="flex flex-wrap items-center gap-2">
           <CurrencyPicker compact remember preferenceKey="dashboard" value={currency} onChange={value => router.push(`/?currency=${value}&month=${period}`)} />
           <Select value={selectedMonth.toString()} onValueChange={(value) => changePeriod(`${selectedYear}-${String(Number(value) + 1).padStart(2, "0")}`)}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={ppT("Month")} />
             </SelectTrigger>
             <SelectContent>
               {months.map((month, index) => (
                 <SelectItem key={month} value={index.toString()}>
-                  {month}
+                  <I18nText text={month}/>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={selectedYear.toString()} onValueChange={(value) => changePeriod(`${value}-${String(selectedMonth + 1).padStart(2, "0")}`)}>
             <SelectTrigger className="w-[80px]">
-              <SelectValue placeholder="Year" />
+              <SelectValue placeholder={ppT("Year")} />
             </SelectTrigger>
             <SelectContent>
               {years.map((year) => (
@@ -211,12 +216,12 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         </div>
       </div>
       
-      <p role="status" className="mt-3 text-xs text-muted-foreground">{loadingMonth ? "Updating monthly figures…" : `${months[selectedMonth]} ${selectedYear} · Monthly activity`} · Balances show your current position</p>
+      <p role="status" className="mt-3 text-xs text-muted-foreground"><I18nText text={loadingMonth ? "Updating monthly figures…" : `${months[selectedMonth]} ${selectedYear} · Monthly activity`}/>{" "}<I18nText text={"· Balances show your current position"}/>{""}</p>
       <div aria-busy={loadingMonth} className="mt-4 grid grid-cols-2 gap-3 md:mt-6 md:gap-4 lg:grid-cols-4">
         {/* Net Worth Card - Spans 2 columns */}
         <Card className="col-span-2 border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-background lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Current Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Current Net Worth"}/>{""}</CardTitle>
             {data.netWorthData && (
               getNetWorthStatus(data.netWorthData.netWorth) === 'positive' ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
@@ -232,14 +237,14 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
               <>
                 <div className="break-words text-3xl font-bold tracking-tight md:text-4xl">{formatCurrency(data.netWorthData.netWorth)}</div>
                 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                  <div>Assets: {formatCurrency(data.netWorthData.totalAssets)}</div>
-                  <div>Liabilities: {formatCurrency(data.netWorthData.totalLiabilities)}</div>
+                  <div>{""}<I18nText text={"Assets:"}/>{" "}{formatCurrency(data.netWorthData.totalAssets)}</div>
+                  <div>{""}<I18nText text={"Liabilities:"}/>{" "}{formatCurrency(data.netWorthData.totalLiabilities)}</div>
                 </div>
               </>
             ) : (
               <>
-                <div className="break-words text-xl font-bold md:text-2xl">Loading...</div>
-                <p className="text-xs text-muted-foreground">Calculating net worth</p>
+                <div className="break-words text-xl font-bold md:text-2xl">{""}<I18nText text={"Loading..."}/>{""}</div>
+                <p className="text-xs text-muted-foreground">{""}<I18nText text={"Calculating net worth"}/>{""}</p>
               </>
             )}
           </CardContent>
@@ -248,25 +253,25 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         {/* Total Balance Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Current Balance"}/>{""}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(totalBalance)}</div>
-            <p className="text-xs text-muted-foreground">{mergedAccounts.length} active accounts</p>
+            <p className="text-xs text-muted-foreground">{mergedAccounts.length}{" "}<I18nText text={"active accounts"}/>{""}</p>
           </CardContent>
         </Card>
         
         {/* Monthly Income Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Monthly Income"}/>{""}</CardTitle>
             <ArrowDownUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.income)}</div>
             <p className="text-xs text-muted-foreground">
-              {data.financialsData.changes.incomeChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.incomeChange)} from previous month`}
+              <I18nText text={data.financialsData.changes.incomeChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.incomeChange)} from previous month`}/>
             </p>
           </CardContent>
         </Card>
@@ -274,24 +279,24 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         {/* Monthly Expenses Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Monthly Expenses"}/>{""}</CardTitle>
             <ReceiptText className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.expenses)}</div>
             <p className="text-xs text-muted-foreground">
-              {data.financialsData.changes.expensesChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.expensesChange)} from previous month`}
+              <I18nText text={data.financialsData.changes.expensesChange === null ? "No previous-month activity" : `${formatPercentChange(data.financialsData.changes.expensesChange)} from previous month`}/>
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Net</CardTitle>
+            <CardTitle className="text-sm font-medium">{""}<I18nText text={"Monthly Net"}/>{""}</CardTitle>
             <PiggyBank aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />
           </CardHeader>
           <CardContent>
             <div className="break-words text-xl font-bold md:text-2xl">{formatCurrency(data.financialsData.current.income - data.financialsData.current.expenses)}</div>
-            <p className="text-xs text-muted-foreground">Income minus expenses</p>
+            <p className="text-xs text-muted-foreground">{""}<I18nText text={"Income minus expenses"}/>{""}</p>
           </CardContent>
         </Card>
       </div>
@@ -301,22 +306,22 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
       {data.netWorthData && (
         <details className="group mt-3 rounded-xl border bg-card text-card-foreground">
           <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-            <span className="sr-only">Assets and liabilities breakdown.</span>
+            <span className="sr-only">{""}<I18nText text={"Assets and liabilities breakdown."}/>{""}</span>
             <span className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:gap-3">
               <span className="min-w-0 rounded-lg border border-teal-500/15 bg-teal-500/5 px-3 py-2">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400"><Wallet aria-hidden="true" className="h-4 w-4 shrink-0" />Assets</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400"><Wallet aria-hidden="true" className="h-4 w-4 shrink-0" />{""}<I18nText text={"Assets"}/>{""}</span>
                 <span className="mt-1 block break-words text-sm font-semibold tabular-nums sm:text-base">{formatCurrency(data.netWorthData.totalAssets)}</span>
               </span>
               <span className="min-w-0 rounded-lg border border-rose-500/15 bg-rose-500/5 px-3 py-2">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400"><TrendingDown aria-hidden="true" className="h-4 w-4 shrink-0" />Liabilities</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400"><TrendingDown aria-hidden="true" className="h-4 w-4 shrink-0" />{""}<I18nText text={"Liabilities"}/>{""}</span>
                 <span className="mt-1 block break-words text-sm font-semibold tabular-nums sm:text-base">{formatCurrency(data.netWorthData.totalLiabilities)}</span>
               </span>
             </span>
-            <span className="flex shrink-0 flex-col items-center gap-1 px-1 text-muted-foreground"><ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" /><span className="hidden text-xs sm:block">Details</span></span>
+            <span className="flex shrink-0 flex-col items-center gap-1 px-1 text-muted-foreground"><ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" /><span className="hidden text-xs sm:block">{""}<I18nText text={"Details"}/>{""}</span></span>
           </summary>
           <div className="grid gap-5 border-t px-4 py-4 sm:grid-cols-2">
             <div>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Wallet aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />Assets</h2>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Wallet aria-hidden="true" className="h-4 w-4 text-teal-600 dark:text-teal-400" />{""}<I18nText text={"Assets"}/>{""}</h2>
               <dl className="space-y-2 text-sm">
                 {[['Accounts', data.netWorthData.accountAssets], ['Property', data.netWorthData.propertyAssets ?? 0], ['Money owed to you', data.netWorthData.receivables], ['Total assets', data.netWorthData.totalAssets]].map(([label, amount]) => (
                   <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{formatCurrency(Number(amount))}</dd></div>
@@ -324,7 +329,7 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
               </dl>
             </div>
             <div>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><TrendingDown aria-hidden="true" className="h-4 w-4 text-red-500" />Liabilities</h2>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><TrendingDown aria-hidden="true" className="h-4 w-4 text-red-500" />{""}<I18nText text={"Liabilities"}/>{""}</h2>
               <dl className="space-y-2 text-sm">
                 {[['Debts', data.netWorthData.debts], ['Account liabilities', data.netWorthData.accountLiabilities], ['Total liabilities', data.netWorthData.totalLiabilities]].map(([label, amount]) => (
                   <div key={label} className="flex flex-wrap justify-between gap-x-3 gap-y-1"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{formatCurrency(Number(amount))}</dd></div>
@@ -339,20 +344,12 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
       {data.financialsData.uncategorizedCount > 0 && (
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-800">
-              Uncategorized Transactions
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-yellow-800">{" "}<I18nText text={"Uncategorized Transactions"}/>{" "}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-yellow-700">
-              You have <strong>{data.financialsData.uncategorizedCount}</strong> uncategorized transaction{data.financialsData.uncategorizedCount !== 1 ? 's' : ''} in the selected month.
-              <br />
-              <a href={`/transactions?month=${period}`} className="text-yellow-800 underline hover:text-yellow-900">
-                Categorize them now
-              </a>{' '}
-              to see accurate expense tracking.
-            </div>
+            <div className="text-sm text-yellow-700">{" "}<I18nText text={"You have"}/>{" "}<strong>{data.financialsData.uncategorizedCount}</strong>{" "}<I18nText text={"uncategorized transaction"}/>{""}{data.financialsData.uncategorizedCount !== 1 ? 's' : ''}{" "}<I18nText text={"in the selected month."}/>{" "}<br />
+              <a href={`/transactions?month=${period}`} className="text-yellow-800 underline hover:text-yellow-900">{" "}<I18nText text={"Categorize them now"}/>{" "}</a><I18nText text={' '}/>{" "}<I18nText text={"to see accurate expense tracking."}/>{" "}</div>
           </CardContent>
         </Card>
       )}
@@ -360,9 +357,8 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
       <div className="pp-dashboard-charts mt-4 grid items-start gap-4 lg:grid-cols-2">
         <Card className="pp-chart-card min-w-0 gap-3 py-4">
           <CardHeader>
-            <CardTitle className="text-base">Income vs expenses</CardTitle>
-            <CardDescription>
-              Six months ending {months[selectedMonth]} {selectedYear}
+            <CardTitle className="text-base">{""}<I18nText text={"Income vs expenses"}/>{""}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Six months ending"}/>{" "}<I18nText text={months[selectedMonth]}/> {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -372,9 +368,8 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
         
         <Card className="pp-chart-card min-w-0 gap-3 py-4">
           <CardHeader>
-            <CardTitle className="text-base">Spending by category</CardTitle>
-            <CardDescription>
-              Spending in {months[selectedMonth]} {selectedYear}
+            <CardTitle className="text-base">{""}<I18nText text={"Spending by category"}/>{""}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Spending in"}/>{" "}<I18nText text={months[selectedMonth]}/> {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -382,7 +377,7 @@ export function DashboardClient({ data: initialData, currency = "USD", selectedP
               <ExpenseBreakdown currency={currency} categories={data.expenseData.categories} />
             ) : (
               <div className="flex min-h-20 items-center justify-center text-sm">
-                <p className="text-muted-foreground">No expense data available</p>
+                <p className="text-muted-foreground">{""}<I18nText text={"No expense data available"}/>{""}</p>
               </div>
             )}
           </CardContent>

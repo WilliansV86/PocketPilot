@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { ActionMenuButton } from "@/components/ui/action-menu-button";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -143,17 +145,17 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
             <Card key={group.currency} className={`min-w-0 border-t-4 ${group.accent}`}>
               <CardHeader className="p-4 pb-3">
                 <div className="flex items-center justify-between gap-2">
-                  <CardTitle>{group.title}</CardTitle>
+                  <CardTitle><I18nText text={group.title}/></CardTitle>
                   <Badge variant="outline">{group.currency}</Badge>
                 </div>
-                <CardDescription>{countryDebts.length} open {countryDebts.length === 1 ? "debt" : "debts"}</CardDescription>
+                <CardDescription>{countryDebts.length}{" "}<I18nText text={"open"}/>{" "}<I18nText text={countryDebts.length === 1 ? "debt" : "debts"}/></CardDescription>
                 <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div><div className="text-xs text-muted-foreground">Total balance</div><div className="text-lg font-semibold">{formatCurrency(balance, group.currency)}</div></div>
-                  <div><div className="text-xs text-muted-foreground">Monthly minimums</div><div className="text-lg font-semibold">{formatCurrency(minimums, group.currency)}</div></div>
+                  <div><div className="text-xs text-muted-foreground">{""}<I18nText text={"Total balance"}/>{""}</div><div className="text-lg font-semibold">{formatCurrency(balance, group.currency)}</div></div>
+                  <div><div className="text-xs text-muted-foreground">{""}<I18nText text={"Monthly minimums"}/>{""}</div><div className="text-lg font-semibold">{formatCurrency(minimums, group.currency)}</div></div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 p-4 pt-0">
-                {countryDebts.length === 0 && <p className="py-4 text-sm text-muted-foreground">No open debts in {group.currency}.</p>}
+                {countryDebts.length === 0 && <p className="py-4 text-sm text-muted-foreground">{""}<I18nText text={"No open debts in"}/>{" "}{group.currency}.</p>}
                 {countryDebts.map(debt => {
                   const Icon = debtTypeIcons[debt.type as keyof typeof debtTypeIcons] || DollarSign;
                   const utilization = getUtilizationPercentage(debt);
@@ -168,28 +170,28 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><ActionMenuButton label={`Actions for ${debt.name}`} /></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handlePayment(debt)}><TrendingDown className="mr-2 h-4 w-4" />Make Payment</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handlePayment(debt)}><TrendingDown className="mr-2 h-4 w-4" />{""}<I18nText text={"Make Payment"}/>{""}</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => onEdit?.(debt)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete?.(debt)} className="text-red-600"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEdit?.(debt)}><Edit className="mr-2 h-4 w-4" />{""}<I18nText text={"Edit"}/>{""}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDelete?.(debt)} className="text-red-600"><Trash2 className="mr-2 h-4 w-4" />{""}<I18nText text={"Delete"}/>{""}</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        <div><div className="text-xs text-muted-foreground">Balance</div><div className="font-semibold">{formatCurrency(debt.currentBalance, group.currency)}</div></div>
-                        <div><div className="text-xs text-muted-foreground">Minimum payment</div>
-                          {debt.minimumPayment ? <><div className="font-medium">{formatCurrency(debt.minimumPayment, group.currency)}</div><div className={`text-xs ${(debt.minimumPaymentRemaining || 0) <= 0 ? "text-green-600" : "text-muted-foreground"}`}>{(debt.minimumPaymentRemaining || 0) <= 0 ? "Minimum paid" : `${formatCurrency(debt.minimumPaymentRemaining || 0, group.currency)} remaining`}</div></> : <div>—</div>}
+                        <div><div className="text-xs text-muted-foreground">{""}<I18nText text={"Balance"}/>{""}</div><div className="font-semibold">{formatCurrency(debt.currentBalance, group.currency)}</div></div>
+                        <div><div className="text-xs text-muted-foreground">{""}<I18nText text={"Minimum payment"}/>{""}</div>
+                          {debt.minimumPayment ? <><div className="font-medium">{formatCurrency(debt.minimumPayment, group.currency)}</div><div className={`text-xs ${(debt.minimumPaymentRemaining || 0) <= 0 ? "text-green-600" : "text-muted-foreground"}`}><I18nText text={(debt.minimumPaymentRemaining || 0) <= 0 ? "Minimum paid" : `${formatCurrency(debt.minimumPaymentRemaining || 0, group.currency)} remaining`}/></div></> : <div>—</div>}
                         </div>
                       {debt.type === "CREDIT_CARD" && debt.creditLimit ? <div className="col-span-2 space-y-1 sm:col-span-1">
-                        <div className="text-xs text-muted-foreground">Utilization</div>
+                        <div className="text-xs text-muted-foreground">{""}<I18nText text={"Utilization"}/>{""}</div>
                         <Progress value={utilization} className={`h-1.5 ${utilization > 30 ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`} />
-                        <div className={`text-xs ${utilization > 30 ? "text-red-500" : "text-green-500"}`}>{utilization.toFixed(1)}% of {formatCurrency(debt.creditLimit, group.currency)}</div>
-                      </div> : debt.originalAmount ? <div className="col-span-2 space-y-1 sm:col-span-1"><div className="text-xs text-muted-foreground">Payment progress</div><Progress value={progress} className="h-1.5" /><div className="text-xs text-muted-foreground">{progress.toFixed(1)}%</div></div> : null}
+                        <div className={`text-xs ${utilization > 30 ? "text-red-500" : "text-green-500"}`}>{utilization.toFixed(1)}{""}<I18nText text={"% of"}/>{" "}{formatCurrency(debt.creditLimit, group.currency)}</div>
+                      </div> : debt.originalAmount ? <div className="col-span-2 space-y-1 sm:col-span-1"><div className="text-xs text-muted-foreground">{""}<I18nText text={"Payment progress"}/>{""}</div><Progress value={progress} className="h-1.5" /><div className="text-xs text-muted-foreground">{progress.toFixed(1)}%</div></div> : null}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 border-t pt-2 text-xs">
-                        {debt.nextDueDate && <span>Due {formatDateOnly(debt.nextDueDate)}</span>}
-                        {debt.type === "CREDIT_CARD" && debt.nextStatementClosingDate && <span className="text-muted-foreground">Closes {formatDateOnly(debt.nextStatementClosingDate)}</span>}
-                        {!debt.nextDueDate && !debt.nextStatementClosingDate && <span className="text-muted-foreground">No dates entered</span>}
+                        {debt.nextDueDate && <span>{""}<I18nText text={"Due"}/>{" "}{formatDateOnly(debt.nextDueDate)}</span>}
+                        {debt.type === "CREDIT_CARD" && debt.nextStatementClosingDate && <span className="text-muted-foreground">{""}<I18nText text={"Closes"}/>{" "}{formatDateOnly(debt.nextStatementClosingDate)}</span>}
+                        {!debt.nextDueDate && !debt.nextStatementClosingDate && <span className="text-muted-foreground">{""}<I18nText text={"No dates entered"}/>{""}</span>}
                       </div>
                     </div>
                   );
@@ -204,20 +206,18 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
       {closedDebtList.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Closed Debts</CardTitle>
-            <CardDescription>
-              Debts that have been fully paid off
-            </CardDescription>
+            <CardTitle>{""}<I18nText text={"Closed Debts"}/>{""}</CardTitle>
+            <CardDescription>{" "}<I18nText text={"Debts that have been fully paid off"}/>{" "}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Final Balance</TableHead>
-                  <TableHead>Closed Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{""}<I18nText text={"Name"}/>{""}</TableHead>
+                  <TableHead>{""}<I18nText text={"Type"}/>{""}</TableHead>
+                  <TableHead>{""}<I18nText text={"Final Balance"}/>{""}</TableHead>
+                  <TableHead>{""}<I18nText text={"Closed Date"}/>{""}</TableHead>
+                  <TableHead className="text-right">{""}<I18nText text={"Actions"}/>{""}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -246,7 +246,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                         {formatCurrency(debt.currentBalance, debt.currency)}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(debt.updatedAt), "MMM d, yyyy")}
+                        <I18nText text={format(new Date(debt.updatedAt), "MMM d, yyyy")}/>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -255,16 +255,12 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onEdit?.(debt)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />{" "}<I18nText text={"View Details"}/>{" "}</DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => onDelete?.(debt)}
                               className="text-red-600"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
+                              <Trash2 className="mr-2 h-4 w-4" />{" "}<I18nText text={"Delete"}/>{" "}</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -282,10 +278,8 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No debts yet</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Start tracking your debts to see your progress and manage payments.
-            </p>
+            <h3 className="text-lg font-semibold mb-2">{""}<I18nText text={"No debts yet"}/>{""}</h3>
+            <p className="text-muted-foreground text-center mb-4">{" "}<I18nText text={"Start tracking your debts to see your progress and manage payments."}/>{" "}</p>
           </CardContent>
         </Card>
       )}

@@ -1,4 +1,6 @@
 "use client";
+
+import { I18nText } from "@/components/language-provider";
 import { useAuth } from "@clerk/nextjs";
 import { createContext, useContext, useEffect, useRef } from "react";
 
@@ -24,6 +26,6 @@ export function AuthSessionBoundary({ children, legacyOwner }: { children: React
     window.addEventListener("pageshow", restore);
     return () => window.removeEventListener("pageshow", restore);
   }, []);
-  if (!isLoaded || changed) return <div className="p-6 text-sm text-muted-foreground">Loading PocketPilot…</div>;
+  if (!isLoaded || changed) return <div className="p-6 text-sm text-muted-foreground">{""}<I18nText text={"Loading PocketPilot…"}/>{""}</div>;
   return <OwnerContext.Provider value={legacyOwner}><div key={userId ?? "signed-out"}>{children}</div></OwnerContext.Provider>;
 }

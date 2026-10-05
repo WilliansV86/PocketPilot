@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTransaction, updateTransaction } from "@/lib/actions/transaction-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -74,6 +77,8 @@ type TransactionFormProps = {
 };
 
 export function TransactionForm({ transaction, accounts, categories, mode }: TransactionFormProps) {
+ const { t: ppT } = useLanguage();
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -184,20 +189,20 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Transaction Type</FormLabel>
+              <FormLabel>{""}<I18nText text={"Transaction Type"}/>{""}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={ppT("Select type")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={TransactionType.INCOME}>Income</SelectItem>
-                  <SelectItem value={TransactionType.EXPENSE}>Expense</SelectItem>
-                  <SelectItem value={TransactionType.TRANSFER}>Transfer</SelectItem>
+                  <SelectItem value={TransactionType.INCOME}>{""}<I18nText text={"Income"}/>{""}</SelectItem>
+                  <SelectItem value={TransactionType.EXPENSE}>{""}<I18nText text={"Expense"}/>{""}</SelectItem>
+                  <SelectItem value={TransactionType.TRANSFER}>{""}<I18nText text={"Transfer"}/>{""}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -210,9 +215,9 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{""}<I18nText text={"Description"}/>{""}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Grocery Shopping" {...field} />
+                <Input placeholder={ppT("e.g. Grocery Shopping")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -225,12 +230,12 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
             name="amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>{""}<I18nText text={"Amount"}/>{""}</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
                     step="0.01" 
-                    placeholder="0.00" 
+                    placeholder={ppT("0.00")} 
                     {...field}
                     onChange={(e) => field.onChange(e.target.value)}
                   />
@@ -245,7 +250,7 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
+                <FormLabel>{""}<I18nText text={"Date"}/>{""}</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -261,11 +266,11 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
             name="accountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{selectedType === TransactionType.TRANSFER ? "From Account" : "Account"}</FormLabel>
+                <FormLabel><I18nText text={selectedType === TransactionType.TRANSFER ? "From Account" : "Account"}/></FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
+                      <SelectValue placeholder={ppT("Select account")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -288,14 +293,14 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
               name="toAccountId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>To Account</FormLabel>
+                  <FormLabel>{""}<I18nText text={"To Account"}/>{""}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select destination account" />
+                        <SelectValue placeholder={ppT("Select destination account")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -321,18 +326,18 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{""}<I18nText text={"Category"}/>{""}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={ppT("Select category")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Uncategorized</SelectItem>
+                      <SelectItem value="">{""}<I18nText text={"Uncategorized"}/>{""}</SelectItem>
                       {relevantCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
@@ -352,10 +357,10 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>{""}<I18nText text={"Notes"}/>{""}</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Add any additional details here" 
+                  placeholder={ppT("Add any additional details here")} 
                   {...field} 
                   value={field.value || ""}
                 />
@@ -367,15 +372,13 @@ export function TransactionForm({ transaction, accounts, categories, mode }: Tra
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : mode === "create" ? "Create Transaction" : "Update Transaction"}
+            <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Transaction" : "Update Transaction"}/>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push("/transactions")}
-          >
-            Cancel
-          </Button>
+          >{" "}<I18nText text={"Cancel"}/>{" "}</Button>
         </div>
       </form>
     </Form>

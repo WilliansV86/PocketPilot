@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { Target, Plus } from "lucide-react";
 
@@ -14,7 +16,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 
 interface Goal {
   id: string;
@@ -162,8 +164,8 @@ export function GoalsClient() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
-            <h2 className={TYPOGRAPHY.SECTION_TITLE}>Loading Goals...</h2>
-            <p className={TYPOGRAPHY.SECTION_SUBTITLE}>Please wait while we load your financial goals</p>
+            <h2 className={TYPOGRAPHY.SECTION_TITLE}>{""}<I18nText text={"Loading Goals..."}/>{""}</h2>
+            <p className={TYPOGRAPHY.SECTION_SUBTITLE}>{""}<I18nText text={"Please wait while we load your financial goals"}/>{""}</p>
           </div>
         </div>
       </div>
@@ -175,15 +177,11 @@ export function GoalsClient() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Goals</h1>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Track savings, debt payoff, and financial targets
-          </p>
+          <h1 className="text-2xl font-bold">{""}<I18nText text={"Goals"}/>{""}</h1>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">{" "}<I18nText text={"Track savings, debt payoff, and financial targets"}/>{" "}</p>
         </div>
         <Button onClick={handleCreateGoal} className={BUTTON.PRIMARY_ACTION}>
-          <Plus className="h-4 w-4" />
-          Create Goal
-        </Button>
+          <Plus className="h-4 w-4" />{" "}<I18nText text={"Create Goal"}/>{" "}</Button>
       </div>
 
       {/* Goals List */}
@@ -203,13 +201,12 @@ export function GoalsClient() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {formMode === 'create' ? 'Create New Goal' : 'Edit Goal'}
+              <I18nText text={formMode === 'create' ? 'Create New Goal' : 'Edit Goal'}/>
             </DialogTitle>
             <DialogDescription>
-              {formMode === 'create' 
+              <I18nText text={formMode === 'create' 
                 ? 'Set up a new financial goal to track your progress'
-                : 'Update your goal details and tracking preferences'
-              }
+                : 'Update your goal details and tracking preferences'}/>
             </DialogDescription>
           </DialogHeader>
           <GoalFormSimple

@@ -1,5 +1,8 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -27,7 +30,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createDebt, updateDebt } from "@/lib/actions/debt-actions";
-import { toast } from "sonner";
+import { localizedToast as toast } from "@/lib/i18n/client-messages";
 import { formatMoney } from "@/lib/currency";
 
 // Define the form validation schema
@@ -67,6 +70,8 @@ const debtTypeOptions = [
 ];
 
 export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
+ const { t: ppT } = useLanguage();
+
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -137,12 +142,11 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{mode === "create" ? "Create New Debt" : "Edit Debt"}</CardTitle>
+        <CardTitle><I18nText text={mode === "create" ? "Create New Debt" : "Edit Debt"}/></CardTitle>
         <CardDescription>
-          {mode === "create" 
+          <I18nText text={mode === "create" 
             ? "Add a new debt to track your payments and progress."
-            : "Update the debt information and track your progress."
-          }
+            : "Update the debt information and track your progress."}/>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -154,15 +158,15 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Currency *"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="USD">USD — US Dollar</SelectItem>
-                        <SelectItem value="CAD">CAD — Canadian Dollar</SelectItem>
+                        <SelectItem value="USD">{""}<I18nText text={"USD — US Dollar"}/>{""}</SelectItem>
+                        <SelectItem value="CAD">{""}<I18nText text={"CAD — Canadian Dollar"}/>{""}</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormDescription>All amounts on this form use this currency. Changing currency does not convert amounts.</FormDescription>
+                    <FormDescription>{""}<I18nText text={"All amounts on this form use this currency. Changing currency does not convert amounts."}/>{""}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -172,9 +176,9 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Debt Name *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Debt Name *"}/>{""}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Chase Credit Card" {...field} />
+                      <Input placeholder={ppT("e.g., Chase Credit Card")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,17 +190,17 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Debt Type *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Debt Type *"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select debt type" />
+                          <SelectValue placeholder={ppT("Select debt type")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {debtTypeOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            <I18nText text={option.label}/>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -211,9 +215,9 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="lender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lender</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Lender"}/>{""}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Chase Bank" {...field} />
+                      <Input placeholder={ppT("e.g., Chase Bank")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -225,12 +229,12 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="currentBalance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Balance *</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Current Balance *"}/>{""}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder={ppT("0.00")} 
                         {...field} 
                       />
                     </FormControl>
@@ -244,18 +248,16 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="originalAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Original Amount</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Original Amount"}/>{""}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder={ppT("0.00")} 
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>
-                      Optional: Original amount to track payment progress
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Optional: Original amount to track payment progress"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -266,12 +268,12 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="interestRateAPR"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Interest Rate (APR %)</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Interest Rate (APR %)"}/>{""}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder={ppT("0.00")} 
                         {...field} 
                       />
                     </FormControl>
@@ -285,12 +287,12 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="minimumPayment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Minimum Payment</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Minimum Payment"}/>{""}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00" 
+                        placeholder={ppT("0.00")} 
                         {...field} 
                       />
                     </FormControl>
@@ -304,19 +306,17 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                 name="dueDayOfMonth"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Day of Month</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Due Day of Month"}/>{""}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         min="1" 
                         max="31" 
-                        placeholder="1" 
+                        placeholder={ppT("1")} 
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>
-                      Day of the month payment is due (1-31)
-                    </FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Day of the month payment is due (1-31)"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -329,19 +329,17 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                     name="creditLimit"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Credit Limit</FormLabel>
+                        <FormLabel>{""}<I18nText text={"Credit Limit"}/>{""}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min="0"
                             step="0.01"
-                            placeholder="0.00"
+                            placeholder={ppT("0.00")}
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Used to calculate your credit utilization
-                        </FormDescription>
+                        <FormDescription>{" "}<I18nText text={"Used to calculate your credit utilization"}/>{" "}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -352,19 +350,17 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                     name="statementClosingDay"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Statement Closing Day</FormLabel>
+                        <FormLabel>{""}<I18nText text={"Statement Closing Day"}/>{""}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min="1"
                             max="31"
-                            placeholder="25"
+                            placeholder={ppT("25")}
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Day your statement normally closes (1-31)
-                        </FormDescription>
+                        <FormDescription>{" "}<I18nText text={"Day your statement normally closes (1-31)"}/>{" "}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -377,8 +373,8 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
             {originalAmount > 0 && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Payment Progress</span>
-                  <span>{progressPercentage.toFixed(1)}% paid</span>
+                  <span>{""}<I18nText text={"Payment Progress"}/>{""}</span>
+                  <span>{progressPercentage.toFixed(1)}{""}<I18nText text={"% paid"}/>{""}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -387,7 +383,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                   />
                 </div>
                 <div className="text-xs text-gray-500">
-                  {formatMoney(currentBalance, form.watch("currency"))} remaining of {formatMoney(originalAmount, form.watch("currency"))}
+                  {formatMoney(currentBalance, form.watch("currency"))}{" "}<I18nText text={"remaining of"}/>{" "}{formatMoney(originalAmount, form.watch("currency"))}
                 </div>
               </div>
             )}
@@ -397,10 +393,10 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>{""}<I18nText text={"Notes"}/>{""}</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Additional notes about this debt..."
+                      placeholder={ppT("Additional notes about this debt...")}
                       className="resize-none"
                       {...field}
                     />
@@ -422,10 +418,8 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Mark as closed</FormLabel>
-                    <FormDescription>
-                      Check if this debt has been fully paid off
-                    </FormDescription>
+                    <FormLabel>{""}<I18nText text={"Mark as closed"}/>{""}</FormLabel>
+                    <FormDescription>{" "}<I18nText text={"Check if this debt has been fully paid off"}/>{" "}</FormDescription>
                   </div>
                 </FormItem>
               )}
@@ -433,12 +427,10 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
 
             <div className="flex justify-end space-x-2">
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel}>
-                  Cancel
-                </Button>
+                <Button type="button" variant="outline" onClick={onCancel}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
               )}
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : mode === "create" ? "Create Debt" : "Update Debt"}
+                <I18nText text={isPending ? "Saving..." : mode === "create" ? "Create Debt" : "Update Debt"}/>
               </Button>
             </div>
           </form>

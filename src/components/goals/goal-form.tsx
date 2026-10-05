@@ -1,4 +1,7 @@
 "use client";
+import { useLanguage } from "@/components/language-provider";
+
+import { I18nText } from "@/components/language-provider";
 import { CurrencyPicker } from "@/components/ui/currency-picker";
 
 
@@ -76,6 +79,8 @@ const priorities = [
 ];
 
 export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
+ const { t: ppT } = useLanguage();
+
   const [accounts, setAccounts] = useState<any[]>([]);
   const [debts, setDebts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -173,13 +178,12 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          {mode === "create" ? "Create Goal" : "Edit Goal"}
+          <I18nText text={mode === "create" ? "Create Goal" : "Edit Goal"}/>
         </CardTitle>
         <CardDescription>
-          {mode === "create" 
+          <I18nText text={mode === "create" 
             ? "Set up a new financial goal to track your progress"
-            : "Update your goal details and tracking preferences"
-          }
+            : "Update your goal details and tracking preferences"}/>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -193,9 +197,9 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Goal Name</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Goal Name"}/>{""}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Emergency Fund, New Car, Vacation" {...field} />
+                      <Input placeholder={ppT("e.g., Emergency Fund, New Car, Vacation")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -207,11 +211,11 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Goal Type</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Goal Type"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select goal type" />
+                          <SelectValue placeholder={ppT("Select goal type")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -220,8 +224,8 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                             <div className="flex items-center gap-2">
                               <span>{type.icon}</span>
                               <div>
-                                <div className="font-medium">{type.label}</div>
-                                <div className="text-sm text-muted-foreground">{type.description}</div>
+                                <div className="font-medium"><I18nText text={type.label}/></div>
+                                <div className="text-sm text-muted-foreground"><I18nText text={type.description}/></div>
                               </div>
                             </div>
                           </SelectItem>
@@ -238,12 +242,12 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 name="targetAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Amount</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Target Amount"}/>{""}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="0.00"
+                        placeholder={ppT("0.00")}
                         {...field}
                       />
                     </FormControl>
@@ -258,7 +262,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                   name="startDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
+                      <FormLabel>{""}<I18nText text={"Start Date"}/>{""}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -272,7 +276,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>Pick a date</span>
+                                <span>{""}<I18nText text={"Pick a date"}/>{""}</span>
                               )}
                               <CalendarLucide className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -300,7 +304,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                   name="targetDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Target Date (Optional)</FormLabel>
+                      <FormLabel>{""}<I18nText text={"Target Date (Optional)"}/>{""}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -314,7 +318,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>Pick a date</span>
+                                <span>{""}<I18nText text={"Pick a date"}/>{""}</span>
                               )}
                               <CalendarLucide className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -349,10 +353,8 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Auto-Track Progress</FormLabel>
-                      <FormDescription>
-                        Automatically update progress based on linked account or debt
-                      </FormDescription>
+                      <FormLabel className="text-base">{""}<I18nText text={"Auto-Track Progress"}/>{""}</FormLabel>
+                      <FormDescription>{" "}<I18nText text={"Automatically update progress based on linked account or debt"}/>{" "}</FormDescription>
                     </div>
                     <FormControl>
                       <Switch
@@ -372,11 +374,11 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                       name="linkedAccountId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Link to Account</FormLabel>
+                          <FormLabel>{""}<I18nText text={"Link to Account"}/>{""}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select account to track" />
+                                <SelectValue placeholder={ppT("Select account to track")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -385,7 +387,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                                 .filter(account => account.currency === form.watch("currency"))
                                 .map((account) => (
                                   <SelectItem key={account.id} value={account.id}>
-                                    {account.name} ({account.type})
+                                    {account.name} (<I18nText text={account.type}/>)
                                   </SelectItem>
                                 ))}
                             </SelectContent>
@@ -402,17 +404,17 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                       name="linkedDebtId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Link to Debt</FormLabel>
+                          <FormLabel>{""}<I18nText text={"Link to Debt"}/>{""}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select debt to track" />
+                                <SelectValue placeholder={ppT("Select debt to track")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {debts.filter(d => d.currency === form.watch("currency")).map((debt) => (
                                 <SelectItem key={debt.id} value={debt.id}>
-                                  {debt.name} - {debt.type}
+                                  {debt.name} - <I18nText text={debt.type}/>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -435,11 +437,11 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Priority"}/>{""}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder={ppT("Select priority")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -447,7 +449,7 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                           <SelectItem key={priority.value} value={priority.value}>
                             <div className="flex items-center gap-2">
                               <Flag className={`h-4 w-4 ${priority.color}`} />
-                              <span>{priority.label}</span>
+                              <span><I18nText text={priority.label}/></span>
                             </div>
                           </SelectItem>
                         ))}
@@ -463,10 +465,10 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormLabel>{""}<I18nText text={"Notes (Optional)"}/>{""}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Add any additional notes about your goal..."
+                        placeholder={ppT("Add any additional notes about your goal...")}
                         className="resize-none"
                         {...field}
                       />
@@ -479,11 +481,9 @@ export function GoalForm({ mode, goal, onCancel, onSuccess }: GoalFormProps) {
 
             {/* Form Actions */}
             <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={onCancel}>{" "}<I18nText text={"Cancel"}/>{" "}</Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : mode === "create" ? "Create Goal" : "Update Goal"}
+                <I18nText text={loading ? "Saving..." : mode === "create" ? "Create Goal" : "Update Goal"}/>
               </Button>
             </div>
           </form>

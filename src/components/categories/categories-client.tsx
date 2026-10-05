@@ -1,5 +1,7 @@
 "use client";
 
+
+import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
 import { CategoriesTable } from "@/components/categories/categories-table";
 import { Switch } from "@/components/ui/switch";
@@ -65,9 +67,7 @@ export function CategoriesClient({ searchParams }: CategoriesClientProps) {
             onCheckedChange={handleArchivedToggle}
           />
           <Label htmlFor="show-archived" className="flex items-center">
-            <Archive className="h-4 w-4 mr-2" />
-            Show Archived
-          </Label>
+            <Archive className="h-4 w-4 mr-2" />{" "}<I18nText text={"Show Archived"}/>{" "}</Label>
         </div>
       </div>
 
