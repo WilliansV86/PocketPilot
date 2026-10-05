@@ -1,6 +1,7 @@
 "use client";
 
 
+import { GoalContributionHistory } from "@/components/goals/goal-contribution-history";
 import { GoalContributionDialog } from "@/components/goals/goal-contribution-dialog";
 import { I18nText } from "@/components/language-provider";
 import { useState, useEffect } from "react";
@@ -60,6 +61,7 @@ export function GoalsClient() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [contributionGoal, setContributionGoal] = useState<Goal | null>(null);
+  const [historyGoal, setHistoryGoal] = useState<Goal | null>(null);
 
   useEffect(() => {
     loadGoals();
@@ -196,9 +198,12 @@ export function GoalsClient() {
           onDelete={handleDeleteGoal}
           onComplete={handleCompleteGoal}
           onAddContribution={handleAddContribution}
+          onManageContributions={goal => setHistoryGoal(goal)}
         />
       </div>
 
+      {historyGoal && <GoalContributionHistory goal={historyGoal}
+        onClose={() => setHistoryGoal(null)} onChanged={() => { void loadGoals(false); }} />}
       {contributionGoal && <GoalContributionDialog goal={contributionGoal}
         onClose={() => setContributionGoal(null)}
         onSuccess={() => { setContributionGoal(null); void loadGoals(false); }} />}

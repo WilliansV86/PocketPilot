@@ -56,9 +56,10 @@ interface GoalListProps {
   onDelete: (goalId: string) => void;
   onComplete: (goalId: string) => void;
   onAddContribution: (goalId: string) => void;
+  onManageContributions?: (goal: Goal) => void;
 }
 
-export function GoalList({ goals, onCreate, onEdit, onDelete, onComplete, onAddContribution }: GoalListProps) {
+export function GoalList({ goals, onCreate, onEdit, onDelete, onComplete, onAddContribution, onManageContributions }: GoalListProps) {
  const { t: ppT } = useLanguage();
 
  const [currency,setCurrency] = usePreferredCurrency("goals");
@@ -87,7 +88,7 @@ export function GoalList({ goals, onCreate, onEdit, onDelete, onComplete, onAddC
      </div>
      <div className="space-y-2"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="font-semibold tabular-nums">{money(progress.currentAmount)}</span><span className="text-muted-foreground">{""}<I18nText text={"of"}/>{" "}{money(progress.targetAmount)}</span></div><FinancialProgress value={progress.percentage} label={`${goal.name} progress`} status={progress.status} /><div className="flex flex-wrap justify-between gap-2 text-xs"><span className={formatted.statusColor}>{formatted.percentage}</span><span className="text-muted-foreground">{money(progress.remainingAmount)}{" "}<I18nText text={"remaining"}/>{""}</span></div></div>
      {(goal.targetDate || progress.monthlyProgressNeeded) && <div className="flex flex-wrap gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">{goal.targetDate && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{""}<I18nText text={"Target"}/>{" "}<I18nText text={statsDateLabel(goal.targetDate)}/></span>}{!!progress.monthlyProgressNeeded && !progress.isCompleted && <span>{""}<I18nText text={"Need"}/>{" "}{money(progress.monthlyProgressNeeded)}{""}<I18nText text={"/month"}/>{""}</span>}</div>}
-     {!!goal.contributions?.length && <details className="border-t pt-2 text-xs text-muted-foreground"><summary className="cursor-pointer py-1"><I18nText text="Recent contributions"/></summary><ul className="mt-2 space-y-2">{goal.contributions.map((entry:any) => <li key={entry.id} className="flex flex-wrap justify-between gap-2"><div><I18nText text={statsDateLabel(entry.date)}/>{entry.note && <p className="mt-1 break-words">{entry.note}</p>}</div><span className="font-medium text-foreground">{money(Number(entry.amount))}</span></li>)}</ul></details>}
+     {!!goal.contributions?.length && onManageContributions && <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" onClick={() => onManageContributions(goal)}><Calendar className="mr-2 h-4 w-4"/><I18nText text="Contribution history"/></Button>}
      {(goal.autoTrack || goal.notes) && <details className="text-xs text-muted-foreground"><summary className="cursor-pointer py-1">{""}<I18nText text={"Tracking details"}/>{""}</summary>{goal.autoTrack && <p className="mt-1">{""}<I18nText text={"Auto-tracking"}/>{""}{goal.linkedAccount ? ` · ${goal.linkedAccount.name}` : goal.linkedDebt ? ` · ${goal.linkedDebt.name}` : ""}</p>}{goal.notes && <p className="mt-1 break-words">{goal.notes}</p>}</details>}
     </article>;
    })}
