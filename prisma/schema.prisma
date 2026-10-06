@@ -15,6 +15,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  cardPaymentBudgets CardPaymentBudget[]
   monthlyIncomePlans MonthlyIncomePlan[]
   netWorthSnapshots NetWorthSnapshot[]
   recurringPayments RecurringPayment[]
@@ -211,6 +212,7 @@ enum GoalPriority {
 }
 
 model Debt {
+  cardPaymentBudgets CardPaymentBudget[]
   property Property?
   currency         String     @default("USD")
   id               String     @id @default(cuid())
@@ -406,4 +408,19 @@ model Property {
   mortgageDebt Debt? @relation(fields: [mortgageDebtId], references: [id], onDelete: SetNull)
   updatedAt DateTime @updatedAt
   @@index([userId, currency])
+}
+
+// Additional cash assigned to card payments; purchases reserve their own category funds.
+model CardPaymentBudget {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debtId String
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  currency String
+  month String
+  amount Decimal @db.Decimal(12,2)
+  updatedAt DateTime @updatedAt
+  @@unique([userId, debtId, month, currency])
+  @@index([userId, currency, month])
 }

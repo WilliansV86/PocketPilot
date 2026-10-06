@@ -395,6 +395,7 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
             <DialogTitle>{""}<I18nText text={"Make Debt Payment"}/>{""}</DialogTitle>
             <DialogDescription>{" "}<I18nText text={"Record a payment for"}/>{" "}{selectedDebt?.name}
             </DialogDescription>
+            {selectedDebt?.type === "CREDIT_CARD" && <p className="text-xs text-muted-foreground"><I18nText text="This payment is a transfer. It uses your credit card payment reserve in Budgets, without counting as another expense."/></p>}
           </DialogHeader>
           <div className="space-y-4">
             <div>

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { loadCardPaymentBudgets } from "@/lib/card-payment-budget-data";
 import { getTotalIncome, getTotalExpenses } from "@/lib/finance/calculations";
 
 // Resolve the signed-in owner through getDefaultUser.
@@ -14,6 +15,7 @@ import { getTotalIncome, getTotalExpenses } from "@/lib/finance/calculations";
 // Get budget data for a specific month
 export async function getBudgetsForMonth(month: string, year: number, currency = "USD") {
   try {
+    if (!Number.isInteger(year) || year < 1900 || year > 9998 || !/^(0?[1-9]|1[0-2])$/.test(month) || !["USD", "CAD"].includes(currency)) throw new Error("Invalid budget period");
     const user = await getDefaultUser();
     
     // Get all categories except INCOME group
@@ -121,7 +123,9 @@ export async function getBudgetsForMonth(month: string, year: number, currency =
     });
 
     // Calculate totals
-    const totalBudgeted = budgetData.reduce((sum, item) => sum + item.budgeted, 0);
+    const cardPayments = await loadCardPaymentBudgets(user.id, `${year}-${month.padStart(2, "0")}`, currency);
+    const extraCardBudgeted = cardPayments.reduce((sum, card) => sum + card.assigned, 0);
+    const totalBudgeted = budgetData.reduce((sum, item) => sum + item.budgeted, 0) + extraCardBudgeted;
     const totalActivity = budgetData.reduce((sum, item) => sum + item.activity, 0);
     const totalAvailable = budgetData.reduce((sum, item) => sum + item.available, 0);
 
@@ -135,6 +139,7 @@ export async function getBudgetsForMonth(month: string, year: number, currency =
       success: true,
       data: {
         categories: budgetData,
+        cardPayments,
         uncategorized: {
           count: uncategorizedCount,
           total: uncategorizedTotal,
@@ -143,7 +148,7 @@ export async function getBudgetsForMonth(month: string, year: number, currency =
           income: monthlyIncome,
           expenses: monthlyExpenses,
           budgeted: totalBudgeted,
-          available: totalAvailable,
+          available: totalAvailable + cardPayments.reduce((sum, card) => sum + card.available - card.shortfall, 0),
           leftToBudget: monthlyIncome - totalBudgeted,
         },
       },
@@ -295,7 +300,10 @@ export async function copyMonthlyBudget(source: string, destination: string, cur
       const budgets = await tx.budget.findMany({
         where: { userId: user.id, month: source, currency, category: { userId: user.id, isArchived: false, group: { not: "INCOME" } } }
       });
-      if (!budgets.length) throw new Error("There are no saved budget amounts to copy in this month");
+      const cardBudgets = await tx.cardPaymentBudget.findMany({ where: { userId: user.id, month: source, currency, debt: { userId: user.id, isClosed: false, type: "CREDIT_CARD", currency } } });
+      if (!budgets.length && !cardBudgets.length) throw new Error("There are no saved budget amounts to copy in this month");
+      const existingCards = await tx.cardPaymentBudget.count({ where: { userId: user.id, month: destination, currency, debtId: { in: cardBudgets.map(b => b.debtId) } } });
+      if (existingCards && !replaceExisting) throw new Error("That month already has card payment allocations. Select replace to overwrite them.");
       const existing = await tx.budget.count({ where: { userId: user.id, month: destination, currency, categoryId: { in: budgets.map(b => b.categoryId) } } });
       if (existing && !replaceExisting) throw new Error("That month already has amounts for these categories. Select replace to overwrite them.");
       for (const budget of budgets) {
@@ -305,7 +313,14 @@ export async function copyMonthlyBudget(source: string, destination: string, cur
           update: { amount: budget.amount, year: Number(destination.slice(0, 4)) }
         });
       }
-      return budgets.length;
+      for (const budget of cardBudgets) {
+        await tx.cardPaymentBudget.upsert({
+          where: { userId_debtId_month_currency: { userId: user.id, debtId: budget.debtId, month: destination, currency } },
+          create: { userId: user.id, debtId: budget.debtId, month: destination, currency, amount: budget.amount },
+          update: { amount: budget.amount }
+        });
+      }
+      return budgets.length + cardBudgets.length;
     });
     revalidatePath("/budgets");
     return { success: true, count };

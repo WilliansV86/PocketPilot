@@ -158,6 +158,7 @@ export async function createDebt(formData: FormData) {
       },
     });
     
+    revalidatePath("/budgets");
     revalidatePath("/debts");
     revalidatePath("/accounts");
     revalidatePath("/dashboard");
@@ -217,6 +218,7 @@ export async function updateDebt(id: string, formData: FormData) {
       data: parsed,
     });
     
+    revalidatePath("/budgets");
     revalidatePath("/debts");
     revalidatePath("/accounts");
     revalidatePath("/dashboard");
@@ -258,6 +260,7 @@ export async function deleteDebt(id: string) {
       where: { id },
     });
     
+    revalidatePath("/budgets");
     revalidatePath("/debts");
     revalidatePath("/accounts");
     revalidatePath("/dashboard");
@@ -305,7 +308,7 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
     
     // Auto-create "Debt Payment" category if not provided or doesn't exist
     let debtPaymentCategoryId = categoryId;
-    if (!debtPaymentCategoryId) {
+    if (debt.type !== "CREDIT_CARD" && !debtPaymentCategoryId) {
       let debtPaymentCategory = await prisma.category.findFirst({
         where: {
           userId: user.id,
@@ -356,6 +359,7 @@ export async function makeDebtPayment(debtId: string, paymentAmount: number, pay
     }, { isolationLevel: "Serializable" });
 
     // Revalidate all relevant paths
+    revalidatePath("/budgets");
     revalidatePath("/debts");
     revalidatePath("/accounts");
     revalidatePath("/dashboard");
