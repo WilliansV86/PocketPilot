@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { I18nText, useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,9 @@ export function CardPaymentBudgets({cards=[],month,currency,onSaved}:{cards?:Car
   if(!cards.length)return null;
   const totalAvailable=cards.reduce((total,card)=>total+card.available,0);
   const totalShortfall=cards.reduce((total,card)=>total+card.shortfall,0);
-  return <details className="group/payment-section rounded-xl border bg-card">
-    <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 p-3 md:p-4 [&::-webkit-details-marker]:hidden">
-      <div className="min-w-0"><h2 className="text-sm font-semibold md:text-base"><I18nText text="Credit card payments"/></h2>
+  return <details className="group/payment-section overflow-hidden rounded-xl border border-l-4 border-l-teal-500 bg-card">
+    <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 bg-teal-50/70 p-3 md:p-4 dark:bg-teal-950/20 [&::-webkit-details-marker]:hidden">
+      <div className="min-w-0"><h2 className="flex items-center gap-2 text-sm font-semibold md:text-base"><CreditCard aria-hidden="true" className="h-5 w-5 shrink-0 text-teal-700 dark:text-teal-400"/><I18nText text="Credit card payments"/></h2>
         <p className="mt-0.5 text-xs text-muted-foreground">{cards.length} <I18nText text="cards"/>{totalShortfall>0&&<span className="ml-2 text-red-600 dark:text-red-400"><I18nText text="Budget gap"/>: {money(totalShortfall)}</span>}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2"><div className="text-right"><p className="text-xs text-muted-foreground"><I18nText text="Available to pay"/></p><p className="text-sm font-semibold tabular-nums">{money(totalAvailable)}</p></div><ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground transition-transform group-open/payment-section:rotate-180"/></div>
