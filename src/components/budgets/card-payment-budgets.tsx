@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { I18nText, useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -24,26 +25,38 @@ export function CardPaymentBudgets({cards=[],month,currency,onSaved}:{cards?:Car
     finally {setBusy(false);}
   }
   if(!cards.length)return null;
-  return <section aria-label={t('Credit card payments')} className="space-y-3 rounded-xl border p-3 md:p-4">
-    <div><h2 className="text-base font-semibold"><I18nText text="Credit card payments"/></h2>
-      <p className="mt-1 text-xs text-muted-foreground"><I18nText text="Budgeted purchases reserve money here automatically. Assign extra for older debt or a payment shortfall. Payments remain transfers, not new expenses."/></p>
-      <p className="mt-1 text-xs text-muted-foreground"><I18nText text="These are planned funds, not a separate bank balance. Keep your category budgets backed by cash. Do not budget the same card repayment again under Debt."/></p>
-    </div>
-    <div className="grid gap-3 lg:grid-cols-2">{cards.map(card=><article key={card.id} className="min-w-0 rounded-lg border bg-card p-3">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words text-sm font-semibold">{card.name}</h3>
-        <p className="mt-0.5 text-xs text-muted-foreground"><I18nText text="Balance at month end"/>: {money(card.balance)}</p></div>
-        <div className="shrink-0 text-right"><p className="text-xs text-muted-foreground"><I18nText text="Available to pay"/></p><p className="text-base font-semibold tabular-nums">{money(card.available)}</p></div></div>
+  const totalAvailable=cards.reduce((total,card)=>total+card.available,0);
+  const totalShortfall=cards.reduce((total,card)=>total+card.shortfall,0);
+  return <details className="group/payment-section rounded-xl border bg-card">
+    <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 p-3 md:p-4 [&::-webkit-details-marker]:hidden">
+      <div className="min-w-0"><h2 className="text-sm font-semibold md:text-base"><I18nText text="Credit card payments"/></h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">{cards.length} <I18nText text="cards"/>{totalShortfall>0&&<span className="ml-2 text-red-600 dark:text-red-400"><I18nText text="Budget gap"/>: {money(totalShortfall)}</span>}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2"><div className="text-right"><p className="text-xs text-muted-foreground"><I18nText text="Available to pay"/></p><p className="text-sm font-semibold tabular-nums">{money(totalAvailable)}</p></div><ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground transition-transform group-open/payment-section:rotate-180"/></div>
+    </summary>
+    <div className="space-y-3 border-t p-3 md:p-4">
+      <p className="text-xs text-muted-foreground"><I18nText text="Money set aside for card payments. Budgeted card purchases add money automatically; budget for debt repayment to cover older debt. Paying the card uses this money and stays a transfer."/></p>
+      <p className="text-xs text-muted-foreground"><I18nText text="This is planned money, not your bank balance. Budget each repayment here only once."/></p>
+      <div className="space-y-2">{cards.map(card=><details key={card.id} className="group/payment-card min-w-0 rounded-lg border">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 p-3 [&::-webkit-details-marker]:hidden">
+          <div className="min-w-0"><h3 className="break-words text-sm font-semibold">{card.name}</h3><p className="mt-0.5 text-xs text-muted-foreground"><I18nText text="Debt repayment budget"/>: {money(card.assigned)}</p>{card.shortfall>0&&<p className="mt-0.5 text-xs text-red-600 dark:text-red-400"><I18nText text="Budget gap"/>: {money(card.shortfall)}</p>}{(card.unfundedPurchases>0||card.overReserved>0)&&<p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400"><I18nText text="Review funding details"/></p>}</div>
+          <div className="flex shrink-0 items-center gap-2"><div className="text-right"><p className="text-xs text-muted-foreground"><I18nText text="Available to pay"/></p><p className="text-sm font-semibold tabular-nums">{money(card.available)}</p></div><ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground transition-transform group-open/payment-card:rotate-180"/></div>
+        </summary>
+        <div className="border-t p-3">
+          <p className="text-xs text-muted-foreground"><I18nText text="Balance at month end"/>: {money(card.balance)}</p>
       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-        {[['Carried over',card.carried],['Reserved from purchases',card.fromPurchases],['Extra assigned',card.assigned],['Paid this month',card.paid]].map(([label,amount])=><div key={String(label)}><dt className="text-muted-foreground"><I18nText text={String(label)}/></dt><dd className="mt-0.5 font-medium tabular-nums">{money(Number(amount))}</dd></div>)}
+        {[['Carried over',card.carried],['Reserved from purchases',card.fromPurchases],['Debt repayment budget',card.assigned],['Paid this month',card.paid]].map(([label,amount])=><div key={String(label)}><dt className="text-muted-foreground"><I18nText text={String(label)}/></dt><dd className="mt-0.5 font-medium tabular-nums">{money(Number(amount))}</dd></div>)}
       </dl>
-      {card.shortfall>0&&<p role="status" className="mt-2 text-xs text-red-600 dark:text-red-400"><I18nText text="Payment shortfall"/>: {money(card.shortfall)}. <I18nText text="Payments exceeded the reserved plan. Assign extra to cover this."/></p>}
+      {card.shortfall>0&&<p role="status" className="mt-2 text-xs text-red-600 dark:text-red-400"><I18nText text="Budget gap"/>: {money(card.shortfall)}. <I18nText text="You paid more than you set aside. Budget for debt repayment to cover the gap; the payment itself is already recorded."/></p>}
       {card.unfundedPurchases>0&&<p className="mt-2 text-xs text-amber-700 dark:text-amber-400"><I18nText text="Purchases without category funding"/>: {money(card.unfundedPurchases)}. <I18nText text="Cover the original spending category or assign extra here."/></p>}
       {card.overReserved>0&&<p className="mt-2 text-xs text-amber-700 dark:text-amber-400"><I18nText text="Reserved above the remaining balance"/>: {money(card.overReserved)}. <I18nText text="Reduce an extra allocation if you no longer need it."/></p>}
       <p className="mt-2 text-xs text-muted-foreground"><I18nText text="Debt not yet reserved"/>: {money(card.unreservedDebt)}</p>
       {editing===card.id?<form className="mt-3 space-y-2 border-t pt-3" onSubmit={e=>{e.preventDefault();void save(card.id);}}>
-        <label className="block text-xs"><I18nText text="Extra assigned this month"/> ({currency})<Input value={value} onChange={e=>setValue(e.target.value)} inputMode="decimal" disabled={busy} className="mt-1 h-11" autoFocus required /></label>
+        <label className="block text-xs"><I18nText text="Debt repayment budget this month"/> ({currency})<Input value={value} onChange={e=>setValue(e.target.value)} inputMode="decimal" disabled={busy} className="mt-1 h-11" autoFocus required /></label>
         <div className="flex gap-2"><Button type="submit" size="sm" disabled={busy}><I18nText text={busy?'Saving…':'Save'}/></Button><Button type="button" size="sm" variant="outline" disabled={busy} onClick={()=>setEditing(null)}><I18nText text="Cancel"/></Button></div>
-      </form>:<div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={()=>{setEditing(card.id);setValue(card.isClosed ? '0.00' : card.assigned.toFixed(2));}}><I18nText text="Assign extra"/></Button><Button asChild size="sm" variant="ghost"><Link href="/debts"><I18nText text="Record payment in Debts"/></Link></Button></div>}
-    </article>)}</div>
-  </section>;
+      </form>:<div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" disabled={busy} onClick={()=>{setEditing(card.id);setValue(card.isClosed ? '0.00' : card.assigned.toFixed(2));}}><I18nText text="Budget for debt repayment"/></Button><Button asChild size="sm" variant="ghost"><Link href="/debts"><I18nText text="Record payment in Debts"/></Link></Button></div>}
+        </div>
+      </details>)}</div>
+    </div>
+  </details>;
 }
