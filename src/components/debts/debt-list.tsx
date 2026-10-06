@@ -120,7 +120,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
   const getProgressPercentage = (debt: Debt) => {
     if (!debt.originalAmount || debt.originalAmount <= 0) return 0;
     const paid = debt.originalAmount - debt.currentBalance;
-    return Math.min((paid / debt.originalAmount) * 100, 100);
+    return Math.max(0, Math.min((paid / debt.originalAmount) * 100, 100));
   };
 
   const getUtilizationPercentage = (debt: Debt) => {
@@ -186,7 +186,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
                         <div className="text-xs text-muted-foreground">{""}<I18nText text={"Utilization"}/>{""}</div>
                         <Progress value={utilization} className={`h-1.5 ${utilization > 30 ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`} />
                         <div className={`text-xs ${utilization > 30 ? "text-red-500" : "text-green-500"}`}>{utilization.toFixed(1)}{""}<I18nText text={"% of"}/>{" "}{formatCurrency(debt.creditLimit, group.currency)}</div>
-                      </div> : debt.originalAmount ? <div className="col-span-2 space-y-1 sm:col-span-1"><div className="text-xs text-muted-foreground">{""}<I18nText text={"Payment progress"}/>{""}</div><Progress value={progress} className="h-1.5" /><div className="text-xs text-muted-foreground">{progress.toFixed(1)}%</div></div> : null}
+                      </div> : debt.type !== "CREDIT_CARD" && debt.originalAmount && debt.originalAmount > 0 ? <div className="col-span-2 space-y-1 sm:col-span-1"><div className="text-xs text-muted-foreground">{""}<I18nText text={"Loan repayment progress"}/>{""}</div><Progress value={progress} className="h-1.5" /><div className="text-xs text-muted-foreground">{progress.toFixed(1)}% <I18nText text="of original balance reduced"/></div></div> : debt.type !== "CREDIT_CARD" ? <div className="col-span-2 text-xs text-muted-foreground sm:col-span-1"><I18nText text="Enter the original debt amount to show repayment progress."/></div> : null}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 border-t pt-2 text-xs">
                         {debt.nextDueDate && <span>{""}<I18nText text={"Due"}/>{" "}{formatDateOnly(debt.nextDueDate)}</span>}
@@ -207,7 +207,7 @@ export function DebtList({ debts, onEdit, onDelete, onUpdate, onMakePayment }: D
         <Card>
           <CardHeader>
             <CardTitle>{""}<I18nText text={"Closed Debts"}/>{""}</CardTitle>
-            <CardDescription>{" "}<I18nText text={"Debts that have been fully paid off"}/>{" "}</CardDescription>
+            <CardDescription>{" "}<I18nText text={"Debts and cards marked closed"}/>{" "}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>

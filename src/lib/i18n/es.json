@@ -1144,5 +1144,10 @@
   "Review funding details": "Revisar detalles del presupuesto",
   "Money set aside for card payments. Budgeted card purchases add money automatically; budget for debt repayment to cover older debt. Paying the card uses this money and stays a transfer.": "Dinero reservado para pagar tarjetas. Las compras presupuestadas con tarjeta reservan dinero automáticamente; presupuesta pagos para cubrir deudas anteriores. Al pagar la tarjeta se usa este dinero y el pago sigue siendo una transferencia.",
   "This is planned money, not your bank balance. Budget each repayment here only once.": "Este es dinero presupuestado, no el saldo de tu banco. Presupuesta cada pago aquí una sola vez.",
-  "You paid more than you set aside. Budget for debt repayment to cover the gap; the payment itself is already recorded.": "Pagaste más de lo que reservaste. Presupuesta el pago de deuda para cubrir la diferencia; el pago ya está registrado."
+  "You paid more than you set aside. Budget for debt repayment to cover the gap; the payment itself is already recorded.": "Pagaste más de lo que reservaste. Presupuesta el pago de deuda para cubrir la diferencia; el pago ya está registrado.",
+  "Marked closed": "Marcadas como cerradas",
+  "Loan repayment progress": "Progreso de pago del préstamo",
+  "of original balance reduced": "del saldo original reducido",
+  "Enter the original debt amount to show repayment progress.": "Ingresa el monto original de la deuda para mostrar el progreso de pago.",
+  "Debts and cards marked closed": "Deudas y tarjetas marcadas como cerradas"
 }
