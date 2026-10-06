@@ -260,9 +260,9 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
         )}
       </div>
 
-      {/* Summary Cards - Simplified to 3 cards to eliminate redundancy */}
+      {/* Debt summary */}
       {debts.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
               <CardTitle className="text-sm font-medium">{""}<I18nText text={"Total Debt"}/>{""}</CardTitle>
@@ -291,25 +291,6 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <CardTitle className="text-sm font-medium">{""}<I18nText text={"Payment Progress"}/>{""}</CardTitle>
-              <TrendingDown className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <div className="text-lg font-bold text-green-600">
-                {debts.length > 0 
-                  ? Math.round((debts.filter(d => d.isClosed).length / debts.length) * 100)
-                  : 0}%
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {summary.nextDuePayments.length > 0 
-                  ? `${debts.filter(d => d.isClosed).length} of ${debts.length} paid off • Next: ${formatDate(summary.nextDuePayments[0].dueDate)}`
-                  : `${debts.filter(d => d.isClosed).length} of ${debts.length} paid off`
-                }
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
             <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">{""}<I18nText text={"Average APR"}/>{""}</CardTitle></CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="text-lg font-bold">{(() => { const open = debts.filter(debt => !debt.isClosed); return open.length ? (open.reduce((sum, debt) => sum + (debt.interestRateAPR || 0), 0) / open.length).toFixed(2) : "0.00"; })()}%</div>
@@ -318,7 +299,7 @@ export function DebtsClientEnhanced({ debts: initialDebts }: DebtsClientProps) {
           </Card>
           <Card>
             <CardHeader className="space-y-0 p-3 pb-1"><CardTitle className="text-sm font-medium">{""}<I18nText text={"Closed Debts"}/>{""}</CardTitle></CardHeader>
-            <CardContent className="p-3 pt-0"><div className="text-lg font-bold text-green-600">{debts.filter(debt => debt.isClosed).length}</div><p className="text-xs text-muted-foreground">{""}<I18nText text={"Paid off"}/>{""}</p></CardContent>
+            <CardContent className="p-3 pt-0"><div className="text-lg font-bold text-green-600">{debts.filter(debt => debt.isClosed).length}</div><p className="text-xs text-muted-foreground">{""}<I18nText text={"Marked closed"}/>{""}</p></CardContent>
           </Card>
         </div>
       )}

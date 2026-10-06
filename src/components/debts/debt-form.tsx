@@ -137,7 +137,9 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
   const currentBalance = parseFloat(String(form.watch("currentBalance") || "0"));
   const originalAmount = parseFloat(String(form.watch("originalAmount") || "0"));
   const debtType = form.watch("type");
-  const progressPercentage = originalAmount > 0 ? ((originalAmount - currentBalance) / originalAmount) * 100 : 0;
+  const progressPercentage = originalAmount > 0 ? Math.max(0, Math.min(100, ((originalAmount - currentBalance) / originalAmount) * 100)) : 0;
+  const creditLimit = parseFloat(String(form.watch("creditLimit") || "0"));
+  const utilizationPercentage = creditLimit > 0 ? Math.max(0, (currentBalance / creditLimit) * 100) : 0;
 
   return (
     <Card>
@@ -257,7 +259,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>{" "}<I18nText text={"Optional: Original amount to track payment progress"}/>{" "}</FormDescription>
+                    <FormDescription>{" "}<I18nText text={debtType === "CREDIT_CARD" ? "Optional: Starting card balance; not the credit limit" : "Optional: Original amount to track loan repayment progress"}/>{" "}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -370,11 +372,17 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
             </div>
 
             {/* Progress indicator */}
-            {originalAmount > 0 && (
+            {debtType === "CREDIT_CARD" && creditLimit > 0 ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm"><span><I18nText text="Utilization"/></span><span>{utilizationPercentage.toFixed(1)}%</span></div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className={`h-2 rounded-full ${utilizationPercentage > 30 ? "bg-red-500" : "bg-green-600"}`} style={{width: `${Math.min(utilizationPercentage,100)}%`}}/></div>
+                <p className="text-xs text-muted-foreground">{formatMoney(currentBalance, form.watch("currency"))} / {formatMoney(creditLimit, form.watch("currency"))} <I18nText text="credit limit"/></p>
+              </div>
+            ) : debtType !== "CREDIT_CARD" && originalAmount > 0 && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{""}<I18nText text={"Payment Progress"}/>{""}</span>
-                  <span>{progressPercentage.toFixed(1)}{""}<I18nText text={"% paid"}/>{""}</span>
+                  <span>{""}<I18nText text={"Loan repayment progress"}/>{""}</span>
+                  <span>{progressPercentage.toFixed(1)}{""}<I18nText text={"% of original balance reduced"}/>{""}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -419,7 +427,7 @@ export function DebtForm({ mode, debt, onCancel, onSuccess }: DebtFormProps) {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>{""}<I18nText text={"Mark as closed"}/>{""}</FormLabel>
-                    <FormDescription>{" "}<I18nText text={"Check if this debt has been fully paid off"}/>{" "}</FormDescription>
+                    <FormDescription>{" "}<I18nText text={"Mark closed only when you stop tracking this debt or close the account. A zero balance can stay open."}/>{" "}</FormDescription>
                   </div>
                 </FormItem>
               )}
