@@ -1149,5 +1149,10 @@
   "Loan repayment progress": "Progreso de pago del préstamo",
   "of original balance reduced": "del saldo original reducido",
   "Enter the original debt amount to show repayment progress.": "Ingresa el monto original de la deuda para mostrar el progreso de pago.",
-  "Debts and cards marked closed": "Deudas y tarjetas marcadas como cerradas"
+  "Debts and cards marked closed": "Deudas y tarjetas marcadas como cerradas",
+  "Optional: Starting card balance; not the credit limit": "Opcional: Saldo inicial de la tarjeta; no es el límite de crédito",
+  "Optional: Original amount to track loan repayment progress": "Opcional: Monto original para seguir el progreso de pago del préstamo",
+  "% of original balance reduced": "% del saldo original reducido",
+  "credit limit": "límite de crédito",
+  "Mark closed only when you stop tracking this debt or close the account. A zero balance can stay open.": "Marca como cerrada solo cuando dejes de seguir esta deuda o cierres la cuenta. Puede permanecer abierta con saldo cero."
 }
