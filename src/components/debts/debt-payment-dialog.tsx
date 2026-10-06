@@ -290,6 +290,7 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                 )}
               />
 
+              {debt.type !== "CREDIT_CARD" && <>
               <FormField
                 control={form.control}
                 name="categoryId"
@@ -316,6 +317,8 @@ export function DebtPaymentDialog({ debt, open, onOpenChange, onSuccess }: DebtP
                   </FormItem>
                 )}
               />
+
+              </>}
 
               <DialogFooter>
                 <Button

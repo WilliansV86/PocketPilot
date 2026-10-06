@@ -1,4 +1,6 @@
 "use client";
+import { CardPaymentBudgets } from "./card-payment-budgets";
+import type { CardPaymentBudgetRow } from "@/lib/card-payment-budget";
 import { useLanguage } from "@/components/language-provider";
 
 
@@ -47,6 +49,7 @@ type BudgetCategory = {
 };
 
 type BudgetData = {
+  cardPayments?: CardPaymentBudgetRow[];
   categories: BudgetCategory[];
   uncategorized: {
     count: number;
@@ -62,6 +65,7 @@ type BudgetData = {
 };
 
 interface MobileBudgetsProps {
+  loadingBudget?: boolean;
   currency?: string;
   data: BudgetData;
   month: string;
@@ -70,10 +74,20 @@ interface MobileBudgetsProps {
   onDataUpdate?: (newData: BudgetData) => void;
 }
 
-export function MobileBudgets({ currency = "USD", data, month, year, onMonthChange, onDataUpdate }: MobileBudgetsProps) {
+export function MobileBudgets({ currency = "USD", data, month, year, onMonthChange, onDataUpdate, loadingBudget = false }: MobileBudgetsProps) {
  const { t: ppT } = useLanguage();
 
   const formatCurrency = (amount: number) => formatMoney(amount, currency);
+  const cardBudgetPeriod = `${year}-${month.padStart(2, "0")}`;
+  const latestCardPeriod = useRef("");
+  latestCardPeriod.current = `${cardBudgetPeriod}:${currency}`;
+  async function refreshAfterCardBudgetSave() {
+    const period = `${cardBudgetPeriod}:${currency}`;
+    const refreshed = await getBudgetsForMonth(month, year, currency);
+    if (!refreshed.success || !refreshed.data) throw new Error("Unable to refresh budget");
+    if (latestCardPeriod.current === period) onDataUpdate?.(refreshed.data);
+  }
+
   const router = useRouter();
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -324,6 +338,8 @@ export function MobileBudgets({ currency = "USD", data, month, year, onMonthChan
           </CardContent>
         </Card>
       )}
+
+      {!loadingBudget && <CardPaymentBudgets key={`${cardBudgetPeriod}:${currency}`} cards={data.cardPayments} month={cardBudgetPeriod} currency={currency} onSaved={refreshAfterCardBudgetSave} />}
 
       {/* Category Groups */}
       {Object.entries(groupedCategories).map(([group, categories]) => {

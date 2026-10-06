@@ -1,4 +1,6 @@
 "use client";
+import { CardPaymentBudgets } from "./card-payment-budgets";
+import type { CardPaymentBudgetRow } from "@/lib/card-payment-budget";
 import { useLanguage } from "@/components/language-provider";
 
 import { I18nText } from "@/components/language-provider";
@@ -55,6 +57,7 @@ type BudgetCategory = {
 };
 
 type BudgetData = {
+  cardPayments?: CardPaymentBudgetRow[];
   categories: BudgetCategory[];
   uncategorized: {
     count: number;
@@ -105,6 +108,17 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
   const [replaceExisting, setReplaceExisting] = useState(false);
   const [copying, setCopying] = useState(false);
 
+
+  const cardBudgetPeriod = `${year}-${month.padStart(2, "0")}`;
+  const latestCardPeriod = useRef("");
+  latestCardPeriod.current = `${cardBudgetPeriod}:${currency}`;
+  async function refreshAfterCardBudgetSave() {
+    const period = `${cardBudgetPeriod}:${currency}`;
+    const refreshed = await getBudgetsForMonth(month, year, currency);
+    if (!refreshed.success || !refreshed.data) throw new Error("Unable to refresh budget");
+    if (latestCardPeriod.current === period) setData(refreshed.data);
+  }
+
   function openCopy() {
     const next = new Date(year, Number(month), 1);
     setCopyTarget(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
@@ -117,7 +131,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
     try {
       const result = await copyMonthlyBudget(`${year}-${month.padStart(2, "0")}`, copyTarget, currency, replaceExisting);
       if (!result.success) { toast.error(result.error || "Could not copy budget"); return; }
-      toast.success(`Copied ${result.count} category budgets to ${copyTarget} (${currency})`);
+      toast.success(`Copied ${result.count} budget allocations to ${copyTarget} (${currency})`);
       setCopyOpen(false);
       setMonth(String(Number(copyTarget.slice(5))));
       setYear(Number(copyTarget.slice(0, 4)));
@@ -405,7 +419,7 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       <IncomePlan month={`${year}-${month.padStart(2,"0")}`} currency={currency} received={data.totals.income} budgeted={data.totals.budgeted} loadingBudget={loading} />
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <MobileBudgets currency={currency}
+        <MobileBudgets currency={currency} loadingBudget={loading}
           data={data}
           month={month}
           year={year}
@@ -613,7 +627,8 @@ export function BudgetsClientEnhanced({ initialData, initialMonth, initialYear }
       </div>
 
       {/* Budget Table */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
+        {!loading && <CardPaymentBudgets key={`${cardBudgetPeriod}:${currency}`} cards={data.cardPayments} month={cardBudgetPeriod} currency={currency} onSaved={refreshAfterCardBudgetSave} />}
         <Card>
           <CardHeader>
             <CardTitle>{""}<I18nText text={"Category Budgets"}/>{""}</CardTitle>
